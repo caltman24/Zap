@@ -2,8 +2,6 @@ export type MenuLink = {
   name: string;
   to: string;
   materialIcon?: string;
-  userId?: string;
-  companyId?: string;
   roles: string[];
 };
 
@@ -27,7 +25,7 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "Company Details",
         to: "/company",
-        materialIcon: "business",
+        materialIcon: "domain",
         roles: [],
       },
     ],
@@ -106,22 +104,13 @@ export function filterMenuRoutesByRoles(
   }));
 }
 
-export type MenuRoutesConfig = {
-  menuRoutes: MenuRoutes;
-  userId?: string;
-  companyId?: string;
-  roles?: string[];
-};
-
-export const routeNameMap: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/company": "Company Details",
-  "/projects": "All Projects",
-  "/projects/new": "Create New Project",
-  "/projects/archived": "Archived Projects",
-  "/tickets/open": "Open Tickets",
-  "/tickets/assigned": "My Tickets",
-  "/tickets/resolved": "Resolved Tickets",
-  "/tickets/archived": "Archived Tickets",
-  "/tickets/new": "Submit Ticket",
-};
+export function createRouteNameMap(
+  menuRoutes: MenuRoutes
+): Record<string, string> {
+  return menuRoutes.reduce((acc, group) => {
+    group.links.forEach((link) => {
+      acc[link.to] = link.name;
+    });
+    return acc;
+  }, {} as Record<string, string>);
+}

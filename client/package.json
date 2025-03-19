@@ -16,7 +16,6 @@
     "@remix-run/serve": "^2.16.1",
     "@tailwindcss/postcss": "^4.0.14",
     "isbot": "^4.1.0",
-    "material-symbols": "^0.29.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwindcss": "^4.0.14"
@@ -42,5 +41,13 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ],
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

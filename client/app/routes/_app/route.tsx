@@ -2,7 +2,9 @@ import { Link, Outlet, redirect, useLocation, useNavigation } from "@remix-run/r
 import SideMenu from "./SideMenu";
 import { useEffect, useMemo } from "react";
 import DashboardNavbar from "./DashboardNavbar";
-import { filterMenuRoutesByRoles, menuRoutes, routeNameMap } from "~/data/routes";
+import { filterMenuRoutesByRoles, menuRoutes, createRouteNameMap } from "~/data/routes";
+
+const routeNameMap = createRouteNameMap(menuRoutes);
 
 export async function loader() {
     return null
