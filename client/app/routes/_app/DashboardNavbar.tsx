@@ -1,13 +1,26 @@
-type Props = {
-    routeName: string;
-}
+import { useMatches } from "@remix-run/react";
 
-export default function DashboardNavbar({ routeName }: Props) {
+
+
+export default function DashboardNavbar() {
+    const matches = useMatches();
+
     return (
         <div className="bg-base-200 shadow-sm sticky left-0 w-full z-10">
             <nav className="relative left-0 navbar px-10">
-                <div className="flex-1">
-                    <a className="text-xl font-bold">{routeName}</a>
+                <div className="flex-1 breadcrumbs">
+                    <ul>
+                        {matches
+                            .filter(
+                                (match) =>
+                                    match.handle && (match.handle as any).breadcrumb
+                            )
+                            .map((match, index) => (
+                                <li key={index} className={`${index === 0 ? "font-medium" : ""}`}>
+                                    {(match.handle as any).breadcrumb(match)}
+                                </li>
+                            ))}
+                    </ul>
                 </div>
                 <div className="flex gap-2 items-center">
                     <div className="dropdown dropdown-end">

@@ -58,7 +58,7 @@ export const menuRoutes: MenuRoutes = [
     links: [
       {
         name: "Open Tickets",
-        to: "/tickets/open",
+        to: "/tickets",
         materialIcon: "assignment",
         roles: [],
       },

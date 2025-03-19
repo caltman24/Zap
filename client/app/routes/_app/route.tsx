@@ -10,25 +10,7 @@ export async function loader() {
     return null
 }
 
-
 export default function AppRoute() {
-    const location = useLocation();
-
-    const routeName = useMemo(() => {
-        const path = location.pathname;
-        let bestMatch = "";
-        let bestMatchName = "Dashboard"
-
-        Object.entries(routeNameMap).forEach(([key, value]) => {
-            if (path.startsWith(key) && key.length > bestMatch.length) {
-                bestMatch = key;
-                bestMatchName = value;
-            }
-        })
-
-        return bestMatchName;
-    }, [location])
-
     useEffect(() => {
         document.querySelector("body")?.classList.contains("overflow-hidden") || document.querySelector("body")?.classList.add("overflow-hidden")
     }, [])
@@ -41,7 +23,7 @@ export default function AppRoute() {
 
                 {/* contnet */}
                 <div className="w-full">
-                    <DashboardNavbar routeName={routeName} />
+                    <DashboardNavbar />
                     <div className="overflow-auto h-[calc(100vh-64px)]">
                         <Outlet />
                     </div>

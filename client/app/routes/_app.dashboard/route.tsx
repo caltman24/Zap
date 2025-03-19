@@ -1,3 +1,9 @@
+import { Link } from "@remix-run/react";
+
+export const handle = {
+    breadcrumb: () => <Link to="/dashboard">Dashboard</Link>,
+};
+
 export default function DashboardRoute() {
     return (
         <div className="text-center w-full bg-base-300 p-6">
@@ -44,9 +50,9 @@ export default function DashboardRoute() {
                     <table className="table table-zebra w-full 2xlxl:text-lg">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Title</th>
                                 <th>Status</th>
+                                <th>Type</th>
                                 <th>Priority</th>
                                 <th>Assigned To</th>
                                 <th>Last Updated</th>
@@ -55,16 +61,20 @@ export default function DashboardRoute() {
                         <tbody>
                             {[...Array(5)].map((_, i) => (
                                 <tr key={i}>
-                                    <td>ZAP-{1000 + i}</td>
-                                    <td>{["Login page crashes on mobile", "Cannot upload images", "Search results not filtering correctly", "Payment processing timeout", "User profile not saving changes"][i]}</td>
+                                    <td className="font-medium">{["Login page crashes on mobile", "Cannot upload images", "Search results not filtering correctly", "Payment processing timeout", "User profile not saving changes"][i]}</td>
                                     <td>
-                                        <div className={`badge ${["badge-error", "badge-warning", "badge-info", "badge-success", "badge-warning"][i]}`}>
+                                        <div className={`badge ${["badge-error", "badge-warning", "badge-info", "badge-success", "badge-warning"][i]} h-auto w-max`}>
                                             {["Critical", "In Progress", "Under Review", "Resolved", "In Progress"][i]}
                                         </div>
                                     </td>
                                     <td>
-                                        <div className={`badge ${["badge-error", "badge-warning", "badge-warning", "badge-info", "badge-error"][i]}`}>
-                                            {["High", "Medium", "Medium", "Low", "High"][i]}
+                                        <div className={`badge ${["badge-error", "badge-info", "badge-success", "badge-error", "badge-error"][i]} h-auto w-max`}>
+                                            {["Defect", "New Development", "General Task", "Defect", "Defect"][i]}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className={`badge ${["badge-warning", "badge-info", "badge-info", "badge-error", "badge-success"][i]} h-auto w-max`}>
+                                            {["High", "Medium", "Medium", "Urgent", "Low"][i]}
                                         </div>
                                     </td>
                                     <td>{["Sarah Kim", "Alex Johnson", "Miguel Rodriguez", "Priya Patel", "Jordan Taylor"][i]}</td>
