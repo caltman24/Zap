@@ -1,41 +1,81 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
+using Zap.Api.Endpoints;
+using Zap.DataAccess;
+using Zap.DataAccess.Models;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+var builder = WebApplication.CreateBuilder(args);
+{
+    builder.Services.AddOpenApi();
+
+
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    });
+
+    builder.Services.AddIdentityCore<AppUser>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = true;
+            options.User.RequireUniqueEmail = true;
+        })
+        .AddRoles<IdentityRole>()
+        .AddEntityFrameworkStores<AppDbContext>()
+        .AddDefaultTokenProviders()
+        .AddSignInManager<SignInManager<AppUser>>();
+
+    builder.Services.AddAuthentication(IdentityConstants.BearerScheme)
+        .AddBearerToken(IdentityConstants.BearerScheme);
+
+    builder.Services.AddAuthorizationBuilder()
+        .AddDefaultPolicy("default", pb =>
+        {
+            pb.RequireAuthenticatedUser();
+            pb.Build();
+        });
+
+    builder.Services.AddCors(opts =>
+    {
+        opts.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "https://client.scalar.com")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    });
+}
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseCors();
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapRegisterUserEndpoints().MapSignInEndpoints();
+
+    app.MapGet("/company",
+        async (AppDbContext db, HttpContext context) =>
+        {
+            return Results.Ok(context.User.Claims.Select(c => c.Value));
+        }).RequireAuthorization(pb => pb.RequireRole("Admin"));
+
+    app.Run();
 }
 
-app.UseHttpsRedirection();
+record RegisterVerifyResponse(string Result);
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+record RegisterCompanyRequest(string Name, string Description, string Email);
 
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+record RegisterCompanyUserRequest(string Name, string Description, RegisterUserRequest Owner);
