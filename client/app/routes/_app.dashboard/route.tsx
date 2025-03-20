@@ -35,7 +35,17 @@ export default function DashboardRoute() {
 
                 <div className="stat bg-base-100 shadow rounded-box">
                     <div className="stat-figure text-content">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            className="inline-block h-8 w-8 stroke-current">
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
                     </div>
                     <div className="stat-title">Closed Tickets</div>
                     <div className="stat-value text-content">128</div>
@@ -86,36 +96,33 @@ export default function DashboardRoute() {
                 </div>
             </div>
 
-            {/* Team Performance */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Chart Section */}
+            <div className="grid grid-cols-2 gap-8 mb-8">
                 <div className="bg-base-100 p-6 rounded-box shadow">
-                    <h2 className="text-xl font-semibold mb-4">Team Performance</h2>
-                    <div className="space-y-4">
-                        {["Frontend Team", "Backend Team", "QA Team", "DevOps"].map((team, i) => (
-                            <div key={i}>
-                                <div className="flex justify-between mb-1">
-                                    <span>{team}</span>
-                                    <span>{[78, 92, 65, 88][i]}%</span>
-                                </div>
-                                <progress
-                                    className={`progress ${["progress-primary", "progress-success", "progress-warning", "progress-info"][i]} w-full`}
-                                    value={[78, 92, 65, 88][i]}
-                                    max="100"
-                                ></progress>
-                            </div>
-                        ))}
+                    <h2 className="text-xl font-semibold mb-4">Tickets Over Time</h2>
+                    <div className="h-64 w-full bg-base-200 flex items-center justify-center">
+                        <p className="text-base-content/60">Chart Visualization Placeholder</p>
                     </div>
                 </div>
 
                 <div className="bg-base-100 p-6 rounded-box shadow">
-                    <h2 className="text-xl font-semibold mb-4">Upcoming Deadlines</h2>
+                    <h2 className="text-xl font-semibold mb-4">Tickets By Priority</h2>
+                    <div className="h-64 w-full bg-base-200 flex items-center justify-center">
+                        <p className="text-base-content/60">Chart Visualization Placeholder</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-5 gap-8">
+                <div className="bg-base-100 p-6 rounded-box shadow col-span-3">
+                    <h2 className="text-xl font-semibold mb-8">Upcoming Deadlines</h2>
                     <ul className="space-y-4">
-                        {[...Array(4)].map((_, i) => (
-                            <li key={i} className="flex items-center gap-4">
-                                <div className={`badge badge-lg ${["badge-primary", "badge-secondary", "badge-accent", "badge-neutral"][i]}`}>
+                        {[...Array(5)].map((_, i) => (
+                            <li key={i} className="flex items-center gap-6">
+                                <div className={`badge badge-lg ${["badge-primary", "badge-secondary", "badge-accent", "badge-neutral"][i]} w-24`}>
                                     {["Oct 15", "Oct 22", "Nov 5", "Nov 18"][i]}
                                 </div>
-                                <div>
+                                <div className="flex w-full justify-between">
                                     <h3 className="font-medium">{["User Authentication Refactor", "Mobile App v2.0 Release", "Payment Gateway Integration", "Year-End Security Audit"][i]}</h3>
                                     <p className="text-sm opacity-70">{["3 days remaining", "10 days remaining", "24 days remaining", "37 days remaining"][i]}</p>
                                 </div>
@@ -123,34 +130,14 @@ export default function DashboardRoute() {
                         ))}
                     </ul>
                 </div>
-            </div>
-
-            {/* Chart Section */}
-            <div className="bg-base-100 p-6 rounded-box shadow mb-8">
-                <h2 className="text-xl font-semibold mb-4">Bug Resolution Trends</h2>
-                <div className="h-64 w-full bg-base-200 flex items-center justify-center">
-                    <p className="text-base-content/60">Chart Visualization Placeholder</p>
+                <div className="bg-base-100 p-6 rounded-box shadow col-span-2">
+                    <h2 className="text-xl font-semibold mb-4">Projects By Priority</h2>
+                    <div className="h-64 w-full bg-base-200 flex items-center justify-center">
+                        <p className="text-base-content/60">Chart Visualization Placeholder</p>
+                    </div>
                 </div>
             </div>
 
-            {/* Bottom Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {[...Array(3)].map((_, i) => (
-                    <div key={i} className="card bg-base-100 shadow-xl">
-                        <div className="card-body">
-                            <h2 className="card-title">{["System Status", "Recent Notifications", "Quick Actions"][i]}</h2>
-                            <p>{[
-                                "All systems operational. Last incident: 15 days ago.",
-                                "You have 8 unread notifications. 3 require immediate attention.",
-                                "Access frequently used tools and actions from here."
-                            ][i]}</p>
-                            <div className="card-actions justify-end">
-                                <button className="btn btn-primary btn-sm">View Details</button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
         </div>
     )
 }
