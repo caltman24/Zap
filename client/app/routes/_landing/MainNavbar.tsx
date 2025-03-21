@@ -1,16 +1,19 @@
-import { Link } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react";
 
 export default function MainNavbar({ isAuthenticated }: { isAuthenticated: boolean }) {
     return (
         <div className="bg-base-200 shadow-sm">
             <nav className="navbar max-w-7xl mx-auto">
                 <div className="flex-1">
-                    <a className="btn btn-ghost text-2xl">ZAP</a>
+                    <Link to="/" className="btn btn-ghost text-2xl">ZAP</Link>
                 </div>
                 <div className="flex gap-2 items-center">
                     <ul className="menu menu-horizontal px-1 2xl:text-lg">
                         <li>
                             <Link to="/">Home</Link>
+                        </li>
+                        <li>
+                            <Link to="/setup">Setup</Link>
                         </li>
                         {
                             isAuthenticated ?
@@ -24,7 +27,7 @@ export default function MainNavbar({ isAuthenticated }: { isAuthenticated: boole
                                             <Link to="/login">Login</Link>
                                         </li>
                                         <li>
-                                            <Link to="/">Register</Link>
+                                            <Link to="/register">Register</Link>
                                         </li>
                                     </>
                                 )
@@ -49,7 +52,9 @@ export default function MainNavbar({ isAuthenticated }: { isAuthenticated: boole
                                         </a>
                                     </li>
                                     <li><a>Settings</a></li>
-                                    <li><a>Logout</a></li>
+                                    <Form method="post">
+                                        <li><button type="submit" formAction="/logout">Logout</button></li>
+                                    </Form>
                                 </ul>
                             </div>
                         )

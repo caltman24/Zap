@@ -8,8 +8,7 @@ public class AppUser : IdentityUser
     public string LastName { get; set; }
     
     public string? CompanyId { get; set; }
-    public Company? Company { get; set; }
-    public Company? OwnedCompany { get; set; }
+    public virtual Company? Company { get; set; }
 
-    public ICollection<Project> AssignedProjects { get; set; } = [];
+    public virtual ICollection<Project> AssignedProjects { get; set; } = [];
 }

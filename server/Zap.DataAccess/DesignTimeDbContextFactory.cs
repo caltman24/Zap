@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Zap.DataAccess.Constants;
 
 namespace Zap.DataAccess;
 
@@ -19,7 +21,39 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
         // Create DbContext options
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString)
+            // Called as part of EnsureCreated, Migrate, and `dotnet ef database update`
+            .UseSeeding((ctx, _) =>
+            {
+                ctx.Set<IdentityRole>().AddRange([
+                    new IdentityRole
+                    {
+                        Name = RoleNames.Admin,
+                        NormalizedName = RoleNames.Admin.ToUpperInvariant(),
+                        ConcurrencyStamp = Guid.NewGuid().ToString()
+                    },
+                    new IdentityRole
+                    {
+                        Name = RoleNames.ProjectManager,
+                        NormalizedName = RoleNames.ProjectManager.ToUpperInvariant(),
+                        ConcurrencyStamp = Guid.NewGuid().ToString()
+                    },
+                    new IdentityRole
+                    {
+                        Name = RoleNames.Developer,
+                        NormalizedName = RoleNames.Developer.ToUpperInvariant(),
+                        ConcurrencyStamp = Guid.NewGuid().ToString()
+                    },
+                    new IdentityRole
+                    {
+                        Name = RoleNames.Submitter,
+                        NormalizedName = RoleNames.Submitter.ToUpperInvariant(),
+                        ConcurrencyStamp = Guid.NewGuid().ToString()
+                    }
+                ]);
+
+                ctx.SaveChanges();
+            });
 
         return new AppDbContext(optionsBuilder.Options);
     }

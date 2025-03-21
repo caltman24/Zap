@@ -1,10 +1,22 @@
-import { Outlet } from "@remix-run/react";
+import { Outlet, useLoaderData } from "@remix-run/react";
 import MainNavbar from "./MainNavbar";
+import { getSession } from "~/services/sessions.server";
+import { LoaderFunctionArgs } from "@remix-run/node";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+    const session = await getSession(request);
+
+    const isAuthenticated = session.get("isAuthenticated") || false;
+
+    return Response.json({ isAuthenticated });
+}
 
 export default function LandingRoute() {
+    const { isAuthenticated } = useLoaderData<typeof loader>();
+
     return (
         <div>
-            <MainNavbar isAuthenticated={true} />
+            <MainNavbar isAuthenticated={isAuthenticated} />
             <Outlet />
         </div>
     )

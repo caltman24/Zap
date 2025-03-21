@@ -1,4 +1,4 @@
-import { useMatches } from "@remix-run/react";
+import { Form, useMatches } from "@remix-run/react";
 
 
 
@@ -40,7 +40,9 @@ export default function DashboardNavbar() {
                                 </a>
                             </li>
                             <li><a>Settings</a></li>
-                            <li><a>Logout</a></li>
+                            <Form method="post">
+                                <li><button type="submit" formAction="/logout">Logout</button></li>
+                            </Form>
                         </ul>
                     </div>
                 </div>

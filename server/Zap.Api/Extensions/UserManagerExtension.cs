@@ -13,4 +13,5 @@ public static class UserManagerExtension
             new Claim(ClaimTypes.Surname, user.LastName),
         ]);
     }
+    
 }

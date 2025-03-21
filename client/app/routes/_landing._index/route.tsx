@@ -18,7 +18,7 @@ export default function Index() {
         <div className="">
             <div className="max-w-7xl mx-auto p-4">
                 <header>
-                    <h1 className="text-7xl text-base-content">Welcome to Zap!</h1>
+                    <h1 className="text-5xl font-bold text-base-content">Welcome to Zap!</h1>
                 </header>
             </div>
         </div>

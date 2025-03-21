@@ -3,11 +3,19 @@ import SideMenu from "./SideMenu";
 import { useEffect, useMemo } from "react";
 import DashboardNavbar from "./DashboardNavbar";
 import { filterMenuRoutesByRoles, menuRoutes, createRouteNameMap } from "~/data/routes";
+import { LoaderFunctionArgs } from "@remix-run/node";
+import { getSession } from "~/services/sessions.server";
 
 const routeNameMap = createRouteNameMap(menuRoutes);
 
-export async function loader() {
-    return null
+export async function loader({ request }: LoaderFunctionArgs) {
+    const session = await getSession(request);
+
+    if (!session.get("isAuthenticated")) {
+        return redirect("/login");
+    }
+
+    return null;
 }
 
 export default function AppRoute() {

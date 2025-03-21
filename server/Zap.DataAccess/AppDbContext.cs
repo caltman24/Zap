@@ -21,7 +21,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
         
         builder.Entity<Company>()
             .HasOne(u => u.Owner)
-            .WithOne(c => c.OwnedCompany)
+            .WithOne()
             .HasForeignKey<Company>(c => c.OwnerId);
         
         builder.Entity<AppUser>()
@@ -29,7 +29,5 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany(c => c.Members)
             .HasForeignKey(u => u.CompanyId)
             .OnDelete(DeleteBehavior.SetNull);
-        
-        
     }
 }

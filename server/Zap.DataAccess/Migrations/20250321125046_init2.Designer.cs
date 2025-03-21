@@ -12,8 +12,8 @@ using Zap.DataAccess;
 namespace Zap.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250320184807_init")]
-    partial class init
+    [Migration("20250321125046_init2")]
+    partial class init2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -433,7 +433,7 @@ namespace Zap.DataAccess.Migrations
             modelBuilder.Entity("Zap.DataAccess.Models.Company", b =>
                 {
                     b.HasOne("Zap.DataAccess.Models.AppUser", "Owner")
-                        .WithOne("OwnedCompany")
+                        .WithOne()
                         .HasForeignKey("Zap.DataAccess.Models.Company", "OwnerId");
 
                     b.Navigation("Owner");
@@ -465,11 +465,6 @@ namespace Zap.DataAccess.Migrations
                     b.Navigation("Assignee");
 
                     b.Navigation("Submitter");
-                });
-
-            modelBuilder.Entity("Zap.DataAccess.Models.AppUser", b =>
-                {
-                    b.Navigation("OwnedCompany");
                 });
 
             modelBuilder.Entity("Zap.DataAccess.Models.Company", b =>

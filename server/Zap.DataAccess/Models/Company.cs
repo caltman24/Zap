@@ -9,8 +9,8 @@ public class Company
     public string? WebsiteUrl { get; set; }
     
     public string? OwnerId { get; set; }
-    public AppUser? Owner { get; set; }
+    public virtual AppUser? Owner { get; set; }
 
-    public ICollection<AppUser> Members { get; set; } = [];
-    public ICollection<Project> Projects { get; set; } = [];
+    public virtual ICollection<AppUser> Members { get; set; } = [];
+    public virtual ICollection<Project> Projects { get; set; } = [];
 }

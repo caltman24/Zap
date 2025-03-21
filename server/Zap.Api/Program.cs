@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddIdentityCore<AppUser>(options =>
         {
             options.SignIn.RequireConfirmedAccount = true;
+            options.SignIn.RequireConfirmedEmail = true;
             options.User.RequireUniqueEmail = true;
         })
         .AddRoles<IdentityRole>()
@@ -71,11 +72,3 @@ var app = builder.Build();
 
     app.Run();
 }
-
-record RegisterVerifyResponse(string Result);
-
-record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
-
-record RegisterCompanyRequest(string Name, string Description, string Email);
-
-record RegisterCompanyUserRequest(string Name, string Description, RegisterUserRequest Owner);
