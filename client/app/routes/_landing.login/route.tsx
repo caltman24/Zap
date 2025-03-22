@@ -3,6 +3,7 @@ import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useRef, useTransition } from "react";
 import apiService from "~/services/ApiService";
 import { commitSession, getSession } from "~/services/sessions.server";
+import tryCatch from "~/utils/tryCatch";
 
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -10,26 +11,29 @@ export async function action({ request }: ActionFunctionArgs) {
     const intent = formData.get("intent");
 
     if (intent === "pwd") {
-        const email = formData.get("email");
-        const password = formData.get("password");
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
 
-        const res = await apiService.SignInUser(email as string, password as string);
+        const { data: res, error } = await tryCatch(
+            apiService.SignInUser(email, password));
 
-        if (!res) {
-            return Response.json({ message: "Server Error: Failed to login" });
+        if (error) {
+            return Response.json(
+                { message: "Server Error: Please try again later." });
         }
 
         if (res.status === 400) {
             return Response.json({ message: await res.json() });
         }
 
-        if (res.status === 200) {
-            const tokenResonse = await res.json() as {
+        if (res.ok) {
+            const tokenResonse: {
                 tokenType: string;
                 accessToken: string;
                 expiresIn: number;
                 refreshToken: string;
-            }
+            } = await res.json();
+
 
             const session = await getSession(request);
             session.set("tokens", tokenResonse.accessToken);
@@ -41,6 +45,7 @@ export async function action({ request }: ActionFunctionArgs) {
                 },
             });
         }
+
 
     }
     if (intent === "demo:admin") {

@@ -9,13 +9,9 @@ export class ApiService {
     this.BaseUrl = baseUrl;
   }
 
+  // Base wrapper to make requests
   private async fetchApi(url: string, options?: RequestInit) {
-    try {
-      return await fetch(this.BaseUrl + url, options);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    return await fetch(this.BaseUrl + url, options);
   }
 
   public async SignInUser(email: string, password: string): Promise<Response> {
