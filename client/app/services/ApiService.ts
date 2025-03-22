@@ -149,3 +149,10 @@ export class ApiService {
 const apiService = new ApiService("http://localhost:5090");
 
 export default apiService;
+
+// fetch with auth
+
+// fetch(API)
+// 200 -> return
+// 401 -> getSessionToken -> RefreshToken -> 401 -> clearSession -> return
+// 401 -> getSessionToken -> RefreshToken -> 200 -> setTokens -> return
