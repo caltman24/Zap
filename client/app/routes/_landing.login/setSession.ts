@@ -1,5 +1,6 @@
 import { redirect } from "@remix-run/node";
 import apiService, {
+  AuthenticationError,
   TokenRefreshError,
   TokenResponse,
 } from "~/services/ApiService";
@@ -19,7 +20,11 @@ export default async function setSession(
   const session = await getSession(request);
   const { data, error } = await tryCatch(apiService.GetUserInfo(tokens));
 
-  if (error instanceof TokenRefreshError) {
+  // if we get 401 (expired token)
+  // try to refresh token
+  // if we get 401 again, redirect to login page
+
+  if (error instanceof AuthenticationError) {
     redirect("/login", {
       headers: {
         "Set-Cookie": await destroySession(session),

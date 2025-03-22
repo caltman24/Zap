@@ -119,25 +119,18 @@ export class ApiService {
 
     if (error) {
       console.error(error);
-      return Promise.reject(new Error("Server error: Failed to get user info"));
+      return Promise.reject(
+        new ApiError("Server error: Failed to get user info", 500)
+      );
     }
 
     if (res.status === 401) {
-      const refreshRes = await this.RefreshTokens(tokens.refreshToken);
-
-      if (refreshRes.ok) {
-        const newTokens: TokenResponse = await refreshRes.json();
-        return await this.GetUserInfo(newTokens);
-      }
-
-      return Promise.reject(new TokenRefreshError("Unauthorized"));
+      return Promise.reject(new AuthenticationError("Unauthorized"));
     }
 
     if (!res.ok) {
       console.error(res);
-      return Promise.reject(
-        new ApiError("Failed to sign in. No user info found", res.status)
-      );
+      return Promise.reject(new ApiError(res.statusText, res.status));
     }
 
     const data: {
