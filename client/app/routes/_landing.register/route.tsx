@@ -1,8 +1,9 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import apiService, { ValidateAccountResponse } from "~/services/ApiService";
+import apiService, { TokenResponse, ValidateAccountResponse } from "~/services/ApiService";
 import { commitSession, getSession } from "~/services/sessions.server";
+import setSession from "../_landing.login/setSession";
 
 export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
@@ -19,22 +20,9 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (res.ok) {
-        const tokenResonse = await res.json() as {
-            tokenType: string;
-            accessToken: string;
-            expiresIn: number;
-            refreshToken: string;
-        }
+        const tokenResonse: TokenResponse = await res.json();
 
-        const session = await getSession(request);
-        session.set("tokens", tokenResonse.accessToken);
-        session.set("isAuthenticated", true);
-
-        return redirect("/dashboard", {
-            headers: {
-                "Set-Cookie": await commitSession(session),
-            },
-        });
+        return await setSession(request, tokenResonse, "/dashboard");
     }
 
     if (res.status === 400) {

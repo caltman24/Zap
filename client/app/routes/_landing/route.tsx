@@ -6,7 +6,7 @@ import { LoaderFunctionArgs } from "@remix-run/node";
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
 
-    const isAuthenticated = session.get("isAuthenticated") || false;
+    const isAuthenticated = session.get("user") || false;
 
     return Response.json({ isAuthenticated });
 }

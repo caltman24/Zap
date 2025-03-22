@@ -1,9 +1,10 @@
-import { ActionFunctionArgs } from "@remix-run/node";
-import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
-import { useEffect, useRef, useTransition } from "react";
-import apiService from "~/services/ApiService";
-import { commitSession, getSession } from "~/services/sessions.server";
-import tryCatch from "~/utils/tryCatch";
+import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { Form, useActionData, useNavigation } from "@remix-run/react";
+import { useEffect, useRef } from "react";
+import DemoUserLoginHandler from "./_handlers/DemoUserLoginHandler";
+import PwdLoginHandler from "./_handlers/PwdLoginHandler";
+import TestUserLoginHandler from "./_handlers/TestUserLoginHandler";
+import { getSession } from "~/services/sessions.server";
 
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -11,57 +12,25 @@ export async function action({ request }: ActionFunctionArgs) {
     const intent = formData.get("intent");
 
     if (intent === "pwd") {
-        const email = formData.get("email") as string;
-        const password = formData.get("password") as string;
-
-        const { data: res, error } = await tryCatch(
-            apiService.SignInUser(email, password));
-
-        if (error) {
-            return Response.json(
-                { message: "Server Error: Please try again later." });
-        }
-
-        if (res.status === 400) {
-            return Response.json({ message: await res.json() });
-        }
-
-        if (res.ok) {
-            const tokenResonse: {
-                tokenType: string;
-                accessToken: string;
-                expiresIn: number;
-                refreshToken: string;
-            } = await res.json();
-
-
-            const session = await getSession(request);
-            session.set("tokens", tokenResonse.accessToken);
-            session.set("isAuthenticated", true);
-
-            return redirect("/dashboard", {
-                headers: {
-                    "Set-Cookie": await commitSession(session),
-                },
-            });
-        }
-
-
+        return await PwdLoginHandler(request, formData);
     }
-    if (intent === "demo:admin") {
-        return Response.json({ message: "Admin login successful" });
-    }
-    if (intent === "demo:pm") {
-        return Response.json({ message: "Project Manager login successful" });
-    }
-    if (intent === "demo:dev") {
-        return Response.json({ message: "Developer login successful" });
-    }
-    if (intent === "demo:submitter") {
-        return Response.json({ message: "Submitter login successful" });
+    if (intent === "test:user") {
+        return await TestUserLoginHandler(request)
     }
 
-    return Response.json({ message: "Failed to login" });
+    if (intent?.toString().startsWith("demo:")) {
+        return await DemoUserLoginHandler()
+    }
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+    const session = await getSession(request);
+
+    if (session.get("user")) {
+        return Response.redirect("/setup");
+    }
+
+    return null;
 }
 
 
@@ -78,7 +47,7 @@ export default function Login() {
 
     return (
         <div className="grid place-items-center">
-            <div className="mt-10">
+            <div className="pt-10 pb-20">
                 <Form method="post" ref={formRef}>
                     <fieldset className="fieldset w-md bg-base-200 border border-base-300 p-4 rounded-box" disabled={isSubmitting}>
                         <legend className="fieldset-legend text-2xl">Sign Into Zap</legend>
@@ -113,6 +82,7 @@ export default function Login() {
                     <button className="btn btn-outline btn-secondary" type="submit" name="intent" value="demo:pm">Demo as Project Manager</button>
                     <button className="btn btn-outline btn-accent" type="submit" name="intent" value="demo:dev">Demo as Developer</button>
                     <button className="btn btn-outline btn-warning" type="submit" name="intent" value="demo:submitter">Demo as Submitter</button>
+                    <button className="btn btn-neutral" type="submit" name="intent" value="test:user">Test User</button>
                 </Form>
             </div>
         </div>

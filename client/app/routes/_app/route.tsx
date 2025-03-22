@@ -6,13 +6,17 @@ import { filterMenuRoutesByRoles, menuRoutes, createRouteNameMap } from "~/data/
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { getSession } from "~/services/sessions.server";
 
-const routeNameMap = createRouteNameMap(menuRoutes);
-
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    const user = session.get("user");
 
-    if (!session.get("isAuthenticated")) {
+    // Check if user is authenticated
+    if (!user) {
         return redirect("/login");
+    }
+
+    if (!user.companyId) {
+        return redirect("/setup");
     }
 
     return null;

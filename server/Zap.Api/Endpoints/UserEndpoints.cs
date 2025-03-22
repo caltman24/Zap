@@ -1,0 +1,44 @@
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using Zap.Api.Extensions;
+using Zap.DataAccess;
+using Zap.DataAccess.Models;
+
+namespace Zap.Api.Endpoints;
+
+public static class UserEndpoints
+{
+    public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/user");
+
+        group.MapGet("/info",
+            async (AppDbContext db, HttpContext context, UserManager<AppUser> userManager) =>
+            {
+                var user = await userManager.GetUserAsync(context.User);
+                if (user == null) return Results.BadRequest("User not found");
+
+                var response = new UserInfoResponse
+                (
+                    Id: user.Id,
+                    Email: user.Email!,
+                    FirstName: user.FirstName,
+                    LastName: user.LastName,
+                    Role: context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "None",
+                    CompanyId: user.CompanyId
+                );
+
+                return Results.Ok(response);
+            }).RequireAuthorization();
+
+        return app;
+    }
+}
+
+public record UserInfoResponse(
+    string Id,
+    string Email,
+    string FirstName,
+    string LastName,
+    string Role,
+    string? CompanyId);

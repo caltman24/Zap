@@ -64,11 +64,7 @@ var app = builder.Build();
 
     app.MapRegisterUserEndpoints().MapSignInEndpoints();
 
-    app.MapGet("/company",
-        async (AppDbContext db, HttpContext context) =>
-        {
-            return Results.Ok(context.User.Claims.Select(c => c.Value));
-        }).RequireAuthorization(pb => pb.RequireRole("Admin"));
+    app.MapUserEndpoints();
 
     app.Run();
 }

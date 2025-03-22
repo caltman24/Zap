@@ -12,9 +12,6 @@ export default function MainNavbar({ isAuthenticated }: { isAuthenticated: boole
                         <li>
                             <Link to="/">Home</Link>
                         </li>
-                        <li>
-                            <Link to="/setup">Setup</Link>
-                        </li>
                         {
                             isAuthenticated ?
                                 <li>
