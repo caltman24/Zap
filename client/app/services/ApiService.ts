@@ -103,6 +103,7 @@ export class ApiService {
     });
   }
 
+  // Maybe pass in the session instead of tokens. This way we can get and set the tokens directly here
   public async GetUserInfo(tokens: {
     accessToken: string;
     refreshToken: string;
