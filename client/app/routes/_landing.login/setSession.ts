@@ -3,7 +3,7 @@ import apiService, {
   AuthenticationError,
   TokenRefreshError,
   TokenResponse,
-} from "~/services/ApiService";
+} from "~/services/ApiService.server";
 import {
   getSession,
   destroySession,

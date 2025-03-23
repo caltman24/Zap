@@ -1,4 +1,4 @@
-import apiService, { TokenResponse } from "~/services/ApiService";
+import apiService, { TokenResponse } from "~/services/ApiService.server";
 import tryCatch from "~/utils/tryCatch";
 import setSession from "../setSession";
 
