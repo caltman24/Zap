@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Zap.Api.Endpoints;
 using Zap.DataAccess;
@@ -65,5 +67,29 @@ var app = builder.Build();
 
     app.MapUserEndpoints();
 
+    app.MapPost("/refresh",
+        async (RefreshTokenRequest request, SignInManager<AppUser> signInManager,
+            IOptionsMonitor<BearerTokenOptions> bearerTokenOptions, TimeProvider timeProvider) =>
+        {
+            var refreshTokenProtector =
+                bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
+            var refreshTicket = refreshTokenProtector.Unprotect(request.RefreshToken);
+
+            // Reject the /refresh attempt with a 401 if the token expired or the security stamp validation fails
+            if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
+                timeProvider.GetUtcNow() >= expiresUtc ||
+                await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not { } user)
+
+            {
+                return TypedResults.Challenge();
+            }
+
+            var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
+            
+            return Results.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
+        });
+
     app.Run();
 }
+
+public record RefreshTokenRequest(string RefreshToken);
