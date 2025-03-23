@@ -9,11 +9,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = session.get("user")
 
     if (!user) {
-        redirect("/login")
+        return redirect("/login")
     }
 
     if (user.companyId) {
-        redirect("/dashboard")
+        return redirect("/dashboard")
     }
 
 

@@ -18,7 +18,10 @@ export default async function setSession(
   redirectUrl: string
 ) {
   const session = await getSession(request);
-  const { data, error } = await tryCatch(apiService.GetUserInfo(tokens));
+  // we pass in the raw token here because we don't have the session yet
+  const { data, error } = await tryCatch(
+    apiService.GetUserInfo(undefined, tokens.accessToken)
+  );
 
   // if we get 401 (expired token)
   // try to refresh token

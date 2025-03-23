@@ -1,3 +1,4 @@
+import { Session, SessionData } from "@remix-run/node";
 import tryCatch from "~/utils/tryCatch";
 
 // Custom error classes for better error handling
@@ -103,11 +104,39 @@ export class ApiService {
     });
   }
 
+  public async RegisterCompany(
+    {
+      name,
+      description,
+    }: {
+      name: string;
+      description: string;
+    },
+    session: Session<SessionData, SessionData>
+  ): Promise<Response> {
+    const tokens = session.get("tokens");
+    if (!tokens) {
+      return Promise.reject(new AuthenticationError("Unauthorized"));
+    }
+    return await this.fetchApi("/register/company", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tokens.accessToken}`,
+      },
+      body: JSON.stringify({ name, description }),
+    });
+  }
+
   // Maybe pass in the session instead of tokens. This way we can get and set the tokens directly here
-  public async GetUserInfo(tokens: {
-    accessToken: string;
-    refreshToken: string;
-  }): Promise<UserInfoResponse> {
+  public async GetUserInfo(
+    session?: Session<SessionData, SessionData>,
+    accessToken?: string
+  ): Promise<UserInfoResponse> {
+    const tokens = session?.get("tokens") || { accessToken };
+    if (!tokens) {
+      return Promise.reject(new AuthenticationError("Unauthorized"));
+    }
     const { data: res, error } = await tryCatch(
       this.fetchApi("/user/info", {
         method: "GET",
