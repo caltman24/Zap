@@ -17,15 +17,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
 
-    const tokens = session.get("tokens")
-    const { data, error } = await tryCatch(apiService.GetUserInfo(tokens));
 
-    if (error) {
-        console.error(error)
-        return null
-    }
-
-    return Response.json({ firstName: data?.firstName })
+    return Response.json({ firstName: user.firstName })
 }
 
 export default function SetupRootRoute() {

@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 import DemoUserLoginHandler from "./_handlers/DemoUserLoginHandler";
@@ -27,7 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
 
     if (session.get("user")) {
-        return Response.redirect("/setup");
+        return redirect("/setup");
     }
 
     return null;

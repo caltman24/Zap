@@ -46,7 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
 
-    if (session.get("isAuthenticated")) {
+    if (session.get("user")) {
         return redirect("/dashboard");
     }
 
