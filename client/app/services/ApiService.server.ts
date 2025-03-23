@@ -1,7 +1,10 @@
 import { Session, SessionData } from "@remix-run/node";
+import { commitSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 
 // Custom error classes for better error handling
+
+// Thrown when the user is not authenticated / No Tokens
 export class AuthenticationError extends Error {
   constructor(message = "Authentication required") {
     super(message);
@@ -9,6 +12,7 @@ export class AuthenticationError extends Error {
   }
 }
 
+// Thrown when the token refresh fails -> redirect to login
 export class TokenRefreshError extends Error {
   constructor(message = "Failed to refresh token") {
     super(message);
@@ -16,6 +20,7 @@ export class TokenRefreshError extends Error {
   }
 }
 
+// Thrown when the API returns an error
 export class ApiError extends Error {
   public status: number;
 
@@ -56,6 +61,53 @@ export class ApiService {
   // Base wrapper to make requests
   private async fetchApi(url: string, options?: RequestInit) {
     return await fetch(this.BaseUrl + url, options);
+  }
+
+  private async fetchWithAuth(
+    url: string,
+    session: Session<SessionData, SessionData>,
+    options?: RequestInit
+  ) {
+    const tokens = session.get("tokens");
+    // if no tokens throw AuthenticationError to redirect to login
+    if (!tokens) {
+      return Promise.reject(new AuthenticationError("Unauthorized"));
+    }
+    const res = await this.fetchApi(url, {
+      ...options,
+      headers: {
+        ...options?.headers,
+        Authorization: `Bearer ${tokens.accessToken}`,
+      },
+    });
+
+    if (res.status === 401) {
+      const { data: refreshRes, error } = await tryCatch(
+        this.RefreshTokens(tokens.refreshToken)
+      );
+
+      if (error) {
+        return Promise.reject(new TokenRefreshError("Failed to refresh token"));
+      }
+
+      const { accessToken, refreshToken } =
+        (await refreshRes.json()) as TokenResponse;
+
+      session.set("tokens", {
+        accessToken,
+        refreshToken,
+      });
+
+      return await this.fetchApi(url, {
+        ...options,
+        headers: {
+          ...options?.headers,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    }
+
+    return res;
   }
 
   public async RefreshTokens(refreshToken: string): Promise<Response> {
