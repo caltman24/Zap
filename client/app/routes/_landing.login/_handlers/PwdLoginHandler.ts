@@ -26,4 +26,6 @@ export default async function PwdLoginHandler(
 
     return await setSession(request, tokenResonse, "/dashboard");
   }
+
+  return Response.json({ message: "Failed to login" });
 }

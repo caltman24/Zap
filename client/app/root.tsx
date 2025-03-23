@@ -7,6 +7,7 @@ import {
 } from "@remix-run/react";
 import type { LinksFunction } from "@remix-run/node";
 
+
 import "./app.css";
 
 export const links: LinksFunction = () => [
