@@ -17,7 +17,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
 
-
     return Response.json({ firstName: user.firstName })
 }
 

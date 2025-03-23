@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, redirect, Session, SessionData } from "@remix-run/node";
+import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import apiService, { AuthenticationError } from "~/services/ApiService.server";
@@ -29,11 +29,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         if (error) {
             if (error instanceof AuthenticationError) {
-                return redirect("/login", {
-                    headers: {
-                        "Set-Cookie": await destorySession(session),
-                    },
-                });
+                return redirect("/login");
             }
             return Response.json({ message: "Server Error: Please try again later." });
         }
@@ -125,7 +121,3 @@ export default function SetupCompanyRoute() {
         </div>
     );
 }
-function destorySession(session: Session<SessionData, SessionData>): string | PromiseLike<string> {
-    throw new Error("Function not implemented.");
-}
-
