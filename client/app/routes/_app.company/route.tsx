@@ -1,6 +1,7 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
-import apiService, { AuthenticationError } from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
+import { AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 
@@ -13,12 +14,12 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiService.getValidToken(session));
+    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
     if (tokenError) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(apiService.getCompanyInfo(tokenResponse.token));
+    const { data: res, error } = await tryCatch(apiClient.getCompanyInfo(tokenResponse.token));
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");

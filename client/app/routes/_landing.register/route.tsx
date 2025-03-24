@@ -1,10 +1,11 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import apiService, { TokenResponse, ValidateAccountResponse } from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
 import { commitSession, getSession } from "~/services/sessions.server";
 import setSession from "../_landing.login/setSession";
 import tryCatch from "~/utils/tryCatch";
+import { TokenResponse } from "~/services/api.server/types";
 
 export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
@@ -19,7 +20,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ message: "Passwords do not match" });
     }
 
-    const { data: res, error } = await tryCatch(apiService.registerAccount({
+    const { data: res, error } = await tryCatch(apiClient.auth.registerAccount({
         firstName: firstName as string,
         lastName: lastName as string,
         email: email as string,

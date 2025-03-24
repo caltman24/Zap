@@ -1,6 +1,7 @@
-import apiService, { TokenResponse } from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
 import tryCatch from "~/utils/tryCatch";
 import setSession from "../setSession";
+import { TokenResponse } from "~/services/api.server/types";
 
 export default async function PwdLoginHandler(
   request: Request,
@@ -10,7 +11,7 @@ export default async function PwdLoginHandler(
   const password = formData.get("password") as string;
 
   const { data: res, error } = await tryCatch(
-    apiService.signInUser(email, password)
+    apiClient.auth.signInUser(email, password)
   );
 
   if (error) {

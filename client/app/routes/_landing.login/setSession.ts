@@ -1,9 +1,7 @@
 import { redirect } from "@remix-run/node";
-import apiService, {
-  AuthenticationError,
-  TokenRefreshError,
-  TokenResponse,
-} from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
+import { AuthenticationError } from "~/services/api.server/errors";
+import { TokenResponse } from "~/services/api.server/types";
 import {
   getSession,
   destroySession,
@@ -20,7 +18,7 @@ export default async function setSession(
   const session = await getSession(request);
   // we pass in the raw token here because we don't have the session yet
   const { data, error } = await tryCatch(
-    apiService.getUserInfo(tokens.accessToken)
+    apiClient.getUserInfo(tokens.accessToken)
   );
 
   if (error instanceof AuthenticationError) {
@@ -37,7 +35,7 @@ export default async function setSession(
 
   session.set("tokens", {
     accessToken: tokens.accessToken,
-    expiresIn: apiService.expiresInToIso(tokens.expiresIn),
+    expiresIn: apiClient.expiresInToIso(tokens.expiresIn),
     refreshToken: tokens.refreshToken,
   });
 

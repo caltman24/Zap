@@ -1,7 +1,8 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import apiService, { AuthenticationError } from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
+import { AuthenticationError } from "~/services/api.server/errors";
 import { commitSession, getSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 
@@ -11,7 +12,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // Try to get valid token
     // Returns error if token is invalid or expired -> logout
     // Returns token if token is valid, and headers if token was refreshed
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiService.getValidToken(session));
+    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
 
     if (tokenError) {
         return redirect("/logout");
@@ -23,7 +24,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
 
-    const { data: res, error } = await tryCatch(apiService.registerCompany({
+    const { data: res, error } = await tryCatch(apiClient.registerCompany({
         name,
         description,
     }, token));
@@ -37,7 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (res.ok) {
-        const { data, error } = await tryCatch(apiService.getUserInfo(token));
+        const { data, error } = await tryCatch(apiClient.getUserInfo(token));
 
         if (error) {
             if (error instanceof AuthenticationError) {

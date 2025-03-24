@@ -1,9 +1,10 @@
-import apiService, { TokenResponse } from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
 import tryCatch from "~/utils/tryCatch";
 import setSession from "../setSession";
+import { TokenResponse } from "~/services/api.server/types";
 
 export default async function TestUserLoginHandler(request: Request) {
-  const { data: res, error } = await tryCatch(apiService.signInTestUser());
+  const { data: res, error } = await tryCatch(apiClient.auth.signInTestUser());
 
   if (error) {
     return Response.json({ message: "Server Error: Please try again later." });

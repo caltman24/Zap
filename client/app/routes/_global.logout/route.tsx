@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import apiService from "~/services/api.server/apiClient";
+import apiClient from "~/services/api.server/apiClient";
 import { destroySession, getSession } from "~/services/sessions.server";
 
 export async function action({ request }: ActionFunctionArgs) {
