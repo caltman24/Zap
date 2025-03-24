@@ -10,8 +10,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
     const user = session.get("user");
 
-    console.log("yoo")
-
     // Check if user is authenticated
     if (!user) {
         return redirect("/login");

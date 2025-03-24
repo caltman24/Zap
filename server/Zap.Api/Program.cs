@@ -65,7 +65,7 @@ var app = builder.Build();
 
     app.MapRegisterUserEndpoints().MapSignInEndpoints();
 
-    app.MapUserEndpoints();
+    app.MapUserEndpoints().MapCompanyEndpoints();
 
     app.MapPost("/refresh",
         async (RefreshTokenRequest request, SignInManager<AppUser> signInManager,
