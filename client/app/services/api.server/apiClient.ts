@@ -1,69 +1,14 @@
 import { Session, SessionData } from "@remix-run/node";
 import { commitSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
-
-// Error classes
-export class AuthenticationError extends Error {
-  constructor(message = "Authentication required") {
-    super(message);
-    this.name = "AuthenticationError";
-  }
-}
-
-export class TokenRefreshError extends Error {
-  constructor(message = "Failed to refresh token") {
-    super(message);
-    this.name = "TokenRefreshError";
-  }
-}
-
-export class ApiError extends Error {
-  public status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
-
-// Response types
-export type ValidateAccountResponse = {
-  result: "company" | "user" | "none";
-};
-
-export type TokenResponse = {
-  tokenType: string;
-  accessToken: string;
-  expiresIn: number;
-  refreshToken: string;
-};
-
-export type UserInfoResponse = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  companyId?: string;
-};
-
-export type CompanyInfoResponse = {
-  name: string;
-  description: string;
-};
-
-export type RegisterUserRequest = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-};
-
-export type RegisterCompanyRequest = {
-  name: string;
-  description: string;
-};
+import { ApiError, AuthenticationError } from "./errors";
+import {
+  TokenResponse,
+  RegisterUserRequest,
+  UserInfoResponse,
+  RegisterCompanyRequest,
+  CompanyInfoResponse,
+} from "./types";
 
 export class ApiService {
   private readonly baseUrl: string;
