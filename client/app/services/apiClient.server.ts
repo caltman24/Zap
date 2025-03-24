@@ -2,9 +2,7 @@ import { Session, SessionData } from "@remix-run/node";
 import { commitSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 
-// Custom error classes for better error handling
-
-// Thrown when the user is not authenticated / No Tokens
+// Error classes
 export class AuthenticationError extends Error {
   constructor(message = "Authentication required") {
     super(message);
@@ -12,7 +10,6 @@ export class AuthenticationError extends Error {
   }
 }
 
-// Thrown when the token refresh fails -> redirect to login
 export class TokenRefreshError extends Error {
   constructor(message = "Failed to refresh token") {
     super(message);
@@ -20,7 +17,6 @@ export class TokenRefreshError extends Error {
   }
 }
 
-// Thrown when the API returns an error
 export class ApiError extends Error {
   public status: number;
 
@@ -31,6 +27,7 @@ export class ApiError extends Error {
   }
 }
 
+// Response types
 export type ValidateAccountResponse = {
   result: "company" | "user" | "none";
 };

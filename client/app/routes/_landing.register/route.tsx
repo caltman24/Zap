@@ -1,7 +1,7 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import apiService, { TokenResponse, ValidateAccountResponse } from "~/services/ApiService.server";
+import apiService, { TokenResponse, ValidateAccountResponse } from "~/services/apiClient.server";
 import { commitSession, getSession } from "~/services/sessions.server";
 import setSession from "../_landing.login/setSession";
 import tryCatch from "~/utils/tryCatch";

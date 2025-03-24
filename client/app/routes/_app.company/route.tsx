@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
-import apiService, { AuthenticationError } from "~/services/ApiService.server";
+import apiService, { AuthenticationError } from "~/services/apiClient.server";
 import { getSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 
