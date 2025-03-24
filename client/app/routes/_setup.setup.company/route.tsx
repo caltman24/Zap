@@ -1,7 +1,7 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import apiService, { AuthenticationError } from "~/services/apiClient.server";
+import apiService, { AuthenticationError } from "~/services/api.server/apiClient";
 import { commitSession, getSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 
