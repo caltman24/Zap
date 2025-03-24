@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Zap.DataAccess;
+using Zap.DataAccess.Constants;
 using Zap.DataAccess.Models;
 
 namespace Zap.Api.Extensions;
@@ -54,8 +55,8 @@ public static class ServiceExtensions
             opts.AddDefaultPolicy(policy =>
             {
                 policy.WithOrigins("http://localhost:5173", "https://client.scalar.com")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .WithHeaders("Content-Type", "Authorization")
+                    .WithMethods("GET", "POST", "PUT", "DELETE");
             });
         });
 
