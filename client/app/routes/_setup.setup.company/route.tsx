@@ -7,29 +7,41 @@ import tryCatch from "~/utils/tryCatch";
 
 export async function action({ request }: ActionFunctionArgs) {
     const session = await getSession(request);
-    const formData = await request.formData();
 
+    // Try to get valid token
+    // Returns error if token is invalid or expired -> logout
+    // Returns token if token is valid, and headers if token was refreshed
+    const { data: tokenResponse, error: tokenError } = await tryCatch(apiService.getValidToken(session));
+
+    if (tokenError) {
+        return redirect("/logout");
+    }
+    const { token } = tokenResponse;
+
+
+    const formData = await request.formData();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
 
-    const { data: res, error } = await tryCatch(apiService.RegisterCompany({
+    const { data: res, error } = await tryCatch(apiService.registerCompany({
         name,
         description,
-    }, session));
+    }, token));
+
+    if (error instanceof AuthenticationError) {
+        return redirect("/logout");
+    }
 
     if (error) {
-        if (error instanceof AuthenticationError) {
-            return redirect("/login");
-        }
         return Response.json({ message: "Server Error: Please try again later." });
     }
 
     if (res.ok) {
-        const { data, error } = await tryCatch(apiService.GetUserInfo(session));
+        const { data, error } = await tryCatch(apiService.getUserInfo(token));
 
         if (error) {
             if (error instanceof AuthenticationError) {
-                return redirect("/login");
+                return redirect("/logout");
             }
             return Response.json({ message: "Server Error: Please try again later." });
         }
@@ -37,6 +49,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         session.set("user", data);
 
+        // Dont need to append headers returned from getValidToken because we already need to commit the session from setting the user data
         return redirect("/dashboard", {
             headers: {
                 "Set-Cookie": await commitSession(session),

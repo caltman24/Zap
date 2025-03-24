@@ -20,12 +20,8 @@ export default async function setSession(
   const session = await getSession(request);
   // we pass in the raw token here because we don't have the session yet
   const { data, error } = await tryCatch(
-    apiService.GetUserInfo(undefined, tokens.accessToken)
+    apiService.getUserInfo(tokens.accessToken)
   );
-
-  // if we get 401 (expired token)
-  // try to refresh token
-  // if we get 401 again, redirect to login page
 
   if (error instanceof AuthenticationError) {
     redirect("/login", {
@@ -41,6 +37,7 @@ export default async function setSession(
 
   session.set("tokens", {
     accessToken: tokens.accessToken,
+    expiresIn: apiService.expiresInToIso(tokens.expiresIn),
     refreshToken: tokens.refreshToken,
   });
 

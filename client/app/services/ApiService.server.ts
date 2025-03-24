@@ -63,54 +63,68 @@ export class ApiService {
     return await fetch(this.BaseUrl + url, options);
   }
 
-  private async fetchWithAuth(
-    url: string,
-    session: Session<SessionData, SessionData>,
-    options?: RequestInit
-  ) {
+  public expiresInToIso(expiresIn: number) {
+    return new Date(Date.now() + expiresIn * 1000).toISOString();
+  }
+
+  // Gets token from session and refreshes if necessary
+  // Returns token and headers if the token was refreshed -> append headers to reponse from loader or action
+  // Returns a rejected promise if the token is invalid or expired -> logout
+  public async getValidToken(session: Session<SessionData, SessionData>) {
+    console.log("getValidToken");
     const tokens = session.get("tokens");
-    // if no tokens throw AuthenticationError to redirect to login
     if (!tokens) {
       return Promise.reject(new AuthenticationError("Unauthorized"));
     }
-    const res = await this.fetchApi(url, {
-      ...options,
-      headers: {
-        ...options?.headers,
-        Authorization: `Bearer ${tokens.accessToken}`,
-      },
-    });
+    const refreshBuffer = 1000 * 60 * 2; // 2 minutes
+    const expiresAt = new Date(tokens.expiresIn).getTime() - refreshBuffer;
+    console.log("expiresAt", expiresAt);
+    console.log("Date.now()", Date.now());
 
-    if (res.status === 401) {
-      const { data: refreshRes, error } = await tryCatch(
-        this.RefreshTokens(tokens.refreshToken)
+    if (expiresAt <= Date.now()) {
+      console.log("refreshing token");
+      const { data: res, error } = await tryCatch(
+        this.refreshTokens(tokens.refreshToken)
       );
 
       if (error) {
+        console.error(error);
         return Promise.reject(new TokenRefreshError("Failed to refresh token"));
       }
 
-      const { accessToken, refreshToken } =
-        (await refreshRes.json()) as TokenResponse;
+      if (res.status === 401) {
+        console.log("Expired refresh token -> logout");
+        return Promise.reject(new AuthenticationError("Unauthorized"));
+      }
+      if (!res.ok) {
+        console.error(res);
+        return Promise.reject(new ApiError(res.statusText, res.status));
+      }
+
+      const tokenResponse: TokenResponse = await res.json();
 
       session.set("tokens", {
-        accessToken,
-        refreshToken,
+        accessToken: tokenResponse.accessToken,
+        expiresIn: this.expiresInToIso(tokenResponse.expiresIn),
+        refreshToken: tokenResponse.refreshToken,
       });
 
-      return await this.fetchApi(url, {
-        ...options,
+      return {
+        token: tokenResponse.accessToken,
         headers: {
-          ...options?.headers,
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+          "Set-Cookie": await commitSession(session),
+        } as ResponseInit,
+      };
+    } else {
+      // either proceed with request or return tokens
+      return {
+        token: tokens.accessToken,
+        headers: undefined as ResponseInit | undefined,
+      };
     }
-
-    return res;
   }
 
-  public async RefreshTokens(refreshToken: string): Promise<Response> {
+  public async refreshTokens(refreshToken: string): Promise<Response> {
     return await this.fetchApi("/refresh", {
       method: "POST",
       headers: {
@@ -120,7 +134,7 @@ export class ApiService {
     });
   }
 
-  public async SignInUser(email: string, password: string): Promise<Response> {
+  public async signInUser(email: string, password: string): Promise<Response> {
     return await this.fetchApi("/signin", {
       method: "POST",
       headers: {
@@ -130,13 +144,13 @@ export class ApiService {
     });
   }
 
-  public async SignInTestUser(): Promise<Response> {
+  public async signInTestUser(): Promise<Response> {
     return await this.fetchApi("/signin/testuser", {
       method: "POST",
     });
   }
 
-  public async RegisterAccount({
+  public async registerAccount({
     firstName,
     lastName,
     email,
@@ -156,7 +170,7 @@ export class ApiService {
     });
   }
 
-  public async RegisterCompany(
+  public async registerCompany(
     {
       name,
       description,
@@ -164,37 +178,26 @@ export class ApiService {
       name: string;
       description: string;
     },
-    session: Session<SessionData, SessionData>
+    accessToken: string
   ): Promise<Response> {
-    const tokens = session.get("tokens");
-    if (!tokens) {
-      return Promise.reject(new AuthenticationError("Unauthorized"));
-    }
     return await this.fetchApi("/register/company", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ name, description }),
     });
   }
 
   // Maybe pass in the session instead of tokens. This way we can get and set the tokens directly here
-  public async GetUserInfo(
-    session?: Session<SessionData, SessionData>,
-    accessToken?: string
-  ): Promise<UserInfoResponse> {
-    const tokens = session?.get("tokens") || { accessToken };
-    if (!tokens) {
-      return Promise.reject(new AuthenticationError("Unauthorized"));
-    }
+  public async getUserInfo(accessToken: string): Promise<UserInfoResponse> {
     const { data: res, error } = await tryCatch(
       this.fetchApi("/user/info", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${tokens.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       })
     );
@@ -206,6 +209,7 @@ export class ApiService {
       );
     }
 
+    // Dont need to handle this if using getValidToken before
     if (res.status === 401) {
       return Promise.reject(new AuthenticationError("Unauthorized"));
     }
@@ -231,10 +235,3 @@ export class ApiService {
 const apiService = new ApiService("http://localhost:5090");
 
 export default apiService;
-
-// fetch with auth
-
-// fetch(API)
-// 200 -> return
-// 401 -> getSessionToken -> RefreshToken -> 401 -> clearSession -> return
-// 401 -> getSessionToken -> RefreshToken -> 200 -> setTokens -> return

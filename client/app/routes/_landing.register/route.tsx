@@ -19,7 +19,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ message: "Passwords do not match" });
     }
 
-    const { data: res, error } = await tryCatch(apiService.RegisterAccount({
+    const { data: res, error } = await tryCatch(apiService.registerAccount({
         firstName: firstName as string,
         lastName: lastName as string,
         email: email as string,

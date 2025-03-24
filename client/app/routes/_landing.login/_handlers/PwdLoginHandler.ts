@@ -10,7 +10,7 @@ export default async function PwdLoginHandler(
   const password = formData.get("password") as string;
 
   const { data: res, error } = await tryCatch(
-    apiService.SignInUser(email, password)
+    apiService.signInUser(email, password)
   );
 
   if (error) {

@@ -3,7 +3,7 @@ import tryCatch from "~/utils/tryCatch";
 import setSession from "../setSession";
 
 export default async function TestUserLoginHandler(request: Request) {
-  const { data: res, error } = await tryCatch(apiService.SignInTestUser());
+  const { data: res, error } = await tryCatch(apiService.signInTestUser());
 
   if (error) {
     return Response.json({ message: "Server Error: Please try again later." });
