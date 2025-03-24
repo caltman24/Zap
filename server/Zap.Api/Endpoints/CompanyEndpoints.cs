@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Zap.DataAccess;
@@ -12,16 +13,18 @@ public static class CompanyEndpoints
     {
         var group = app.MapGroup("/company");
 
-        group.MapGet("/info", async (AppDbContext db, UserManager<AppUser> userManager, HttpContext context) =>
-        {
-            var user = await userManager.GetUserAsync(context.User);
-            if (user == null) return Results.BadRequest("User not found");
-            
-            var company = await db.Companies.FindAsync(user.CompanyId);
-            if (company == null) return Results.BadRequest("Company not found");
+        group.MapGet("/info",
+            async Task<Results<BadRequest<string>, Ok<CompanyInfoResponse>>> (AppDbContext db,
+                UserManager<AppUser> userManager, HttpContext context) =>
+            {
+                var user = await userManager.GetUserAsync(context.User);
+                if (user == null) return TypedResults.BadRequest("User not found");
 
-            return Results.Ok(new CompanyInfoResponse(company.Name, company.Description));
-        }).RequireAuthorization();
+                var company = await db.Companies.FindAsync(user.CompanyId);
+                if (company == null) return TypedResults.BadRequest("Company not found");
+
+                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description));
+            }).RequireAuthorization();
 
         return app;
     }

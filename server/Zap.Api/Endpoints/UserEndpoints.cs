@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Zap.Api.Extensions;
 using Zap.DataAccess;
@@ -13,10 +14,11 @@ public static class UserEndpoints
         var group = app.MapGroup("/user");
 
         group.MapGet("/info",
-            async (AppDbContext db, HttpContext context, UserManager<AppUser> userManager) =>
+            async Task<Results<BadRequest<string>, Ok<UserInfoResponse>>> (AppDbContext db, HttpContext context,
+                UserManager<AppUser> userManager) =>
             {
                 var user = await userManager.GetUserAsync(context.User);
-                if (user == null) return Results.BadRequest("User not found");
+                if (user == null) return TypedResults.BadRequest("User not found");
 
                 var response = new UserInfoResponse
                 (
@@ -28,7 +30,7 @@ public static class UserEndpoints
                     CompanyId: user.CompanyId
                 );
 
-                return Results.Ok(response);
+                return TypedResults.Ok(response);
             }).RequireAuthorization();
 
         return app;

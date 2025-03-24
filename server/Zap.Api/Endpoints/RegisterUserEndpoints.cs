@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Extensions;
@@ -15,21 +16,24 @@ public static class RegisterUserEndpoints
         var group = app.MapGroup("/register");
 
         // verify user status
-        group.MapPost("/verify", async (UserManager<AppUser> userManager, HttpContext context) =>
-        {
-            var user = await userManager.GetUserAsync(context.User);
-            // user exists and is already in a company
-            return Results.Ok(user?.CompanyId != null
-                ? new RegisterVerifyResponse("company")
-                : new RegisterVerifyResponse("none"));
-        }).RequireAuthorization();
+        group.MapPost("/verify",
+            async Task<Results<BadRequest<string>, Ok<RegisterVerifyResponse>>> (UserManager<AppUser> userManager,
+                HttpContext context) =>
+            {
+                var user = await userManager.GetUserAsync(context.User);
+                // user exists and is already in a company
+                return TypedResults.Ok(user?.CompanyId != null
+                    ? new RegisterVerifyResponse("company")
+                    : new RegisterVerifyResponse("none"));
+            }).RequireAuthorization();
 
         group.MapPost("/user",
-            async (RegisterUserRequest request, UserManager<AppUser> userManager,
+            async Task<Results<BadRequest<string>, BadRequest<IEnumerable<IdentityError>>, EmptyHttpResult>> (
+                RegisterUserRequest request, UserManager<AppUser> userManager,
                 SignInManager<AppUser> signInManager) =>
             {
                 var user = await userManager.FindByEmailAsync(request.Email);
-                if (user != null) return Results.BadRequest("An account is already registered with this email");
+                if (user != null) return TypedResults.BadRequest("An account is already registered with this email");
 
                 // TODO: Add email confirmation
 
@@ -43,27 +47,28 @@ public static class RegisterUserEndpoints
                 };
 
                 var result = await userManager.CreateAsync(newUser, request.Password);
-                if (!result.Succeeded) return Results.BadRequest(result.Errors);
+                if (!result.Succeeded) return TypedResults.BadRequest(result.Errors);
 
                 await userManager.AddCustomClaimsAsync(newUser);
 
                 signInManager.AuthenticationScheme = IdentityConstants.BearerScheme;
                 await signInManager.PasswordSignInAsync(newUser, request.Password, false, false);
 
-                return Results.Empty;
+                return TypedResults.Empty;
             });
 
         // register company
         group.MapPost("/company",
-            async (RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
+            async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>> (
+                RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
                 HttpContext context) =>
             {
                 var user = await userManager.FindByEmailAsync(context.User.FindFirstValue(ClaimTypes.Email)!);
-                if (user == null) return Results.InternalServerError();
+                if (user == null) return TypedResults.InternalServerError();
 
                 if (user.CompanyId != null)
                 {
-                    return Results.BadRequest("User already exists in a company");
+                    return TypedResults.BadRequest("User already exists in a company");
                 }
 
                 var newCompany = new Company
@@ -79,7 +84,8 @@ public static class RegisterUserEndpoints
 
                 await userManager.AddToRoleAsync(user, "Admin");
 
-                return Results.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name, newCompany.Description));
+                return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name,
+                    newCompany.Description));
             }).RequireAuthorization();
 
 
