@@ -58,18 +58,6 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
                         }
                     ]);
 
-                    var user = new AppUser
-                    {
-                        UserName = "Test",
-                        Email = "test@test.com",
-                        EmailConfirmed = true,
-                        FirstName = "Test",
-                        LastName = "User",
-                    };
-                    user.SetDefaultAvatar();
-
-                    ctx.Set<AppUser>().Add(user);
-
                     ctx.SaveChanges();
                 })
                 .UseAsyncSeeding(async (ctx, _, ct) =>
@@ -100,18 +88,6 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
                             ConcurrencyStamp = Guid.NewGuid().ToString()
                         }
                     ]);
-
-                    var user = new AppUser
-                    {
-                        UserName = "Test",
-                        Email = "test@test.com",
-                        EmailConfirmed = true,
-                        FirstName = "Test",
-                        LastName = "User",
-                    };
-                    user.SetDefaultAvatar();
-
-                    await ctx.Set<AppUser>().AddAsync(user, ct);
 
                     await ctx.SaveChangesAsync(ct);
                 });

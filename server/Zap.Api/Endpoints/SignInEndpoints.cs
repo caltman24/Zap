@@ -46,6 +46,7 @@ public static class SignInEndpoints
                     LastName = "User",
                     EmailConfirmed = true
                 };
+                user.SetDefaultAvatar();
 
                 var res = await userManager.CreateAsync(user, "Password1!");
                 if (!res.Succeeded) return TypedResults.BadRequest(res.Errors);
