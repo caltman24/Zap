@@ -4,6 +4,7 @@ using Zap.Api.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+builder.Services.AddResponseCaching();
 
 builder.Services.AddDataAccess(builder.Configuration)
     .AddIdentityManagement()
@@ -18,6 +19,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseResponseCaching();
 
 app.UseCors();
 app.UseAuthentication();
