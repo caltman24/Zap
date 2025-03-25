@@ -19,9 +19,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseResponseCaching();
 
 app.UseCors();
+app.UseResponseCaching();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

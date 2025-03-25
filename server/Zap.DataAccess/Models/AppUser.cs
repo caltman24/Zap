@@ -5,11 +5,13 @@ namespace Zap.DataAccess.Models;
 
 public class AppUser : IdentityUser
 {
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
+    [StringLength(50)] public required string FirstName { get; set; }
+
+    [StringLength(50)] public required string LastName { get; set; }
 
     public string? CompanyId { get; set; }
-    public string AvatarUrl { get; set; } = "https://gravatar.com/avatar/HASH?d=mp";
+
+    [StringLength(500)] public string AvatarUrl { get; set; } = "https://gravatar.com/avatar/HASH?d=mp";
     public virtual Company? Company { get; set; }
 
     public virtual ICollection<Project> AssignedProjects { get; set; } = [];
