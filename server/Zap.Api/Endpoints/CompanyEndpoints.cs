@@ -20,14 +20,27 @@ public static class CompanyEndpoints
                 var user = await userManager.GetUserAsync(context.User);
                 if (user == null) return TypedResults.BadRequest("User not found");
 
-                var company = await db.Companies.FindAsync(user.CompanyId);
+                // Load company with members in a single query
+                var company = await db.Companies
+                    .Include(c => c.Members)
+                    .FirstOrDefaultAsync(c => c.Id == user.CompanyId);
+                
                 if (company == null) return TypedResults.BadRequest("Company not found");
 
-                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description));
+                var memberResponses = new List<MembersResponse>();
+                foreach (var member in company.Members)
+                {
+                    var roles = await userManager.GetRolesAsync(member);
+                    memberResponses.Add(new MembersResponse($"{member.FirstName} {member.LastName}", roles.FirstOrDefault() ?? "User"));
+                }
+
+                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, memberResponses));
             }).RequireAuthorization();
 
         return app;
     }
 }
 
-public record CompanyInfoResponse(string Name, string Description);
+public record MembersResponse(string Name, string Role);
+
+public record CompanyInfoResponse(string Name, string Description, IEnumerable<MembersResponse> Members);

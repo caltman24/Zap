@@ -28,7 +28,7 @@ public static class RegisterUserEndpoints
             }).RequireAuthorization();
 
         group.MapPost("/user",
-            async Task<Results<BadRequest<string>, BadRequest<IEnumerable<IdentityError>>, EmptyHttpResult>> (
+            async Task<Results<BadRequest<string>, BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> (
                 RegisterUserRequest request, UserManager<AppUser> userManager,
                 SignInManager<AppUser> signInManager) =>
             {
@@ -51,16 +51,14 @@ public static class RegisterUserEndpoints
 
                 await userManager.AddCustomClaimsAsync(newUser);
 
-                signInManager.AuthenticationScheme = IdentityConstants.BearerScheme;
-                await signInManager.PasswordSignInAsync(newUser, request.Password, false, false);
+                var principal = await signInManager.CreateUserPrincipalAsync(newUser);
 
-                return TypedResults.Empty;
+                return TypedResults.SignIn(principal, authenticationScheme: IdentityConstants.BearerScheme);
             });
 
         // register company
         group.MapPost("/company",
-            async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>> (
-                RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
+            async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>> (RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
                 HttpContext context) =>
             {
                 var user = await userManager.FindByEmailAsync(context.User.FindFirstValue(ClaimTypes.Email)!);
@@ -84,8 +82,7 @@ public static class RegisterUserEndpoints
 
                 await userManager.AddToRoleAsync(user, "Admin");
 
-                return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name,
-                    newCompany.Description));
+                return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name, newCompany.Description));
             }).RequireAuthorization();
 
 

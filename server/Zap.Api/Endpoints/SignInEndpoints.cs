@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.BearerToken;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -26,16 +27,15 @@ public static class SignInEndpoints
             });
 
         group.MapPost("/testuser",
-            async Task<Results<BadRequest<IEnumerable<IdentityError>>, EmptyHttpResult>> (
+            async Task<Results<BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> (
                 SignInManager<AppUser> signInManager, UserManager<AppUser> userManager) =>
             {
-                signInManager.AuthenticationScheme = IdentityConstants.BearerScheme;
-
                 var user = await userManager.FindByEmailAsync("test@test.com");
                 if (user != null)
                 {
-                    await signInManager.SignInAsync(user, false);
-                    return TypedResults.Empty;
+                    var claimsPrincipal = await signInManager.CreateUserPrincipalAsync(user);
+
+                    return TypedResults.SignIn(claimsPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
                 }
 
                 user = new AppUser
@@ -52,9 +52,10 @@ public static class SignInEndpoints
 
                 await userManager.AddCustomClaimsAsync(user);
                 await userManager.AddToRoleAsync(user, RoleNames.Admin);
-                await signInManager.SignInAsync(user, false);
 
-                return TypedResults.Empty;
+                var principal = await signInManager.CreateUserPrincipalAsync(user);
+
+                return TypedResults.SignIn(principal, authenticationScheme: IdentityConstants.BearerScheme);
             });
 
 
