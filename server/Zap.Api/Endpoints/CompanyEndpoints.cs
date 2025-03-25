@@ -23,6 +23,7 @@ public static class CompanyEndpoints
                     // Load company with members in a single query
                     var company = await db.Companies
                         .Include(c => c.Members)
+                        .AsNoTracking()
                         .FirstOrDefaultAsync(c => c.Id == user.CompanyId);
 
                     if (company == null) return TypedResults.BadRequest("Company not found");
@@ -33,9 +34,9 @@ public static class CompanyEndpoints
                     {
                         var roles = await userManager.GetRolesAsync(member);
                         var role = roles.FirstOrDefault() ?? "None";
-                        if (!membersByRole.TryGetValue(role, out List<MembersResponse>? value))
+                        if (!membersByRole.TryGetValue(role, out var value))
                         {
-                            value = new List<MembersResponse>();
+                            value = [];
                             membersByRole[role] = value;
                         }
 
