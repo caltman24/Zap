@@ -44,18 +44,7 @@ public static class CompanyEndpoints
                     }
 
                     return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, membersByRole));
-                }).RequireAuthorization()
-            .CacheOutput(p =>
-            {
-                p.Expire(TimeSpan.FromMinutes(10))
-                    .VaryByValue(async (context, ct) =>
-                    {
-                        var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
-                        var user = await userManager.GetUserAsync(context.User);
-                        return new KeyValuePair<string, string>("CompanyId", user?.CompanyId ?? "");
-                    })
-                    .Tag("company-info");
-            });
+                }).RequireAuthorization();
 
         return app;
     }
