@@ -58,14 +58,17 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
                         }
                     ]);
 
-                    ctx.Set<AppUser>().Add(new AppUser
+                    var user = new AppUser
                     {
                         UserName = "Test",
                         Email = "test@test.com",
                         EmailConfirmed = true,
                         FirstName = "Test",
                         LastName = "User",
-                    });
+                    };
+                    user.SetDefaultAvatar();
+
+                    ctx.Set<AppUser>().Add(user);
 
                     ctx.SaveChanges();
                 })
@@ -98,14 +101,17 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
                         }
                     ]);
 
-                    await ctx.Set<AppUser>().AddAsync(new AppUser
+                    var user = new AppUser
                     {
                         UserName = "Test",
                         Email = "test@test.com",
                         EmailConfirmed = true,
                         FirstName = "Test",
                         LastName = "User",
-                    }, ct);
+                    };
+                    user.SetDefaultAvatar();
+
+                    await ctx.Set<AppUser>().AddAsync(user, ct);
 
                     await ctx.SaveChangesAsync(ct);
                 });

@@ -2,7 +2,7 @@ import { Form, useMatches } from "@remix-run/react";
 
 
 
-export default function DashboardNavbar() {
+export default function DashboardNavbar({ avatarUrl }: { avatarUrl: string }) {
     const matches = useMatches();
 
     return (
@@ -28,7 +28,7 @@ export default function DashboardNavbar() {
                             <div className="w-full rounded-full">
                                 <img
                                     alt="Tailwind CSS Navbar component"
-                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                                    src={avatarUrl} />
                             </div>
                         </div>
                         <ul

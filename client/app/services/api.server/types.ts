@@ -16,12 +16,14 @@ export type UserInfoResponse = {
   firstName: string;
   lastName: string;
   role: string;
+  avatarUrl: string;
   companyId?: string;
 };
 
 export type CompanyInfoResponse = {
   name: string;
   description: string;
+  members: { [key: string]: { name: string; avatarUrl: string }[] };
 };
 
 export type RegisterUserRequest = {

@@ -45,6 +45,7 @@ public static class RegisterUserEndpoints
                     LastName = request.LastName,
                     EmailConfirmed = true
                 };
+                newUser.SetDefaultAvatar();
 
                 var result = await userManager.CreateAsync(newUser, request.Password);
                 if (!result.Succeeded) return TypedResults.BadRequest(result.Errors);

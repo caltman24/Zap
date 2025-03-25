@@ -26,6 +26,7 @@ public static class UserEndpoints
                     Email: user.Email!,
                     FirstName: user.FirstName,
                     LastName: user.LastName,
+                    AvatarUrl: user.AvatarUrl,
                     Role: context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "None",
                     CompanyId: user.CompanyId
                 );
@@ -43,4 +44,5 @@ public record UserInfoResponse(
     string FirstName,
     string LastName,
     string Role,
+    string AvatarUrl,
     string? CompanyId);

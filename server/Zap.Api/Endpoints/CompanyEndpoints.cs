@@ -24,23 +24,31 @@ public static class CompanyEndpoints
                 var company = await db.Companies
                     .Include(c => c.Members)
                     .FirstOrDefaultAsync(c => c.Id == user.CompanyId);
-                
+
                 if (company == null) return TypedResults.BadRequest("Company not found");
 
-                var memberResponses = new List<MembersResponse>();
+                var membersByRole = new Dictionary<string, List<MembersResponse>>();
+
                 foreach (var member in company.Members)
                 {
                     var roles = await userManager.GetRolesAsync(member);
-                    memberResponses.Add(new MembersResponse($"{member.FirstName} {member.LastName}", roles.FirstOrDefault() ?? "User"));
+                    var role = roles.FirstOrDefault() ?? "None";
+                    if (!membersByRole.TryGetValue(role, out List<MembersResponse>? value))
+                    {
+                        value = new List<MembersResponse>();
+                        membersByRole[role] = value;
+                    }
+
+                    value.Add(new MembersResponse(member.FirstName + " " + member.LastName, member.AvatarUrl));
                 }
 
-                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, memberResponses));
+                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, membersByRole));
             }).RequireAuthorization();
 
         return app;
     }
 }
 
-public record MembersResponse(string Name, string Role);
+public record MembersResponse(string Name, string AvatarUrl);
 
-public record CompanyInfoResponse(string Name, string Description, IEnumerable<MembersResponse> Members);
+public record CompanyInfoResponse(string Name, string Description, Dictionary<string, List<MembersResponse>> Members);
