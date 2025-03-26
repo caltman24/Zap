@@ -18,17 +18,14 @@ public class S3StorageService
 
     public async Task<string> UploadFileAsync(IFormFile file, string prefix)
     {
+        
         var fileName = $"{prefix}/{Guid.NewGuid()}-{Path.GetFileName(file.FileName)}";
-
-        using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream);
-        memoryStream.Position = 0;
-
+        
         var request = new PutObjectRequest
         {
             BucketName = _bucketName,
             Key = fileName,
-            InputStream = memoryStream,
+            InputStream = file.OpenReadStream(),
             ContentType = file.ContentType
         };
 

@@ -10,5 +10,14 @@ public static class WebAppExtensions
             .MapSignInEndpoints()
             .MapUserEndpoints()
             .MapCompanyEndpoints();
+
+        app.MapPost("/upload", (IFormFile file) =>
+        {
+            using var memoryStream = new MemoryStream();
+            file.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+            
+            return TypedResults.Ok();
+        }).DisableAntiforgery();
     }
 }
