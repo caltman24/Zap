@@ -30,10 +30,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return Response.json({ data: null, error: "Server Error: Please try again later." });
     }
 
-
     return Response.json({
         data: res,
         error: null
+    }, {
+        headers: { ...tokenResponse.headers } // Append headers returned from getValidToken in case token was refreshed
     });
 
 }

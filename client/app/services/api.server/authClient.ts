@@ -55,7 +55,7 @@ export class AuthClient extends BaseApiClient {
           token: tokenResponse.accessToken,
           headers: {
             "Set-Cookie": await commitSession(session),
-          } as ResponseInit,
+          } as HeadersInit,
         };
       } catch (error) {
         console.error(error);
@@ -67,7 +67,7 @@ export class AuthClient extends BaseApiClient {
     } else {
       return {
         token: tokens.accessToken,
-        headers: undefined as ResponseInit | undefined,
+        headers: undefined as HeadersInit | undefined,
       };
     }
   }
