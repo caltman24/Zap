@@ -16,8 +16,7 @@ public static class RateLimitExtension
                     partition => new TokenBucketRateLimiterOptions()
                     {
                         TokenLimit = 20, // Burst of 20 requests
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 5,
+                        QueueLimit = 0,
                         ReplenishmentPeriod = TimeSpan.FromSeconds(30),
                         TokensPerPeriod = 10, // 10 requests per 30 seconds. 20rpm sustained
                         AutoReplenishment = true

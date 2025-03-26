@@ -8,10 +8,10 @@ public static class WebAppExtensions
 {
     public static void UseRequiredServices(this WebApplication app)
     {
-        app.UseRateLimiter();
         app.UseCors();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRateLimiter();
     }
 
     public static void MapZapApiEndpoints(this WebApplication app)
