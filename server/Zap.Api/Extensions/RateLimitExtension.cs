@@ -15,11 +15,11 @@ public static class RateLimitExtension
                     context.User?.Identity?.Name ?? context.Request.Headers.Host.ToString(),
                     partition => new TokenBucketRateLimiterOptions()
                     {
-                        TokenLimit = 100,
+                        TokenLimit = 20, // Burst of 20 requests
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 20,
-                        ReplenishmentPeriod = TimeSpan.FromSeconds(10),
-                        TokensPerPeriod = 20, // 120rpm sustained
+                        QueueLimit = 5,
+                        ReplenishmentPeriod = TimeSpan.FromSeconds(30),
+                        TokensPerPeriod = 10, // 10 requests per 30 seconds. 20rpm sustained
                         AutoReplenishment = true
                     });
             });
