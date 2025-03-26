@@ -1,26 +1,21 @@
-using Amazon.Extensions.NETCore.Setup;
-using Amazon.S3;
+using System.Threading.RateLimiting;
+using dotenv.net;
+using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 using Zap.Api.Extensions;
+
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddResponseCaching();
 
-
-builder.Services.AddDataAccess(builder.Configuration)
+builder.Services.AddRateLimiting()
+    .AddDataAccess(builder.Configuration)
     .AddIdentityManagement()
     .AddAuthService()
-    .AddCorsPolicies();
-
-builder.Services.AddAWSService<IAmazonS3>(new AWSOptions()
-{
-    Region = Amazon.RegionEndpoint.USEast1,
-    Credentials = new Amazon.Runtime.BasicAWSCredentials(
-        builder.Configuration["AWS:AccessKey"],
-        builder.Configuration["AWS:SecretKey"]),
-});
+    .AddCorsPolicies()
+    .AddS3Storage();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -31,12 +26,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors();
-app.UseResponseCaching();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
+app.UseRequiredServices();
 app.MapZapApiEndpoints();
 
 app.Run();

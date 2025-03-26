@@ -1,8 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Amazon;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
+using Amazon.S3;
+using dotenv.net.Utilities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Zap.DataAccess;
+using Zap.DataAccess.Configuration;
 using Zap.DataAccess.Constants;
 using Zap.DataAccess.Models;
+using Zap.DataAccess.Services;
 
 namespace Zap.Api.Extensions;
 
@@ -60,6 +67,24 @@ public static class ServiceExtensions
             });
         });
 
+        return services;
+    }
+
+    public static IServiceCollection AddS3Storage(this IServiceCollection services)
+    {
+        services.AddAWSService<IAmazonS3>(new AWSOptions()
+        {
+            Region = RegionEndpoint.GetBySystemName(EnvReader.GetStringValue("AWS_REGION")),
+            Credentials = new BasicAWSCredentials(EnvReader.GetStringValue("AWS_ACCESS_KEY"),
+                EnvReader.GetStringValue("AWS_SECRET_KEY")),
+            Profile = EnvReader.GetStringValue("AWS_PROFILE"),
+        });
+        services.Configure<S3Options>(options =>
+        {
+            options.BucketName = EnvReader.GetStringValue("AWS_S3_BUCKET");
+            options.Region = EnvReader.GetStringValue("AWS_REGION");
+        });
+        services.AddScoped<IFileUploadService, S3FileUploadService>();
         return services;
     }
 }
