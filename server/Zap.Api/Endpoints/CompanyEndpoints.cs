@@ -68,13 +68,9 @@ public static class CompanyEndpoints
                 var company = await db.Companies.FindAsync(user.CompanyId);
                 if (company == null) return TypedResults.BadRequest("Company not found");
 
-                if (upsertCompanyInfoRequest.RemoveLogo || file != null)
+                if (upsertCompanyInfoRequest.RemoveLogo && company.LogoKey != null)
                 {
                     await fileUploadService.DeleteFileAsync(company.LogoKey!);
-                }
-
-                if (upsertCompanyInfoRequest.RemoveLogo)
-                {
                     company.LogoUrl = null;
                     company.LogoKey = null;
                 }
