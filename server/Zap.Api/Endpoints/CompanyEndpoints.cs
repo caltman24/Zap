@@ -47,48 +47,48 @@ public static class CompanyEndpoints
                     value.Add(new MembersResponse(member.FirstName + " " + member.LastName, member.AvatarUrl));
                 }
 
-                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, membersByRole));
+                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, company.LogoUrl, membersByRole));
             }).RequireAuthorization();
 
         // Update company info with multipart form data.
         // file can be null
         // can also remove the image
-        group.MapPost("/info",
-                async Task<Results<BadRequest<string>, NoContent>> (HttpContext context, IFileUploadService fileUploadService, UserManager<AppUser> userManager,
-                    AppDbContext db) =>
+        group.MapPost("/info", async Task<Results<BadRequest<string>, NoContent>> (
+                [FromForm] IFormFile? file,
+                [FromForm] UpsertCompanyInfoRequest upsertCompanyInfoRequest,
+                HttpContext context,
+                IFileUploadService fileUploadService,
+                UserManager<AppUser> userManager,
+                AppDbContext db) =>
+            {
+                var user = await userManager.GetUserAsync(context.User);
+                if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
+
+                var company = await db.Companies.FindAsync(user.CompanyId);
+                if (company == null) return TypedResults.BadRequest("Company not found");
+
+                if (upsertCompanyInfoRequest.RemoveLogo)
                 {
-                    if (!context.Request.HasFormContentType)
-                    {
-                        return TypedResults.BadRequest("Invalid content type.  " +
-                                                  "Must be multipart/form-data.");
-                    }
+                    company.LogoUrl = null;
+                }
 
-                    var (file, upsertCompanyInfoRequest) = context.ParseMultipartForm<UpsertCompanyInfoRequest>();
+                if (file != null)
+                {
+                    // Validate file
 
-                    var user = await userManager.GetUserAsync(context.User);
-                    if (user == null) return TypedResults.BadRequest("User not found");
+                    // Upload file
+                    company.LogoUrl = await fileUploadService.UploadAvatarAsync(file);
+                }
 
-                    var company = await db.Companies.FindAsync(user.CompanyId);
-                    if (company == null) return TypedResults.BadRequest("Company not found");
-                    if (upsertCompanyInfoRequest.RemoveLogo)
-                    {
-                        company.LogoUrl = null;
-                    }
+                company.Name = upsertCompanyInfoRequest.Name;
+                company.Description = upsertCompanyInfoRequest.Description;
+                company.WebsiteUrl = upsertCompanyInfoRequest.WebsiteUrl;
 
-                    if (file != null)
-                    {
-                        company.LogoUrl = await fileUploadService.UploadAvatarAsync(file);
-                    }
+                db.Companies.Update(company);
+                await db.SaveChangesAsync();
 
-                    company.Name = upsertCompanyInfoRequest.Name;
-                    company.Description = upsertCompanyInfoRequest.Description;
-                    company.WebsiteUrl = upsertCompanyInfoRequest.WebsiteUrl;
-
-                    db.Companies.Update(company);
-                    await db.SaveChangesAsync();
-
-                    return TypedResults.NoContent();
-                })
+                return TypedResults.NoContent();
+            }).DisableAntiforgery()
             .RequireAuthorization(pb => { pb.RequireRole(RoleNames.Admin); });
 
         return app;
@@ -97,6 +97,10 @@ public static class CompanyEndpoints
 
 public record MembersResponse(string Name, string AvatarUrl);
 
-public record CompanyInfoResponse(string Name, string Description, Dictionary<string, List<MembersResponse>> Members);
+public record CompanyInfoResponse(
+    string Name,
+    string Description,
+    string? LogoUrl,
+    Dictionary<string, List<MembersResponse>> Members);
 
 public record UpsertCompanyInfoRequest(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
