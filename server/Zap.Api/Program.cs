@@ -1,6 +1,4 @@
-using System.Threading.RateLimiting;
 using dotenv.net;
-using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 using Zap.Api.Extensions;
 
