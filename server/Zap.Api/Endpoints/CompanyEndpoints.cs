@@ -34,17 +34,37 @@ public static class CompanyEndpoints
 
                 var membersByRole = new Dictionary<string, List<MembersResponse>>();
 
+                var memberIds = company.Members.Select(m => m.Id).ToList();
+
+                var rolesLookup = await db.UserRoles
+                    // Filter UserRoles
+                    .Where(ur => memberIds.Contains(ur.UserId))
+                    // join with Roles table
+                    .Join(db.Roles, // IdentityRole
+                        userRole => userRole.RoleId, // Key selector for the outer sequence (UserRoles)
+                        identityRole => identityRole.Id, // Key selector for the inner sequence (Roles)
+                        // Project the result of the join
+                        (userRole, identityRole) => new { userRole.UserId, Role = identityRole.Name })
+                    .GroupBy(ur => ur.UserId)
+                    // Select the first role for each user
+                    .Select(g => new { UserId = g.Key, Role = g.Select(x => x.Role).FirstOrDefault() ?? "None" })
+                    .ToDictionaryAsync(ur => ur.UserId, ur => ur.Role);
+
+
                 foreach (var member in company.Members)
                 {
-                    var roles = await userManager.GetRolesAsync(member);
-                    var role = roles.FirstOrDefault() ?? "None";
-                    if (!membersByRole.TryGetValue(role, out var value))
+                    var roleName = rolesLookup.GetValueOrDefault(member.Id, "None");
+
+                    if (!membersByRole.TryGetValue(roleName, out var memberList))
                     {
-                        value = [];
-                        membersByRole[role] = value;
+                        memberList = [];
+                        membersByRole[roleName] = memberList;
                     }
 
-                    value.Add(new MembersResponse(member.FirstName + " " + member.LastName, member.AvatarUrl));
+                    memberList.Add(new MembersResponse(
+                        $"{member.FirstName} {member.LastName}",
+                        member.AvatarUrl
+                    ));
                 }
 
                 return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, company.LogoUrl,
@@ -90,12 +110,11 @@ public static class CompanyEndpoints
                 company.Description = upsertCompanyInfoRequest.Description;
                 company.WebsiteUrl = upsertCompanyInfoRequest.WebsiteUrl;
 
-                db.Companies.Update(company);
                 await db.SaveChangesAsync();
 
                 return TypedResults.NoContent();
             }).DisableAntiforgery()
-            .Accepts<IFormFile>("multipart/form-data")
+            .Accepts<UpsertCompanyInfoRequest>("multipart/form-data")
             .RequireRateLimiting("upload")
             .RequireAuthorization(pb => { pb.RequireRole(RoleNames.Admin); });
 
