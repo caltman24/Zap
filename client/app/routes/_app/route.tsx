@@ -6,11 +6,7 @@ import { filterMenuRoutesByRoles, menuRoutes, createRouteNameMap } from "~/data/
 import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { getSession } from "~/services/sessions.server";
 import { UserInfoResponse } from "~/services/api.server/types";
-export const headers: HeadersFunction = ({
-    loaderHeaders,
-}) => ({
-    "Cache-Control": "max-age=60, private", // 1 minute
-});
+
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
     const user = session.get("user");

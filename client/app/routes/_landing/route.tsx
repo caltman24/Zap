@@ -1,7 +1,8 @@
 import { Outlet, useLoaderData } from "@remix-run/react";
 import MainNavbar from "./MainNavbar";
 import { getSession } from "~/services/sessions.server";
-import { LoaderFunctionArgs } from "@remix-run/node";
+import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
+
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
