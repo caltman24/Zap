@@ -11,6 +11,12 @@ export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
 };
 
+export const headers: HeadersFunction = () => {
+    return {
+        "Cache-Control": "max-age=60, private",
+    };
+};
+
 // TODO: Handle when user gets kicked from company
 // TODO: Handle role permissons on this page (edit company info, manage invites)
 

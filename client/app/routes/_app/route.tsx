@@ -7,11 +7,6 @@ import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { getSession } from "~/services/sessions.server";
 import { UserInfoResponse } from "~/services/api.server/types";
 
-export const headers: HeadersFunction = () => {
-    return {
-        "Cache-Control": "max-age=30, private",
-    };
-};
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
