@@ -11,9 +11,12 @@ export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
 };
 
-export const headers: HeadersFunction = () => {
+export const headers: HeadersFunction = ({ loaderHeaders }) => {
+    if (loaderHeaders.get("Cache-Control")) {
+        return loaderHeaders;
+    }
     return {
-        "Cache-Control": "max-age=60, private",
+        "Cache-Control": "max-age=30, private",
     };
 };
 
@@ -37,6 +40,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return Response.json({ data: null, error: "Failed to get company info. Please try again later." }, {
             headers: {
                 ...tokenResponse.headers,
+                "Cache-Control": "no-cache",
             }
         });
     }
