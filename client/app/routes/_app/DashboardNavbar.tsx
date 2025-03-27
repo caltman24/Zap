@@ -6,7 +6,7 @@ export default function DashboardNavbar({ avatarUrl }: { avatarUrl: string }) {
     const matches = useMatches();
 
     return (
-        <div className="bg-base-200 shadow-sm sticky left-0 w-full z-10">
+        <div className="bg-base-200 shadow-sm sticky left-0 w-full z-20">
             <nav className="relative left-0 navbar px-10">
                 <div className="flex-1 breadcrumbs">
                     <ul>
@@ -33,7 +33,7 @@ export default function DashboardNavbar({ avatarUrl }: { avatarUrl: string }) {
                         </div>
                         <ul
                             tabIndex={0}
-                            className="menu menu-md dropdown-content bg-base-200 rounded-box z-1 mt-3 w-52 p-2 shadow">
+                            className="menu menu-md dropdown-content bg-base-200 rounded-box z-20 mt-3 w-52 p-2 shadow">
                             <li>
                                 <a className="justify-between">
                                     Profile
