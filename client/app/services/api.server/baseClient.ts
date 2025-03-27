@@ -43,7 +43,7 @@ export class BaseApiClient {
   ): Promise<T> {
     if (error) {
       console.error(error);
-      throw new ApiError("Server error", 500);
+      throw new ApiError("Failed to fetch", 500);
     }
 
     if (!response) {

@@ -15,7 +15,9 @@ export default async function PwdLoginHandler(
   );
 
   if (error) {
-    return Response.json({ message: "Server Error: Please try again later." });
+    return Response.json({
+      message: "Failed to login. Please try again later.",
+    });
   }
 
   if (res.status === 400) {
@@ -28,5 +30,5 @@ export default async function PwdLoginHandler(
     return await setSession(request, tokenResonse, "/dashboard");
   }
 
-  return Response.json({ message: "Failed to login" });
+  return Response.json({ message: "Failed to login. Please try again later." });
 }

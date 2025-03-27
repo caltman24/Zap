@@ -47,7 +47,8 @@ public static class CompanyEndpoints
                     value.Add(new MembersResponse(member.FirstName + " " + member.LastName, member.AvatarUrl));
                 }
 
-                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, company.LogoUrl, membersByRole));
+                return TypedResults.Ok(new CompanyInfoResponse(company.Name, company.Description, company.LogoUrl,
+                    membersByRole));
             }).RequireAuthorization();
 
         // Update company info with multipart form data.
@@ -67,17 +68,26 @@ public static class CompanyEndpoints
                 var company = await db.Companies.FindAsync(user.CompanyId);
                 if (company == null) return TypedResults.BadRequest("Company not found");
 
+                if (upsertCompanyInfoRequest.RemoveLogo || file != null)
+                {
+                    await fileUploadService.DeleteFileAsync(company.LogoKey!);
+                }
+
                 if (upsertCompanyInfoRequest.RemoveLogo)
                 {
                     company.LogoUrl = null;
+                    company.LogoKey = null;
                 }
-
-                if (file != null)
+                else if (file != null)
                 {
                     // Validate file
+                    if (company.LogoKey != null)
+                    {
+                        await fileUploadService.DeleteFileAsync(company.LogoKey);
+                    }
 
                     // Upload file
-                    company.LogoUrl = await fileUploadService.UploadAvatarAsync(file);
+                    (company.LogoUrl, company.LogoKey) = await fileUploadService.UploadCompanyLogoAsync(file);
                 }
 
                 company.Name = upsertCompanyInfoRequest.Name;
@@ -89,6 +99,8 @@ public static class CompanyEndpoints
 
                 return TypedResults.NoContent();
             }).DisableAntiforgery()
+            .Accepts<IFormFile>("multipart/form-data")
+            .RequireRateLimiting("upload")
             .RequireAuthorization(pb => { pb.RequireRole(RoleNames.Admin); });
 
         return app;

@@ -31,8 +31,8 @@ public static class RateLimitExtension
                     partition => new FixedWindowRateLimiterOptions()
                     {
                         AutoReplenishment = true,
-                        PermitLimit = 10,
-                        QueueLimit = 0,
+                        PermitLimit = 5,
+                        QueueLimit = 1,
                         Window = TimeSpan.FromMinutes(1)
                     });
             });

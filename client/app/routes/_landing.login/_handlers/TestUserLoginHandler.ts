@@ -7,7 +7,7 @@ export default async function TestUserLoginHandler(request: Request) {
   const { data: res, error } = await tryCatch(apiClient.auth.signInTestUser());
 
   if (error) {
-    return Response.json({ message: "Server Error: Please try again later." });
+    return Response.json({ message: "Failed to login as test user." });
   }
 
   if (res.ok) {

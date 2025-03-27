@@ -34,7 +34,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (error) {
-        return Response.json({ message: "Server Error: Please try again later." });
+        return Response.json({ message: "Failed to register company. Please try again later." });
     }
 
     if (res.ok) {
@@ -44,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
             if (error instanceof AuthenticationError) {
                 return redirect("/logout");
             }
-            return Response.json({ message: "Server Error: Please try again later." });
+            return Response.json({ message: "Failed to register company. Please try again later." });
         }
 
 
@@ -62,7 +62,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ message: await res.json() });
     }
 
-    return Response.json({ message: "Failed to register company" });
+    return Response.json({ message: "Failed to register company. Please try again later." });
 }
 
 export default function SetupCompanyRoute() {

@@ -21,17 +21,33 @@ public class S3FileUploadService : IFileUploadService
     }
 
 
-    public Task<string> UploadAvatarAsync(IFormFile file)
+    public Task<(string url, string key)> UploadAvatarAsync(IFormFile file)
     {
-        return UploadFileAsync(file, "avatars", 2);
+        return UploadFileAsync(file, "users/avatars", 2);
     }
 
-    public Task<string> UploadAttachmentAsync(IFormFile file)
+    public Task<(string url, string key)> UploadCompanyLogoAsync(IFormFile file)
+    {
+        return UploadFileAsync(file, "companies/logos", 2);
+    }
+
+    public Task<(string url, string key)> UploadAttachmentAsync(IFormFile file)
     {
         return UploadFileAsync(file, "attachments");
     }
 
-    private async Task<string> UploadFileAsync(IFormFile file, string prefix, int maxSizeMb = 10)
+    public async Task DeleteFileAsync(string key)
+    {
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        };
+
+        await _s3Client.DeleteObjectAsync(request);
+    }
+
+    private async Task<(string url, string key)> UploadFileAsync(IFormFile file, string prefix, int maxSizeMb = 10)
     {
         var fileSizeBytes = file.Length;
 
@@ -40,17 +56,18 @@ public class S3FileUploadService : IFileUploadService
             throw new Exception($"File size exceeds {maxSizeMb}MB");
         }
 
-        var fileName = $"{prefix}/{Guid.NewGuid()}-{Path.GetFileName(file.FileName)}";
+        var key = $"{prefix}/{Guid.NewGuid()}-{Path.GetFileName(file.FileName)}";
+
         var request = new PutObjectRequest
         {
             BucketName = _bucketName,
-            Key = fileName,
+            Key = key,
             InputStream = file.OpenReadStream(),
             ContentType = file.ContentType
         };
 
         await _s3Client.PutObjectAsync(request);
 
-        return $"https://{_bucketName}.s3.{_region}.amazonaws.com/{fileName}";
+        return ($"https://{_bucketName}.s3.{_region}.amazonaws.com/{key}", key);
     }
 }

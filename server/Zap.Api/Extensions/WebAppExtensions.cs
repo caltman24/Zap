@@ -20,14 +20,5 @@ public static class WebAppExtensions
             .MapSignInEndpoints()
             .MapUserEndpoints()
             .MapCompanyEndpoints();
-
-        app.MapPost("/upload/avatar", [RequestSizeLimit(5 * 1024 * 1024)]
-                async (IFormFile file, IFileUploadService fileUploadService) =>
-                {
-                    var uploadKey = await fileUploadService.UploadAvatarAsync(file);
-
-                    return TypedResults.Ok(uploadKey);
-                }).DisableAntiforgery()
-            .RequireRateLimiting("upload");
     }
 }

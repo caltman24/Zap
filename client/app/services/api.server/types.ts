@@ -23,6 +23,7 @@ export type UserInfoResponse = {
 export type CompanyInfoResponse = {
   name: string;
   description: string;
+  logoUrl?: string;
   members: { [key: string]: { name: string; avatarUrl: string }[] };
 };
 

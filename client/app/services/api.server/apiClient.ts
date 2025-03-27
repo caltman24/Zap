@@ -1,3 +1,4 @@
+import tryCatch from "~/utils/tryCatch";
 import { AuthClient } from "./authClient";
 import { BaseApiClient } from "./baseClient";
 import {
@@ -5,6 +6,7 @@ import {
   RegisterCompanyRequest,
   UserInfoResponse,
 } from "./types";
+import { ApiError } from "./errors";
 
 export class ApiService extends BaseApiClient {
   constructor(baseUrl: string) {
@@ -44,6 +46,37 @@ export class ApiService extends BaseApiClient {
       { method: "GET" },
       accessToken
     );
+  }
+
+  public async updateCompanyInfo(
+    formData: FormData,
+    accessToken: string
+  ): Promise<Response> {
+    const { data: response, error } = await tryCatch(
+      fetch(`${this.baseUrl}/company/info`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      })
+    );
+
+    if (error || !response) {
+      console.error(error);
+      return Promise.reject(new ApiError("Failed to update company info", 500));
+    }
+
+    if (response.status === 401) {
+      return Promise.reject(new ApiError("Unauthorized", 401));
+    }
+
+    if (!response.ok) {
+      console.error(response.url, response.status, response.statusText);
+      return Promise.reject(new ApiError(response.statusText, response.status));
+    }
+
+    return response;
   }
 }
 
