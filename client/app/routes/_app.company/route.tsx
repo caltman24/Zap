@@ -16,7 +16,7 @@ export const headers: HeadersFunction = ({ loaderHeaders }) => {
         return loaderHeaders;
     }
     return {
-        "Cache-Control": "max-age=30, private",
+        "Cache-Control": "max-age=10, private",
     };
 };
 
@@ -222,7 +222,7 @@ export default function CompanyRoute() {
                                                 name="logo"
                                                 ref={fileInputRef}
                                                 className="file-input file-input-bordered w-full max-w-xs"
-                                                accept="image/*"
+                                                accept="image/jpg, image/jpeg, image/png, image/svg+xml, image/webp"
                                                 onChange={handleFileChange}
                                                 disabled={removeLogo}
                                             />
@@ -255,7 +255,7 @@ export default function CompanyRoute() {
                                         />
                                     </div>
 
-                                    <div className="form-control mb-4">
+                                    <div className="form-control mb-6">
                                         <label className="label">
                                             <span className="label-text">Description</span>
                                         </label>
@@ -269,18 +269,6 @@ export default function CompanyRoute() {
                                         ></textarea>
                                     </div>
 
-                                    <div className="form-control mb-6">
-                                        <label className="label">
-                                            <span className="label-text">Website URL</span>
-                                        </label>
-                                        <input
-                                            type="url"
-                                            name="websiteUrl"
-                                            className="input input-bordered w-full"
-                                            defaultValue={""}
-                                            maxLength={500}
-                                        />
-                                    </div>
 
                                     <div className="flex justify-end gap-2">
                                         <button
@@ -311,11 +299,7 @@ export default function CompanyRoute() {
                                         <div>
                                             <p className="text-2xl font-bold">{companyInfo.name}</p>
                                             <p className="text-sm lg:text-base mt-2 text-base-content/80">{companyInfo.description}</p>
-                                            {/* {companyInfo.websiteUrl && (
-                                                <a href={companyInfo.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary mt-2 inline-block">
-                                                    {companyInfo.websiteUrl}
-                                                </a>
-                                            )} */}
+
                                         </div>
                                     </div>
 
