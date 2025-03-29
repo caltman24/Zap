@@ -17,12 +17,14 @@ internal static class CompanyEndpoints
         var group = app.MapGroup("/company");
 
         group.MapGet("/info", GetCompanyInfoHandler);
-
         group.MapPost("/info", PostCompanyInfoHandler)
             .DisableAntiforgery()
             .Accepts<UpsertCompanyInfoRequest>("multipart/form-data")
             .RequireRateLimiting("upload")
             .RequireAuthorization(pb => { pb.RequireRole(RoleNames.Admin); });
+
+        var projectsGroup = group.MapGroup("/projects");
+        projectsGroup.MapGet("/", GetCompanyProjectsHandler);
 
         return app;
     }
@@ -136,6 +138,26 @@ internal static class CompanyEndpoints
 
         return TypedResults.NoContent();
     }
+
+    private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectsResponse>>>> GetCompanyProjectsHandler(
+        AppDbContext db, CurrentUser currentUser, ILogger<Program> logger)
+    {
+        var user = currentUser.User;
+        if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
+
+        var projects = await db.Projects
+            .Where(p => p.CompanyId == user.CompanyId)
+            .Select(p => new CompanyProjectsResponse(
+                p.Id,
+                p.Name,
+                p.Priority,
+                p.DueDate,
+                p.AssignedMembers.Count,
+                p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
+            .ToListAsync();
+
+        return TypedResults.Ok(projects);
+    }
 }
 
 record MembersResponse(string Name, string AvatarUrl);
@@ -147,3 +169,11 @@ record CompanyInfoResponse(
     Dictionary<string, List<MembersResponse>> Members);
 
 record UpsertCompanyInfoRequest(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
+
+record CompanyProjectsResponse(
+    string Id,
+    string Name,
+    string Priority,
+    DateTime DueDate,
+    int MemberCount,
+    IEnumerable<string> AvatarUrls);

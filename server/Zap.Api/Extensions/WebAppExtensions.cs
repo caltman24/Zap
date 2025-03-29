@@ -19,6 +19,7 @@ public static class WebAppExtensions
         app.MapRegisterUserEndpoints()
             .MapSignInEndpoints()
             .MapUserEndpoints()
-            .MapCompanyEndpoints();
+            .MapCompanyEndpoints()
+            .MapProjectEndpoints();
     }
 }
