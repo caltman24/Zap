@@ -13,32 +13,33 @@ public static class UserEndpoints
     {
         var group = app.MapGroup("/user");
 
-        group.MapGet("/info",
-            async Task<Results<BadRequest<string>, Ok<UserInfoResponse>>> (AppDbContext db, HttpContext context,
-                UserManager<AppUser> userManager) =>
-            {
-                var user = await userManager.GetUserAsync(context.User);
-                if (user == null) return TypedResults.BadRequest("User not found");
-
-                var response = new UserInfoResponse
-                (
-                    Id: user.Id,
-                    Email: user.Email!,
-                    FirstName: user.FirstName,
-                    LastName: user.LastName,
-                    AvatarUrl: user.AvatarUrl,
-                    Role: context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "None",
-                    CompanyId: user.CompanyId
-                );
-
-                return TypedResults.Ok(response);
-            }).RequireAuthorization();
+        group.MapGet("/info", GetUserInfoHandler);
 
         return app;
     }
+
+    private static async Task<Results<BadRequest<string>, Ok<UserInfoResponse>>> GetUserInfoHandler(
+        HttpContext context, UserManager<AppUser> userManager)
+    {
+        var user = await userManager.GetUserAsync(context.User);
+        if (user == null) return TypedResults.BadRequest("User not found");
+
+        var response = new UserInfoResponse
+        (
+            Id: user.Id,
+            Email: user.Email!,
+            FirstName: user.FirstName,
+            LastName: user.LastName,
+            AvatarUrl: user.AvatarUrl,
+            Role: context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "None",
+            CompanyId: user.CompanyId
+        );
+
+        return TypedResults.Ok(response);
+    }
 }
 
-public record UserInfoResponse(
+record UserInfoResponse(
     string Id,
     string Email,
     string FirstName,
