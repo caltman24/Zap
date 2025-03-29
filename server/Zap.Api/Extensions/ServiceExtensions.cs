@@ -50,6 +50,11 @@ public static class ServiceExtensions
             {
                 pb.RequireAuthenticatedUser();
                 pb.Build();
+            })
+            .AddFallbackPolicy("fallback", pb =>
+            {
+                pb.RequireAuthenticatedUser();
+                pb.Build();
             });
 
         return services;
