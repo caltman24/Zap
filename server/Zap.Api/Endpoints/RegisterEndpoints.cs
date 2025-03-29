@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Zap.Api.Authorization;
 using Zap.Api.Extensions;
 using Zap.DataAccess;
 using Zap.DataAccess.Constants;
@@ -17,15 +18,10 @@ internal static class RegisterEndpoints
 
         // verify user status
         group.MapPost("/verify",
-            async Task<Results<BadRequest<string>, Ok<RegisterVerifyResponse>>> (UserManager<AppUser> userManager,
-                HttpContext context) =>
-            {
-                var user = await userManager.GetUserAsync(context.User);
-                // user exists and is already in a company
-                return TypedResults.Ok(user?.CompanyId != null
+            Results<BadRequest<string>, Ok<RegisterVerifyResponse>> (CurrentUser currentUser) => TypedResults.Ok(
+                currentUser.CompanyId != null
                     ? new RegisterVerifyResponse("company")
-                    : new RegisterVerifyResponse("none"));
-            });
+                    : new RegisterVerifyResponse("none")));
 
         group.MapPost("/user", RegisterUserHandler).AllowAnonymous();
 
@@ -72,13 +68,12 @@ internal static class RegisterEndpoints
 
     private static async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>>
         RegisterCompanyHandler(
-            RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
-            HttpContext context, ILogger<Program> logger)
+            RegisterCompanyRequest request, AppDbContext db, CurrentUser currentUser,
+            HttpContext context, ILogger<Program> logger, UserManager<AppUser> userManager)
     {
-        var user = await userManager.FindByEmailAsync(context.User.FindFirstValue(ClaimTypes.Email)!);
-        if (user == null) return TypedResults.InternalServerError();
+        if (currentUser.User == null) return TypedResults.BadRequest("User not found");
 
-        if (user.CompanyId != null)
+        if (currentUser.CompanyId != null)
         {
             return TypedResults.BadRequest("User already exists in a company");
         }
@@ -87,17 +82,17 @@ internal static class RegisterEndpoints
         {
             Name = request.Name,
             Description = request.Description,
-            OwnerId = user.Id,
-            Members = new List<AppUser> { user },
+            OwnerId = currentUser.Id,
+            Members = new List<AppUser> { currentUser.User! },
         };
 
         await db.Companies.AddAsync(newCompany);
         await db.SaveChangesAsync();
 
-        logger.LogInformation("User {Email} registered new company {Name}", user.Email, newCompany.Name);
+        logger.LogInformation("User {Email} registered new company {Name}", currentUser.Email, newCompany.Name);
 
-        await userManager.AddToRoleAsync(user, RoleNames.Admin);
-        logger.LogDebug("Added user {Email} to role {Role}", user.Email, RoleNames.Admin);
+        await userManager.AddToRoleAsync(currentUser.User, RoleNames.Admin);
+        logger.LogDebug("Added user {Email} to role {Role}", currentUser.Email, RoleNames.Admin);
 
         return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name,
             newCompany.Description));

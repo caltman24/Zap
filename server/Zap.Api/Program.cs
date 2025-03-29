@@ -1,5 +1,6 @@
 using dotenv.net;
 using Scalar.AspNetCore;
+using Zap.Api.Authorization;
 using Zap.Api.Extensions;
 
 DotEnv.Load();
@@ -14,7 +15,8 @@ builder.Services.AddOpenApi()
     .AddIdentityManagement()
     .AddAuthService()
     .AddCorsPolicies()
-    .AddS3Storage();
+    .AddS3Storage()
+    .AddCurrentUser();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

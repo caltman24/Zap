@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Zap.Api.Authorization;
 using Zap.Api.Extensions;
 using Zap.DataAccess;
 using Zap.DataAccess.Models;
@@ -18,10 +19,10 @@ public static class UserEndpoints
         return app;
     }
 
-    private static async Task<Results<BadRequest<string>, Ok<UserInfoResponse>>> GetUserInfoHandler(
-        HttpContext context, UserManager<AppUser> userManager)
+    private static Results<BadRequest<string>, Ok<UserInfoResponse>> GetUserInfoHandler(
+        HttpContext context, CurrentUser currentUser)
     {
-        var user = await userManager.GetUserAsync(context.User);
+        var user = currentUser.User;
         if (user == null) return TypedResults.BadRequest("User not found");
 
         var response = new UserInfoResponse
@@ -31,7 +32,7 @@ public static class UserEndpoints
             FirstName: user.FirstName,
             LastName: user.LastName,
             AvatarUrl: user.AvatarUrl,
-            Role: context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "None",
+            Role: currentUser.Role,
             CompanyId: user.CompanyId
         );
 

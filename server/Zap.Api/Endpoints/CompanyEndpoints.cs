@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Zap.Api.Authorization;
 using Zap.DataAccess;
 using Zap.DataAccess.Constants;
 using Zap.DataAccess.Models;
@@ -26,13 +27,14 @@ internal static class CompanyEndpoints
         return app;
     }
 
-    private static async Task<Results<BadRequest<string>, Ok<CompanyInfoResponse>>> GetCompanyInfoHandler(AppDbContext db,
-        UserManager<AppUser> userManager, HttpContext context, ILogger<Program> logger)
+    private static async Task<Results<BadRequest<string>, Ok<CompanyInfoResponse>>> GetCompanyInfoHandler(
+        AppDbContext db,
+        CurrentUser currentUser,
+        ILogger<Program> logger)
     {
-        var user = await userManager.GetUserAsync(context.User);
+        var user = currentUser.User;
         if (user == null) return TypedResults.BadRequest("User not found");
 
-        // Load company with members in a single query
         var company = await db.Companies
             .Include(c => c.Members)
             .AsNoTracking()
@@ -45,16 +47,12 @@ internal static class CompanyEndpoints
         var memberIds = company.Members.Select(m => m.Id).ToList();
 
         var rolesLookup = await db.UserRoles
-            // Filter UserRoles
             .Where(ur => memberIds.Contains(ur.UserId))
-            // join with Roles table
-            .Join(db.Roles, // IdentityRole
-                userRole => userRole.RoleId, // Key selector for the outer sequence (UserRoles)
-                identityRole => identityRole.Id, // Key selector for the inner sequence (Roles)
-                // Project the result of the join
+            .Join(db.Roles,
+                userRole => userRole.RoleId,
+                identityRole => identityRole.Id,
                 (userRole, identityRole) => new { userRole.UserId, Role = identityRole.Name })
             .GroupBy(ur => ur.UserId)
-            // Select the first role for each user
             .Select(g => new { UserId = g.Key, Role = g.Select(x => x.Role).FirstOrDefault() ?? "None" })
             .ToDictionaryAsync(ur => ur.UserId, ur => ur.Role);
 
@@ -84,25 +82,23 @@ internal static class CompanyEndpoints
         [FromForm] UpsertCompanyInfoRequest upsertCompanyInfoRequest,
         HttpContext context,
         IFileUploadService fileUploadService,
-        UserManager<AppUser> userManager,
-        ILogger<Program> logger,
-        AppDbContext db)
+        CurrentUser currentUser,
+        ILogger<Program> logger, AppDbContext db)
     {
-        var user = await userManager.GetUserAsync(context.User);
-        if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
+        if (currentUser.CompanyId == null) return TypedResults.BadRequest("User not in company");
 
-        var company = await db.Companies.FindAsync(user.CompanyId);
+        var company = await db.Companies.FindAsync(currentUser.CompanyId);
         if (company == null) return TypedResults.BadRequest("Company not found");
 
         if (upsertCompanyInfoRequest.RemoveLogo && company.LogoKey != null)
         {
-            logger.LogInformation("User {Email} removing company logo {LogoKey}", user.Email, company.LogoKey);
+            logger.LogInformation("User {Email} removing company logo {LogoKey}", currentUser.Email, company.LogoKey);
             try
             {
                 await fileUploadService.DeleteFileAsync(company.LogoKey!);
                 company.LogoUrl = null;
                 company.LogoKey = null;
-                logger.LogInformation("User {Email} successfully removed company logo {LogoKey}", user.Email,
+                logger.LogInformation("User {Email} successfully removed company logo {LogoKey}", currentUser.Email,
                     company.LogoKey);
             }
             catch (Exception ex)
@@ -112,7 +108,7 @@ internal static class CompanyEndpoints
         }
         else if (file != null)
         {
-            logger.LogInformation("User {Email} uploading company logo", user.Email);
+            logger.LogInformation("User {Email} uploading company logo", currentUser.Email);
             try
             {
                 // Validate file
@@ -123,7 +119,7 @@ internal static class CompanyEndpoints
 
                 // Upload file
                 (company.LogoUrl, company.LogoKey) = await fileUploadService.UploadCompanyLogoAsync(file);
-                logger.LogInformation("User {Email} successfully uploaded company logo {LogoKey}", user.Email,
+                logger.LogInformation("User {Email} successfully uploaded company logo {LogoKey}", currentUser.Email,
                     company.LogoKey);
             }
             catch (Exception ex)
