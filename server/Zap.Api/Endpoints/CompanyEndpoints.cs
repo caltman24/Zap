@@ -103,7 +103,7 @@ internal static class CompanyEndpoints
                 logger.LogInformation("User {Email} successfully removed company logo {LogoKey}", currentUser.Email,
                     company.LogoKey);
             }
-            catch (Exception ex)
+            catch
             {
                 return TypedResults.Problem("Failed to delete company logo", statusCode: 500);
             }
@@ -113,18 +113,13 @@ internal static class CompanyEndpoints
             logger.LogInformation("User {Email} uploading company logo", currentUser.Email);
             try
             {
-                // Validate file
-                if (company.LogoKey != null)
-                {
-                    await fileUploadService.DeleteFileAsync(company.LogoKey);
-                }
-
                 // Upload file
-                (company.LogoUrl, company.LogoKey) = await fileUploadService.UploadCompanyLogoAsync(file);
+                (company.LogoUrl, company.LogoKey) =
+                    await fileUploadService.UploadCompanyLogoAsync(file, company.LogoKey);
                 logger.LogInformation("User {Email} successfully uploaded company logo {LogoKey}", currentUser.Email,
                     company.LogoKey);
             }
-            catch (Exception ex)
+            catch
             {
                 return TypedResults.Problem("Failed to upload company logo", statusCode: 500);
             }

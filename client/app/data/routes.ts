@@ -1,3 +1,5 @@
+import roleNames from "./roles";
+
 export type MenuLink = {
   name: string;
   to: string;
@@ -49,7 +51,7 @@ export const menuRoutes: MenuRoutes = [
         name: "Create Project",
         to: "/projects/new",
         materialIcon: "add_circle",
-        roles: [],
+        roles: [roleNames.admin, roleNames.projectmanager],
       },
     ],
   },
@@ -104,13 +106,10 @@ export function filterMenuRoutesByRoles(
   }));
 }
 
-export function createRouteNameMap(
-  menuRoutes: MenuRoutes
-): Record<string, string> {
-  return menuRoutes.reduce((acc, group) => {
-    group.links.forEach((link) => {
-      acc[link.to] = link.name;
-    });
-    return acc;
-  }, {} as Record<string, string>);
+export function getRolesByRouteName(routeName: string) {
+  return menuRoutes.flatMap((menuGroup) =>
+    menuGroup.links
+      .filter((link) => link.name === routeName)
+      .flatMap((link) => link.roles)
+  );
 }

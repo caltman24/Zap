@@ -24,21 +24,45 @@ public class S3FileUploadService : IFileUploadService
     }
 
 
-    public Task<(string url, string key)> UploadAvatarAsync(IFormFile file)
+    /// <summary>
+    /// Uploads a user avatar to S3
+    /// </summary>
+    /// <param name="file">File to upload</param>
+    /// <param name="oldKey">Old object key to remove</param>
+    /// <returns>URL and key of the uploaded file</returns>
+    public async Task<(string url, string key)> UploadAvatarAsync(IFormFile file, string? oldKey = null)
     {
-        return UploadFileAsync(file, "users/avatars", 2);
+        if (oldKey != null)
+        {
+            _logger.LogDebug("Deleting old user avatar: {Key}", oldKey);
+            await DeleteFileAsync(oldKey);
+        }
+
+        return await UploadFileAsync(file, "users/avatars", 2);
     }
 
-    public Task<(string url, string key)> UploadCompanyLogoAsync(IFormFile file)
+    /// <summary>
+    /// Uploads a company logo to S3
+    /// </summary>
+    /// <param name="file">File to upload</param>
+    /// <param name="oldKey">Old object key to remove</param>
+    /// <returns>URL and key of the uploaded file</returns>
+    public async Task<(string url, string key)> UploadCompanyLogoAsync(IFormFile file, string? oldKey = null)
     {
-        return UploadFileAsync(file, "companies/logos", 2);
+        if (oldKey != null)
+        {
+            _logger.LogDebug("Deleting old company logo: {Key}", oldKey);
+            await DeleteFileAsync(oldKey);
+        }
+
+        return await UploadFileAsync(file, "companies/logos", 2);
     }
 
-    public Task<(string url, string key)> UploadAttachmentAsync(IFormFile file)
+    public async Task<(string url, string key)> UploadAttachmentAsync(IFormFile file)
     {
-        return UploadFileAsync(file, "attachments");
+        return await UploadFileAsync(file, "attachments");
     }
-
+    
     public async Task DeleteFileAsync(string key)
     {
         _logger.LogDebug("Deleting file: {Key}", key);

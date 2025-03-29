@@ -3,6 +3,7 @@ import { AuthClient } from "./authClient";
 import { BaseApiClient } from "./baseClient";
 import {
   CompanyInfoResponse,
+  CompanyProjectsResponse,
   RegisterCompanyRequest,
   UserInfoResponse,
 } from "./types";
@@ -77,6 +78,16 @@ export class ApiService extends BaseApiClient {
     }
 
     return response;
+  }
+
+  public async getCompanyProjects(
+    accessToken: string
+  ): Promise<CompanyProjectsResponse[]> {
+    return this.requestJson<CompanyProjectsResponse[]>(
+      "/company/projects",
+      { method: "GET" },
+      accessToken
+    );
   }
 }
 

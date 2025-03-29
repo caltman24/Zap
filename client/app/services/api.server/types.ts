@@ -38,3 +38,19 @@ export type RegisterCompanyRequest = {
   name: string;
   description: string;
 };
+
+export type CreateProjectRequest = {
+  name: string;
+  description: string;
+  priority: string;
+  dueDate: string;
+};
+
+export type CompanyProjectsResponse = {
+  id: string;
+  name: string;
+  priority: string;
+  dueDate: string; // ISO date string format
+  memberCount: number;
+  avatarUrls: string[];
+};
