@@ -1,6 +1,5 @@
 using dotenv.net;
 using Scalar.AspNetCore;
-using Serilog;
 using Zap.Api.Extensions;
 
 DotEnv.Load();
@@ -8,7 +7,6 @@ DotEnv.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.AddStructuredLogging(builder.Configuration);
-
 
 builder.Services.AddOpenApi()
     .AddRateLimiting()
