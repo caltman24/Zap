@@ -11,15 +11,6 @@ export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
 };
 
-export const headers: HeadersFunction = ({ loaderHeaders }) => {
-    if (loaderHeaders.get("Cache-Control")) {
-        return loaderHeaders;
-    }
-    return {
-        "Cache-Control": "max-age=30, private",
-    };
-};
-
 // TODO: Handle when user gets kicked from company
 // TODO: Handle role permissons on this page (edit company info, manage invites)
 
@@ -40,7 +31,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return Response.json({ data: null, error: "Failed to get company info. Please try again later." }, {
             headers: {
                 ...tokenResponse.headers,
-                "Cache-Control": "no-cache",
             }
         });
     }
