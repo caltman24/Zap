@@ -28,7 +28,7 @@ public static class SignInEndpoints
 
         group.MapPost("/testuser",
             async Task<Results<BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> (
-                SignInManager<AppUser> signInManager, UserManager<AppUser> userManager) =>
+                SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, ILogger<Program> logger) =>
             {
                 var user = await userManager.FindByEmailAsync("test@test.com");
                 if (user != null)
@@ -54,6 +54,9 @@ public static class SignInEndpoints
                 await userManager.AddCustomClaimsAsync(user);
                 await userManager.AddToRoleAsync(user, RoleNames.Admin);
 
+                logger.LogDebug("Created test user {Email} with password Password1! and Role {Role}",
+                    user.Email, RoleNames.Admin);
+
                 var principal = await signInManager.CreateUserPrincipalAsync(user);
 
                 return TypedResults.SignIn(principal, authenticationScheme: IdentityConstants.BearerScheme);
@@ -63,8 +66,11 @@ public static class SignInEndpoints
         app.MapPost("/refresh",
             async Task<Results<ChallengeHttpResult, SignInHttpResult>> (RefreshTokenRequest request,
                 SignInManager<AppUser> signInManager,
-                IOptionsMonitor<BearerTokenOptions> bearerTokenOptions, TimeProvider timeProvider) =>
+                IOptionsMonitor<BearerTokenOptions> bearerTokenOptions, 
+                TimeProvider timeProvider,
+                ILogger<Program> logger) =>
             {
+                logger.LogDebug("Processing refresh token request");
                 var refreshTokenProtector =
                     bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
                 var refreshTicket = refreshTokenProtector.Unprotect(request.RefreshToken);
@@ -73,11 +79,12 @@ public static class SignInEndpoints
                 if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
                     timeProvider.GetUtcNow() >= expiresUtc ||
                     await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not { } user)
-
                 {
+                    logger.LogDebug("Refresh token validation failed");
                     return TypedResults.Challenge();
                 }
 
+                logger.LogInformation("Refresh token validated successfully for user {Email}", user.Email);
                 var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
 
                 return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);

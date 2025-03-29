@@ -30,7 +30,7 @@ public static class RegisterUserEndpoints
         group.MapPost("/user",
             async Task<Results<BadRequest<string>, BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> (
                 RegisterUserRequest request, UserManager<AppUser> userManager,
-                SignInManager<AppUser> signInManager) =>
+                SignInManager<AppUser> signInManager, ILogger<Program> logger) =>
             {
                 var user = await userManager.FindByEmailAsync(request.Email);
                 if (user != null) return TypedResults.BadRequest("An account is already registered with this email");
@@ -49,8 +49,12 @@ public static class RegisterUserEndpoints
 
                 var result = await userManager.CreateAsync(newUser, request.Password);
                 if (!result.Succeeded) return TypedResults.BadRequest(result.Errors);
+                logger.LogDebug("Created new user {Email} with default avatar {AvatarUrl}", newUser.Email,
+                    newUser.AvatarUrl);
+                logger.LogInformation("New user registered: {Email}", newUser.Email);
 
                 await userManager.AddCustomClaimsAsync(newUser);
+                logger.LogDebug("Added custom claims to user {Email}", newUser.Email);
 
                 var principal = await signInManager.CreateUserPrincipalAsync(newUser);
 
@@ -59,8 +63,9 @@ public static class RegisterUserEndpoints
 
         // register company
         group.MapPost("/company",
-            async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>> (RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
-                HttpContext context) =>
+            async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>> (
+                RegisterCompanyRequest request, AppDbContext db, UserManager<AppUser> userManager,
+                HttpContext context, ILogger<Program> logger) =>
             {
                 var user = await userManager.FindByEmailAsync(context.User.FindFirstValue(ClaimTypes.Email)!);
                 if (user == null) return TypedResults.InternalServerError();
@@ -81,9 +86,13 @@ public static class RegisterUserEndpoints
                 await db.Companies.AddAsync(newCompany);
                 await db.SaveChangesAsync();
 
-                await userManager.AddToRoleAsync(user, "Admin");
+                logger.LogInformation("User {Email} registered new company {Name}", user.Email, newCompany.Name);
 
-                return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name, newCompany.Description));
+                await userManager.AddToRoleAsync(user, RoleNames.Admin);
+                logger.LogDebug("Added user {Email} to role {Role}", user.Email, RoleNames.Admin);
+
+                return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name,
+                    newCompany.Description));
             }).RequireAuthorization();
 
 

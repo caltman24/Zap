@@ -19,7 +19,7 @@ public static class CompanyEndpoints
 
         group.MapGet("/info",
             async Task<Results<BadRequest<string>, Ok<CompanyInfoResponse>>> (AppDbContext db,
-                UserManager<AppUser> userManager, HttpContext context) =>
+                UserManager<AppUser> userManager, HttpContext context, ILogger<Program> logger) =>
             {
                 var user = await userManager.GetUserAsync(context.User);
                 if (user == null) return TypedResults.BadRequest("User not found");
@@ -74,12 +74,13 @@ public static class CompanyEndpoints
         // Update company info with multipart form data.
         // file can be null
         // can also remove the image
-        group.MapPost("/info", async Task<Results<BadRequest<string>, NoContent>> (
+        group.MapPost("/info", async Task<Results<BadRequest<string>, NoContent, ProblemHttpResult>> (
                 [FromForm] IFormFile? file,
                 [FromForm] UpsertCompanyInfoRequest upsertCompanyInfoRequest,
                 HttpContext context,
                 IFileUploadService fileUploadService,
                 UserManager<AppUser> userManager,
+                ILogger<Program> logger,
                 AppDbContext db) =>
             {
                 var user = await userManager.GetUserAsync(context.User);
@@ -90,20 +91,40 @@ public static class CompanyEndpoints
 
                 if (upsertCompanyInfoRequest.RemoveLogo && company.LogoKey != null)
                 {
-                    await fileUploadService.DeleteFileAsync(company.LogoKey!);
-                    company.LogoUrl = null;
-                    company.LogoKey = null;
+                    logger.LogInformation("User {Email} removing company logo {LogoKey}", user.Email, company.LogoKey);
+                    try
+                    {
+                        await fileUploadService.DeleteFileAsync(company.LogoKey!);
+                        company.LogoUrl = null;
+                        company.LogoKey = null;
+                        logger.LogInformation("User {Email} successfully removed company logo {LogoKey}", user.Email,
+                            company.LogoKey);
+                    }
+                    catch (Exception ex)
+                    {
+                        return TypedResults.Problem("Failed to delete company logo", statusCode: 500);
+                    }
                 }
                 else if (file != null)
                 {
-                    // Validate file
-                    if (company.LogoKey != null)
+                    logger.LogInformation("User {Email} uploading company logo", user.Email);
+                    try
                     {
-                        await fileUploadService.DeleteFileAsync(company.LogoKey);
-                    }
+                        // Validate file
+                        if (company.LogoKey != null)
+                        {
+                            await fileUploadService.DeleteFileAsync(company.LogoKey);
+                        }
 
-                    // Upload file
-                    (company.LogoUrl, company.LogoKey) = await fileUploadService.UploadCompanyLogoAsync(file);
+                        // Upload file
+                        (company.LogoUrl, company.LogoKey) = await fileUploadService.UploadCompanyLogoAsync(file);
+                        logger.LogInformation("User {Email} successfully uploaded company logo {LogoKey}", user.Email,
+                            company.LogoKey);
+                    }
+                    catch (Exception ex)
+                    {
+                        return TypedResults.Problem("Failed to upload company logo", statusCode: 500);
+                    }
                 }
 
                 company.Name = upsertCompanyInfoRequest.Name;

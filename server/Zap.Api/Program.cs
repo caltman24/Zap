@@ -1,14 +1,17 @@
 using dotenv.net;
 using Scalar.AspNetCore;
+using Serilog;
 using Zap.Api.Extensions;
 
 DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Logging.AddStructuredLogging(builder.Configuration);
 
-builder.Services.AddRateLimiting()
+
+builder.Services.AddOpenApi()
+    .AddRateLimiting()
     .AddDataAccess(builder.Configuration)
     .AddIdentityManagement()
     .AddAuthService()
@@ -23,6 +26,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseGlobalExceptionHandler(app.Services.GetRequiredService<ILogger<Program>>());
 
 app.UseRequiredServices();
 app.MapZapApiEndpoints();
