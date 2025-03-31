@@ -44,6 +44,7 @@ export default function ProjectDetailsRoute() {
   const isProjectManager = useMemo(() => userInfo?.role?.toLowerCase() === "projectmanager", [userInfo]);
   const canEdit = isAdmin || isProjectManager;
 
+
   // Placeholder data for tickets
   const tickets = [
     { id: "1", title: "Fix login bug", status: "Open", priority: "High", assignee: "John Doe" },
@@ -64,10 +65,16 @@ export default function ProjectDetailsRoute() {
           </div>
           <div className="flex gap-2">
             {canEdit && (
-              <Link to={`/projects/${project.id}/edit`} className="btn btn-soft">
+              <Link to={`/projects/${project.id}/edit`} className="btn btn-primary">
                 <span className="material-symbols-outlined">edit</span>
                 Edit
               </Link>
+            )}
+            {!project.isArchived && (
+              <button className="btn btn-secondary">
+                <span className="material-symbols-outlined">folder</span>
+                Archive
+              </button>
             )}
             <Link to="/projects" className="btn btn-outline">
               <span className="material-symbols-outlined">arrow_back</span>

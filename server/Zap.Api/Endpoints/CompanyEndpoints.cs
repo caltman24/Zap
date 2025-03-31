@@ -135,13 +135,14 @@ internal static class CompanyEndpoints
     }
 
     private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectsResponse>>>> GetCompanyProjectsHandler(
-        AppDbContext db, CurrentUser currentUser, ILogger<Program> logger)
+        AppDbContext db, CurrentUser currentUser, ILogger<Program> logger, [FromQuery] bool isArchived)
     {
         var user = currentUser.User;
         if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
 
         var projects = await db.Projects
             .Where(p => p.CompanyId == user.CompanyId)
+            .Where(p => p.IsArchived == isArchived)
             .Select(p => new CompanyProjectsResponse(
                 p.Id,
                 p.Name,

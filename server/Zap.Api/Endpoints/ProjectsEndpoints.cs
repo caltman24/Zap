@@ -42,13 +42,13 @@ internal static class ProjectsEndpoints
 
         // If the project is not in the same company as the user
         if (project.CompanyId != user.CompanyId) return TypedResults.BadRequest("Project not found");
-        
+
         // Only admins can see all projects
         // if (currentUser.Role != RoleNames.Admin && !project.AssignedMembers.Contains(user))
         //     return TypedResults.BadRequest("Project not found");
 
         var response = new ProjectResponse(project.Id, project.Name, project.Description, project.Priority,
-            project.DueDate, project.AssignedMembers.Select(m =>
+            project.IsArchived, project.DueDate, project.AssignedMembers.Select(m =>
                 new MemberResponse($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
 
         return TypedResults.Ok(response);
@@ -76,7 +76,7 @@ internal static class ProjectsEndpoints
         var newProject = addResult.Entity;
 
         var response = new ProjectResponse(newProject.Id, newProject.Name,
-            newProject.Description, newProject.Priority, newProject.DueDate,
+            newProject.Description, newProject.Priority, newProject.IsArchived, newProject.DueDate,
             newProject.AssignedMembers.Select(m =>
                 new MemberResponse($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
 
@@ -93,5 +93,6 @@ record ProjectResponse(
     string Name,
     string Description,
     string Priority,
+    bool IsArchived,
     DateTime DueDate,
     IEnumerable<MemberResponse> Members);

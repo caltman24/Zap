@@ -86,7 +86,17 @@ export class ApiService extends BaseApiClient {
     accessToken: string
   ): Promise<CompanyProjectsResponse[]> {
     return this.requestJson<CompanyProjectsResponse[]>(
-      "/company/projects",
+      "/company/projects?isArchived=false",
+      { method: "GET" },
+      accessToken
+    );
+  }
+
+  public async getCompanyArchivedProjects(
+    accessToken: string
+  ): Promise<CompanyProjectsResponse[]> {
+    return this.requestJson<CompanyProjectsResponse[]>(
+      "/company/projects?isArchived=true",
       { method: "GET" },
       accessToken
     );

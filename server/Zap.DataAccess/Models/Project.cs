@@ -8,6 +8,7 @@ public class Project
     [StringLength(50)] public required string Name { get; set; }
     [StringLength(1000)] public required string Description { get; set; }
     [StringLength(50)] public required string Priority { get; set; }
+    public bool IsArchived { get; set; } = false;
 
     public required DateTime DueDate { get; set; }
 
