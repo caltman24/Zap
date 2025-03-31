@@ -11,18 +11,6 @@ export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
 };
 
-<<<<<<< HEAD
-export const headers: HeadersFunction = ({ loaderHeaders }) => {
-    if (loaderHeaders.get("Cache-Control")) {
-        return loaderHeaders;
-    }
-    return {
-        "Cache-Control": "max-age=10, private",
-    };
-};
-
-=======
->>>>>>> a895345090292490f6685781b9a384e8f7403d2f
 // TODO: Handle when user gets kicked from company
 // TODO: Handle role permissons on this page (edit company info, manage invites)
 
