@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Zap.Api.Authorization;
 using Zap.Api.Extensions;
 using Zap.DataAccess;
 using Zap.DataAccess.Models;
@@ -13,32 +14,33 @@ public static class UserEndpoints
     {
         var group = app.MapGroup("/user");
 
-        group.MapGet("/info",
-            async Task<Results<BadRequest<string>, Ok<UserInfoResponse>>> (AppDbContext db, HttpContext context,
-                UserManager<AppUser> userManager) =>
-            {
-                var user = await userManager.GetUserAsync(context.User);
-                if (user == null) return TypedResults.BadRequest("User not found");
-
-                var response = new UserInfoResponse
-                (
-                    Id: user.Id,
-                    Email: user.Email!,
-                    FirstName: user.FirstName,
-                    LastName: user.LastName,
-                    AvatarUrl: user.AvatarUrl,
-                    Role: context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "None",
-                    CompanyId: user.CompanyId
-                );
-
-                return TypedResults.Ok(response);
-            }).RequireAuthorization();
+        group.MapGet("/info", GetUserInfoHandler);
 
         return app;
     }
+
+    private static Results<BadRequest<string>, Ok<UserInfoResponse>> GetUserInfoHandler(
+        HttpContext context, CurrentUser currentUser)
+    {
+        var user = currentUser.User;
+        if (user == null) return TypedResults.BadRequest("User not found");
+
+        var response = new UserInfoResponse
+        (
+            Id: user.Id,
+            Email: user.Email!,
+            FirstName: user.FirstName,
+            LastName: user.LastName,
+            AvatarUrl: user.AvatarUrl,
+            Role: currentUser.Role,
+            CompanyId: user.CompanyId
+        );
+
+        return TypedResults.Ok(response);
+    }
 }
 
-public record UserInfoResponse(
+record UserInfoResponse(
     string Id,
     string Email,
     string FirstName,

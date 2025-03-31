@@ -12,8 +12,8 @@ using Zap.DataAccess;
 namespace Zap.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250320184535_role_seed")]
-    partial class role_seed
+    [Migration("20250329191529_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -180,6 +180,15 @@ namespace Zap.DataAccess.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AvatarKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("CompanyId")
                         .HasColumnType("text");
 
@@ -196,11 +205,13 @@ namespace Zap.DataAccess.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -256,20 +267,28 @@ namespace Zap.DataAccess.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("LogoKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("LogoUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(75)
+                        .HasColumnType("character varying(75)");
 
                     b.Property<string>("OwnerId")
                         .HasColumnType("text");
 
                     b.Property<string>("WebsiteUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
 
@@ -285,22 +304,26 @@ namespace Zap.DataAccess.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("CompanyId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Priority")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -319,29 +342,35 @@ namespace Zap.DataAccess.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Priority")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("ProjectId")
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("SubmitterId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -433,7 +462,7 @@ namespace Zap.DataAccess.Migrations
             modelBuilder.Entity("Zap.DataAccess.Models.Company", b =>
                 {
                     b.HasOne("Zap.DataAccess.Models.AppUser", "Owner")
-                        .WithOne("OwnedCompany")
+                        .WithOne()
                         .HasForeignKey("Zap.DataAccess.Models.Company", "OwnerId");
 
                     b.Navigation("Owner");
@@ -443,7 +472,9 @@ namespace Zap.DataAccess.Migrations
                 {
                     b.HasOne("Zap.DataAccess.Models.Company", "Company")
                         .WithMany("Projects")
-                        .HasForeignKey("CompanyId");
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Company");
                 });
@@ -460,16 +491,13 @@ namespace Zap.DataAccess.Migrations
 
                     b.HasOne("Zap.DataAccess.Models.AppUser", "Submitter")
                         .WithMany()
-                        .HasForeignKey("SubmitterId");
+                        .HasForeignKey("SubmitterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Assignee");
 
                     b.Navigation("Submitter");
-                });
-
-            modelBuilder.Entity("Zap.DataAccess.Models.AppUser", b =>
-                {
-                    b.Navigation("OwnedCompany");
                 });
 
             modelBuilder.Entity("Zap.DataAccess.Models.Company", b =>

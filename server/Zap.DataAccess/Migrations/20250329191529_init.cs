@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Zap.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class role_seed : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -111,9 +111,11 @@ namespace Zap.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    LastName = table.Column<string>(type: "text", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     CompanyId = table.Column<string>(type: "text", nullable: true),
+                    AvatarUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    AvatarKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -159,10 +161,11 @@ namespace Zap.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    LogoUrl = table.Column<string>(type: "text", nullable: true),
-                    WebsiteUrl = table.Column<string>(type: "text", nullable: true),
+                    Name = table.Column<string>(type: "character varying(75)", maxLength: 75, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    LogoUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    LogoKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    WebsiteUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     OwnerId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -180,11 +183,11 @@ namespace Zap.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    Priority = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Priority = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CompanyId = table.Column<string>(type: "text", nullable: true)
+                    CompanyId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -193,7 +196,8 @@ namespace Zap.DataAccess.Migrations
                         name: "FK_Projects_Companies_CompanyId",
                         column: x => x.CompanyId,
                         principalTable: "Companies",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -201,12 +205,12 @@ namespace Zap.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    Priority = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<string>(type: "text", nullable: false),
-                    SubmitterId = table.Column<string>(type: "text", nullable: true),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Priority = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    SubmitterId = table.Column<string>(type: "text", nullable: false),
                     AssigneeId = table.Column<string>(type: "text", nullable: true),
                     ProjectId = table.Column<string>(type: "text", nullable: true)
                 },
@@ -222,7 +226,8 @@ namespace Zap.DataAccess.Migrations
                         name: "FK_Tickets_AspNetUsers_SubmitterId",
                         column: x => x.SubmitterId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Tickets_Projects_ProjectId",
                         column: x => x.ProjectId,

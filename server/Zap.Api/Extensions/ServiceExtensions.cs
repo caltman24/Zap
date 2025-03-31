@@ -5,6 +5,7 @@ using Amazon.S3;
 using dotenv.net.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Zap.Api.Authorization;
 using Zap.DataAccess;
 using Zap.DataAccess.Configuration;
 using Zap.DataAccess.Constants;
@@ -46,9 +47,15 @@ public static class ServiceExtensions
             .AddBearerToken(IdentityConstants.BearerScheme);
 
         services.AddAuthorizationBuilder()
+            .AddCurrentUserHandler()
             .AddDefaultPolicy("default", pb =>
             {
-                pb.RequireAuthenticatedUser();
+                pb.RequireCurrentUser();
+                pb.Build();
+            })
+            .AddFallbackPolicy("fallback", pb =>
+            {
+                pb.RequireCurrentUser();
                 pb.Build();
             });
 
