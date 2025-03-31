@@ -46,6 +46,15 @@ export type CreateProjectRequest = {
   dueDate: string;
 };
 
+export type ProjectResponse = {
+  id: string;
+  name: string;
+  description: string;
+  priority: string;
+  dueDate: string; // ISO date string format
+  members: { name: string; avatarUrl: string }[];
+};
+
 export type CompanyProjectsResponse = {
   id: string;
   name: string;

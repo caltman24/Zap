@@ -34,7 +34,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
             }
         });
     }
-    console.log(res)
 
     return Response.json({
         data: res,

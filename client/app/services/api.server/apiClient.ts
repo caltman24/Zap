@@ -4,6 +4,8 @@ import { BaseApiClient } from "./baseClient";
 import {
   CompanyInfoResponse,
   CompanyProjectsResponse,
+  CreateProjectRequest,
+  ProjectResponse,
   RegisterCompanyRequest,
   UserInfoResponse,
 } from "./types";
@@ -88,6 +90,31 @@ export class ApiService extends BaseApiClient {
       { method: "GET" },
       accessToken
     );
+  }
+
+  public async getProjectById(
+    id: string,
+    accessToken: string
+  ): Promise<ProjectResponse> {
+    return this.requestJson<ProjectResponse>(
+      `/projects/${id}`,
+      { method: "GET" },
+      accessToken
+    );
+  }
+
+  public async createProject(
+    data: CreateProjectRequest,
+    accessToken: string
+  ): Promise<Response> {
+    return fetch(`${this.baseUrl}/projects`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(data),
+    });
   }
 }
 
