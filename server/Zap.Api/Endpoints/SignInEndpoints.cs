@@ -9,9 +9,9 @@ using Zap.DataAccess.Models;
 
 namespace Zap.Api.Endpoints;
 
-public static class SignInEndpoints
+internal static class SignInEndpoints
 {
-    public static IEndpointRouteBuilder MapSignInEndpoints(this IEndpointRouteBuilder app)
+    internal static IEndpointRouteBuilder MapSignInEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/signin").AllowAnonymous();
 
@@ -97,6 +97,6 @@ public static class SignInEndpoints
     }
 }
 
-record SignInUserRequest(string Email, string Password);
+internal record SignInUserRequest(string Email, string Password);
 
-record RefreshTokenRequest(string RefreshToken);
+internal record RefreshTokenRequest(string RefreshToken);

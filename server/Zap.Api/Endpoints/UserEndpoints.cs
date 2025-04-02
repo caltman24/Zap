@@ -8,9 +8,9 @@ using Zap.DataAccess.Models;
 
 namespace Zap.Api.Endpoints;
 
-public static class UserEndpoints
+internal static class UserEndpoints
 {
-    public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
+    internal static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/user");
 
@@ -40,7 +40,7 @@ public static class UserEndpoints
     }
 }
 
-record UserInfoResponse(
+internal record UserInfoResponse(
     string Id,
     string Email,
     string FirstName,

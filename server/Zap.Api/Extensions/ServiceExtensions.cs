@@ -22,6 +22,10 @@ public static class ServiceExtensions
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
         });
+        
+        
+        services.AddScoped<ICompanyService, CompanyService>();
+        
         return services;
     }
 

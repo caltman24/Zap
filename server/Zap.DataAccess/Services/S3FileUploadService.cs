@@ -8,7 +8,7 @@ using Zap.DataAccess.Configuration;
 
 namespace Zap.DataAccess.Services;
 
-public class S3FileUploadService : IFileUploadService
+public sealed class S3FileUploadService : IFileUploadService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly ILogger<S3FileUploadService> _logger;
