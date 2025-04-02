@@ -1,15 +1,28 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Zap.DataAccess.Models;
 
 namespace Zap.DataAccess.Services;
 
 public interface ICompanyService
 {
     Task<CompanyInfoDto?> GetCompanyInfoAsync(string companyId);
-    Task<bool> UpdateCompanyInfoAsync(string companyId, string name, string description, string? websiteUrl, 
-        IFormFile? logo, bool removeLogo);
+
+    Task<bool> UpdateCompanyInfoAsync(UpdateCompanyInfoDto updateCompanyDto);
+
     Task<List<CompanyProjectDto>> GetCompanyProjectsAsync(string companyId, bool isArchived);
     Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId);
+    Task CreateCompanyAsync(CreateCompanyDto company);
 }
+
+public record CreateCompanyDto(string Name, string Description, AppUser User);
+
+public record UpdateCompanyInfoDto(
+    string CompanyId,
+    string Name,
+    string Description,
+    string? WebsiteUrl,
+    IFormFile? Logo,
+    bool RemoveLogo);
 
 public record CompanyInfoDto(
     string Name,

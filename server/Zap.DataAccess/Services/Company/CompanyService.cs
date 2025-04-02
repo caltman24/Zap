@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Zap.DataAccess.Constants;
+using Zap.DataAccess.Models;
 
 namespace Zap.DataAccess.Services;
 
@@ -55,15 +57,12 @@ public sealed class CompanyService : ICompanyService
             membersByRole);
     }
 
-    public async Task<bool> UpdateCompanyInfoAsync(string companyId, string name, string description,
-        string? websiteUrl,
-        IFormFile? logo,
-        bool removeLogo)
+    public async Task<bool> UpdateCompanyInfoAsync(UpdateCompanyInfoDto updateCompanyDto)
     {
-        var company = await _db.Companies.FindAsync(companyId);
+        var company = await _db.Companies.FindAsync(updateCompanyDto.CompanyId);
         if (company == null) return false;
 
-        if (removeLogo && company.LogoKey != null)
+        if (updateCompanyDto.RemoveLogo && company.LogoKey != null)
         {
             _logger.LogInformation("User removing company logo {LogoKey}", company.LogoKey);
             try
@@ -72,21 +71,21 @@ public sealed class CompanyService : ICompanyService
                 company.LogoUrl = null;
                 company.LogoKey = null;
                 _logger.LogInformation("User successfully removed company logo {LogoKey}",
-                company.LogoKey);
+                    company.LogoKey);
             }
             catch
             {
                 return false;
             }
         }
-        else if (logo != null)
+        else if (updateCompanyDto.Logo != null)
         {
-            _logger.LogInformation("User uploading company logo, {FileName}", logo.FileName);
+            _logger.LogInformation("User uploading company logo, {FileName}", updateCompanyDto.Logo.FileName);
             try
             {
                 // Upload file
                 (company.LogoUrl, company.LogoKey) =
-                    await _fileUploadService.UploadCompanyLogoAsync(logo, company.LogoKey);
+                    await _fileUploadService.UploadCompanyLogoAsync(updateCompanyDto.Logo, company.LogoKey);
                 _logger.LogInformation("User successfully uploaded company logo {LogoKey}",
                     company.LogoKey);
             }
@@ -96,12 +95,12 @@ public sealed class CompanyService : ICompanyService
             }
         }
 
-        company.Name = name;
-        company.Description = description;
-        company.WebsiteUrl = websiteUrl;
+        company.Name = updateCompanyDto.Name;
+        company.Description = updateCompanyDto.Description;
+        company.WebsiteUrl = updateCompanyDto.WebsiteUrl;
 
         await _db.SaveChangesAsync();
-        
+
         return true;
     }
 
@@ -119,7 +118,7 @@ public sealed class CompanyService : ICompanyService
                 p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
             .ToListAsync();
     }
-    
+
     public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId)
     {
         return await _db.Projects
@@ -132,6 +131,20 @@ public sealed class CompanyService : ICompanyService
                 p.AssignedMembers.Count,
                 p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
             .ToListAsync();
+    }
+
+    public async Task CreateCompanyAsync(CreateCompanyDto company)
+    {
+        var newCompany = new Company
+        {
+            Name = company.Name,
+            Description = company.Description,
+            OwnerId = company.User.Id,
+            Members = new List<AppUser> { company.User },
+        };
+
+        await _db.Companies.AddAsync(newCompany);
+        await _db.SaveChangesAsync();
     }
 
     /// <summary>

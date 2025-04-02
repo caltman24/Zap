@@ -7,6 +7,7 @@ using Zap.Api.Extensions;
 using Zap.DataAccess;
 using Zap.DataAccess.Constants;
 using Zap.DataAccess.Models;
+using Zap.DataAccess.Services;
 
 namespace Zap.Api.Endpoints;
 
@@ -66,9 +67,9 @@ internal static class RegisterEndpoints
         return TypedResults.SignIn(principal, authenticationScheme: IdentityConstants.BearerScheme);
     }
 
-    private static async Task<Results<BadRequest<string>, InternalServerError, Ok<RegisterCompanyResponse>>>
+    private static async Task<Results<BadRequest<string>, InternalServerError, NoContent>>
         RegisterCompanyHandler(
-            RegisterCompanyRequest request, AppDbContext db, CurrentUser currentUser,
+            RegisterCompanyRequest request, ICompanyService companyService, CurrentUser currentUser,
             HttpContext context, ILogger<Program> logger, UserManager<AppUser> userManager)
     {
         if (currentUser.User == null) return TypedResults.BadRequest("User not found");
@@ -78,31 +79,20 @@ internal static class RegisterEndpoints
             return TypedResults.BadRequest("User already exists in a company");
         }
 
-        var newCompany = new Company
-        {
-            Name = request.Name,
-            Description = request.Description,
-            OwnerId = currentUser.Id,
-            Members = new List<AppUser> { currentUser.User! },
-        };
-
-        await db.Companies.AddAsync(newCompany);
-        await db.SaveChangesAsync();
-
-        logger.LogInformation("User {Email} registered new company {Name}", currentUser.Email, newCompany.Name);
+        await companyService.CreateCompanyAsync(new CreateCompanyDto(
+            Name: request.Name,
+            Description: request.Description,
+            User: currentUser.User));
 
         await userManager.AddToRoleAsync(currentUser.User, RoleNames.Admin);
         logger.LogDebug("Added user {Email} to role {Role}", currentUser.Email, RoleNames.Admin);
 
-        return TypedResults.Ok(new RegisterCompanyResponse(newCompany.Id, newCompany.Name,
-            newCompany.Description));
+        return TypedResults.NoContent();
     }
 }
 
-record RegisterVerifyResponse(string Result);
+internal record RegisterVerifyResponse(string Result);
 
-record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
+internal record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
 
-record RegisterCompanyRequest(string Name, string Description);
-
-record RegisterCompanyResponse(string Id, string Name, string Description);
+internal record RegisterCompanyRequest(string Name, string Description);

@@ -15,7 +15,7 @@ internal static class CompanyEndpoints
         group.MapGet("/info", GetCompanyInfoHandler);
         group.MapPost("/info", PostCompanyInfoHandler)
             .DisableAntiforgery()
-            .Accepts<UpsertCompanyInfoRequest>("multipart/form-data")
+            .Accepts<UpdateCompanyInfoRequest>("multipart/form-data")
             .RequireRateLimiting("upload")
             .RequireAuthorization(pb => { pb.RequireRole(RoleNames.Admin); });
 
@@ -32,7 +32,7 @@ internal static class CompanyEndpoints
     {
         var user = currentUser.User;
         if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
-        
+
         var companyInfo = await companyService.GetCompanyInfoAsync(user.CompanyId);
         if (companyInfo == null) return TypedResults.BadRequest("Failed to get company info");
 
@@ -41,26 +41,25 @@ internal static class CompanyEndpoints
 
     private static async Task<Results<BadRequest<string>, NoContent, ProblemHttpResult>> PostCompanyInfoHandler(
         [FromForm] IFormFile? file,
-        [FromForm] UpsertCompanyInfoRequest upsertCompanyInfoRequest,
+        [FromForm] UpdateCompanyInfoRequest updateCompanyInfoRequest,
         HttpContext context,
         ICompanyService companyService,
         CurrentUser currentUser,
         ILogger<Program> logger)
     {
         if (currentUser.CompanyId == null) return TypedResults.BadRequest("User not in company");
-            
-        var success = await companyService.UpdateCompanyInfoAsync(
-            currentUser.CompanyId, 
-            upsertCompanyInfoRequest.Name,
-            upsertCompanyInfoRequest.Description,
-            upsertCompanyInfoRequest.WebsiteUrl,
+
+        var success = await companyService.UpdateCompanyInfoAsync(new UpdateCompanyInfoDto(
+            currentUser.CompanyId,
+            updateCompanyInfoRequest.Name,
+            updateCompanyInfoRequest.Description,
+            updateCompanyInfoRequest.WebsiteUrl,
             file,
-            upsertCompanyInfoRequest.RemoveLogo);
-        
+            updateCompanyInfoRequest.RemoveLogo));
+
         if (success) return TypedResults.NoContent();
-        
+
         return TypedResults.BadRequest("Failed to update company info");
-        
     }
 
     private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectDto>>>> GetCompanyProjectsHandler(
@@ -75,4 +74,4 @@ internal static class CompanyEndpoints
     }
 }
 
-internal record UpsertCompanyInfoRequest(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
+internal record UpdateCompanyInfoRequest(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
