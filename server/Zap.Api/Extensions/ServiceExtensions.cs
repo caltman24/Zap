@@ -5,6 +5,7 @@ using Amazon.S3;
 using dotenv.net.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Zap.Api.Authorization;
 using Zap.DataAccess;
 using Zap.DataAccess.Configuration;
@@ -25,6 +26,7 @@ public static class ServiceExtensions
         
         
         services.AddScoped<ICompanyService, CompanyService>();
+        services.AddScoped<IProjectService, ProjectService>();
         
         return services;
     }

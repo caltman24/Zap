@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Zap.Api.Authorization;
-using Zap.DataAccess;
 using Zap.DataAccess.Constants;
-using Zap.DataAccess.Models;
+using Zap.DataAccess.Services;
 
 namespace Zap.Api.Endpoints;
 
@@ -27,72 +25,38 @@ internal static class ProjectsEndpoints
         return app;
     }
 
-    private static async Task<Results<BadRequest<string>, Ok<ProjectResponse>>> GetProjectHandler(
-        [FromRoute] string projectId, AppDbContext db, CurrentUser currentUser, ILogger<Program> logger)
+    private static async Task<Results<BadRequest<string>, Ok<ProjectDto>>> GetProjectHandler(
+        [FromRoute] string projectId, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
     {
         var user = currentUser.User;
         if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
 
-        var project = await db.Projects
-            .Include(p => p.AssignedMembers)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == projectId);
-
+        var project = await projectService.GetProjectByIdAsync(projectId);
         if (project == null) return TypedResults.BadRequest("Project not found");
 
         // If the project is not in the same company as the user
         if (project.CompanyId != user.CompanyId) return TypedResults.BadRequest("Project not found");
 
-        // Only admins can see all projects
-        // if (currentUser.Role != RoleNames.Admin && !project.AssignedMembers.Contains(user))
-        //     return TypedResults.BadRequest("Project not found");
-
-        var response = new ProjectResponse(project.Id, project.Name, project.Description, project.Priority,
-            project.IsArchived, project.DueDate, project.AssignedMembers.Select(m =>
-                new MemberResponse($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
-
-        return TypedResults.Ok(response);
+        return TypedResults.Ok(project);
     }
 
-    private static async Task<Results<BadRequest<string>, CreatedAtRoute<ProjectResponse>>> CreateProjectHandler(
-        CreateProjectRequest request, AppDbContext db, CurrentUser currentUser, ILogger<Program> logger)
+    private static async Task<Results<BadRequest<string>, CreatedAtRoute<ProjectDto>>> CreateProjectHandler(
+        CreateProjectRequest request, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
     {
         var user = currentUser.User;
         if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
 
-        var project = new Project
-        {
-            Name = request.Name,
-            Description = request.Description,
-            Priority = request.Priority,
-            DueDate = request.DueDate,
-            CompanyId = user.CompanyId,
-            AssignedMembers = new List<AppUser> { user },
-        };
+        var newProject = await projectService.CreateProjectAsync(new CreateProjectDto
+        (
+            Name: request.Name,
+            Description: request.Description,
+            Priority: request.Priority,
+            DueDate: request.DueDate,
+            User: currentUser.User!
+        ));
 
-        var addResult = await db.Projects.AddAsync(project);
-        await db.SaveChangesAsync();
-
-        var newProject = addResult.Entity;
-
-        var response = new ProjectResponse(newProject.Id, newProject.Name,
-            newProject.Description, newProject.Priority, newProject.IsArchived, newProject.DueDate,
-            newProject.AssignedMembers.Select(m =>
-                new MemberResponse($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
-
-        return TypedResults.CreatedAtRoute(response, "GetProject", new { ProjectId = newProject.Id });
+        return TypedResults.CreatedAtRoute(newProject, "GetProject", new { ProjectId = newProject.Id });
     }
 }
 
 record CreateProjectRequest(string Name, string Description, string Priority, DateTime DueDate);
-
-record MemberResponse(string Name, string AvatarUrl);
-
-record ProjectResponse(
-    string Id,
-    string Name,
-    string Description,
-    string Priority,
-    bool IsArchived,
-    DateTime DueDate,
-    IEnumerable<MemberResponse> Members);
