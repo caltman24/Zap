@@ -31,9 +31,9 @@ internal static class CompanyEndpoints
         ILogger<Program> logger)
     {
         var user = currentUser.User;
-        if (user == null) return TypedResults.BadRequest("User not found");
+        if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
         
-        var companyInfo = await companyService.GetCompanyInfoAsync(user.Id);
+        var companyInfo = await companyService.GetCompanyInfoAsync(user.CompanyId);
         if (companyInfo == null) return TypedResults.BadRequest("Failed to get company info");
 
         return TypedResults.Ok(companyInfo);
