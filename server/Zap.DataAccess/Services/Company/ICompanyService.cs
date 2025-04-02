@@ -12,6 +12,7 @@ public interface ICompanyService
     Task<List<CompanyProjectDto>> GetCompanyProjectsAsync(string companyId, bool isArchived);
     Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId);
     Task CreateCompanyAsync(CreateCompanyDto company);
+    Task DeleteCompanyByIdAsync(string companyId);
 }
 
 public record CreateCompanyDto(string Name, string Description, AppUser User);

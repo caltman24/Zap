@@ -54,4 +54,29 @@ public sealed class ProjectService : IProjectService
             newProject.AssignedMembers.Select(m =>
                 new MemberInfoDto($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
     }
+
+    public async Task DeleteProjectByIdAsync(string projectId)
+    {
+        await _db.Projects.Where(p => p.Id == projectId).ExecuteDeleteAsync();
+    }
+
+    public async Task<bool> ArchiveProjectAsync(string projectId)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null || project.IsArchived == true) return false;
+
+        project.IsArchived = true;
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UnarchiveProjectAsync(string projectId)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null || project.IsArchived == false) return false;
+
+        project.IsArchived = false;
+        await _db.SaveChangesAsync();
+        return true;
+    }
 }

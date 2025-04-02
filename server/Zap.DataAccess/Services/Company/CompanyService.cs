@@ -147,6 +147,11 @@ public sealed class CompanyService : ICompanyService
         await _db.SaveChangesAsync();
     }
 
+    public async Task DeleteCompanyByIdAsync(string companyId)
+    {
+        await _db.Companies.Where(c => c.Id == companyId).ExecuteDeleteAsync();
+    }
+
     /// <summary>
     /// Gets each member from each role in the company
     /// </summary>
