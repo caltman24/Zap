@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zap.Api", "Zap.Api\Zap.Api.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zap.DataAccess", "Zap.DataAccess\Zap.DataAccess.csproj", "{053F833C-1DB7-4CA4-9BB9-1AF568A20B87}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zap.Tests", "Zap.Tests\Zap.Tests.csproj", "{6A068D81-02EE-4B6C-9843-C4A386D9EFA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{053F833C-1DB7-4CA4-9BB9-1AF568A20B87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{053F833C-1DB7-4CA4-9BB9-1AF568A20B87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{053F833C-1DB7-4CA4-9BB9-1AF568A20B87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A068D81-02EE-4B6C-9843-C4A386D9EFA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A068D81-02EE-4B6C-9843-C4A386D9EFA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A068D81-02EE-4B6C-9843-C4A386D9EFA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A068D81-02EE-4B6C-9843-C4A386D9EFA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
