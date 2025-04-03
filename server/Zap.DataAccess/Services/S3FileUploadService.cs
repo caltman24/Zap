@@ -83,11 +83,6 @@ public sealed class S3FileUploadService : IFileUploadService
             _logger.LogError(amazonS3Exception, "Failed to delete file: {Key}", key);
             throw new Exception("Failed to delete file");
         }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to delete file: {Key}", key);
-            throw new Exception("Failed to delete file");
-        }
     }
 
     private async Task<(string url, string key)> UploadFileAsync(IFormFile file, string prefix, int maxSizeMb = 10)
@@ -98,6 +93,9 @@ public sealed class S3FileUploadService : IFileUploadService
         {
             throw new Exception($"File size exceeds {maxSizeMb}MB");
         }
+
+        // Validate file type
+        ValidateFileType(file);
 
         var key = $"{prefix}/{Guid.NewGuid()}-{Path.GetFileName(file.FileName)}";
         _logger.LogDebug("Generated S3 key: {Key}", key);
@@ -110,6 +108,14 @@ public sealed class S3FileUploadService : IFileUploadService
             ContentType = file.ContentType
         };
 
+        // Add checksum for integrity validation
+        await using (var stream = file.OpenReadStream())
+        {
+            var checksum = CalculateChecksum(stream);
+            request.ChecksumAlgorithm = ChecksumAlgorithm.SHA256;
+            stream.Position = 0; 
+        }
+
         try
         {
             var res = await _s3Client.PutObjectAsync(request);
@@ -119,7 +125,7 @@ public sealed class S3FileUploadService : IFileUploadService
                 throw new Exception("Failed to upload file");
             }
 
-            _logger.LogDebug("Successfully uploaded file: {Key}, size: {SizeKB}KB", key, fileSizeBytes / 1024);
+            _logger.LogInformation("Successfully uploaded file: {Key}, size: {SizeKB}KB", key, fileSizeBytes / 1024);
             return ($"https://{_bucketName}.s3.{_region}.amazonaws.com/{key}", key);
         }
         catch (AmazonS3Exception amazonS3Exception)
@@ -127,10 +133,42 @@ public sealed class S3FileUploadService : IFileUploadService
             _logger.LogError(amazonS3Exception, "Failed to upload file: {Key}", key);
             throw new Exception("Failed to upload file");
         }
-        catch (Exception e)
+    }
+
+    private void ValidateFileType(IFormFile file)
+    {
+        // List of allowed MIME types
+        var allowedTypes = new[]
         {
-            _logger.LogError(e, "Failed to upload file: {Key}", key);
-            throw new Exception("Failed to upload file");
+            "image/jpeg", "image/png", "image/gif", "image/webp", 
+            "application/pdf", "application/msword", 
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        };
+
+        if (!allowedTypes.Contains(file.ContentType))
+        {
+            _logger.LogWarning("Invalid file type attempted: {ContentType}", file.ContentType);
+            throw new Exception("Invalid file type. Only images, PDFs, and Office documents are allowed.");
+        }
+
+        // Additional validation for file extension
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
+
+        if (allowedExtensions.Contains(extension)) return;
+        
+        _logger.LogWarning("Invalid file extension attempted: {Extension}", extension);
+        throw new Exception("Invalid file extension. Only images, PDFs, and Office documents are allowed.");
+    }
+
+    private string CalculateChecksum(Stream stream)
+    {
+        using (var sha256 = System.Security.Cryptography.SHA256.Create())
+        {
+            var hash = sha256.ComputeHash(stream);
+            return Convert.ToBase64String(hash);
         }
     }
 }
