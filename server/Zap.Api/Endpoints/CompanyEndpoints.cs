@@ -6,9 +6,9 @@ using Zap.DataAccess.Services;
 
 namespace Zap.Api.Endpoints;
 
-internal static class CompanyEndpoints
+public static class CompanyEndpoints
 {
-    internal static IEndpointRouteBuilder MapCompanyEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapCompanyEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/company");
 
@@ -74,4 +74,4 @@ internal static class CompanyEndpoints
     }
 }
 
-internal record UpdateCompanyInfoRequest(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
+public record UpdateCompanyInfoRequest(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);

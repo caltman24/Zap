@@ -6,9 +6,9 @@ using Zap.DataAccess.Services;
 
 namespace Zap.Api.Endpoints;
 
-internal static class ProjectsEndpoints
+public static class ProjectsEndpoints
 {
-    internal static IEndpointRouteBuilder MapProjectEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapProjectEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/projects");
         group.MapGet("/{ProjectId}", GetProjectHandler)
