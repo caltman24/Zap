@@ -38,6 +38,7 @@ internal static class RegisterEndpoints
             RegisterUserRequest request, UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager, ILogger<Program> logger)
     {
+        
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user != null) return TypedResults.BadRequest("An account is already registered with this email");
 

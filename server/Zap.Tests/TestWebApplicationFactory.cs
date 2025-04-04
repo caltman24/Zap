@@ -53,8 +53,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         {
             // DbContext
 
+            services.AddDbContextFactory<AppDbContext>();
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
-            services.AddDbContextFactory<AppDbContext>(o => { o.UseInMemoryDatabase("Zap.Tests");o.UseInternalServiceProvider(Services); });
+
+            var ob = new DbContextOptionsBuilder<AppDbContext>();
+            ob.UseInMemoryDatabase("Zap.Tests");
+            services.AddSingleton(ob.Options);
+            services.AddSingleton<DbContextOptions>(s => s.GetRequiredService<DbContextOptions<AppDbContext>>());
 
             // Lower the requirements for the tests
             services.Configure<IdentityOptions>(o =>
@@ -68,12 +73,5 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             });
         });
         return base.CreateHost(builder);
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        var dbContext = CreateAppDbContext();
-        dbContext.Database.EnsureDeleted();
-        base.Dispose(disposing);
     }
 }
