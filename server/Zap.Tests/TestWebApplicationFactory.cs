@@ -5,6 +5,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.Util.Internal;
 using dotenv.net;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -38,6 +39,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Since we use .env file in the api, we manually set the env variables here
+        // Currently aren't testing s3, so this is just to successfully run the tests
         Environment.SetEnvironmentVariable("AWS_S3_BUCKET", "Development");
         Environment.SetEnvironmentVariable("AWS_PROFILE", "Development");
         Environment.SetEnvironmentVariable("AWS_REGION", "Development");
@@ -71,6 +74,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 o.Password.RequireLowercase = false;
                 o.Password.RequireUppercase = false;
             });
+            
+            // Since tests run in parallel, it's possible multiple servers will startup,
+            // we use an ephemeral key provider and repository to avoid filesystem contention issues
+            services.AddSingleton<IDataProtectionProvider, EphemeralDataProtectionProvider>();
         });
         return base.CreateHost(builder);
     }

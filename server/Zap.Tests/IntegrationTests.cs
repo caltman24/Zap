@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
-using Zap.DataAccess.Models;
 
 namespace Zap.Tests;
 
@@ -11,11 +8,8 @@ public class IntegrationTests : IClassFixture<TestWebApplicationFactory>, IAsync
     private const string TestEmail = "test@example.com";
 
     public Task InitializeAsync() => Task.CompletedTask;
+    public Task DisposeAsync() => Task.CompletedTask;
 
-    public async Task DisposeAsync()
-    {
-        // The database will be dropped by the TestWebApplicationFactory
-    }
 
     [Fact]
     public async Task Register_User_Returns_Success()
@@ -25,7 +19,7 @@ public class IntegrationTests : IClassFixture<TestWebApplicationFactory>, IAsync
 
         var registerRequest = new RegisterRequest(
             Email: TestEmail,
-            Password: "@pwd",
+            Password: "@Password1",
             FirstName: "Test",
             LastName: "User");
 
@@ -36,7 +30,7 @@ public class IntegrationTests : IClassFixture<TestWebApplicationFactory>, IAsync
 
         var user = db.Users.Single();
         Assert.NotNull(user);
-        
+
         Assert.Equal(registerRequest.Email, user.UserName);
         Assert.Equal(registerRequest.Email, user.Email);
         Assert.Equal(registerRequest.FirstName, user.FirstName);
@@ -51,13 +45,13 @@ public class IntegrationTests : IClassFixture<TestWebApplicationFactory>, IAsync
 
         var registerRequest = new RegisterRequest(
             Email: TestEmail,
-            Password: "@pwd",
-            FirstName: null,
-            LastName: null);
-        
+            Password: "@pwd", // Fails validation. Minimum 6
+            FirstName: null, // Fails - Null
+            LastName: null); // Fails - Null
+
         var client = application.CreateDefaultClient();
         var res = await client.PostAsJsonAsync("/register/user", registerRequest);
-        
+
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Zap.Api.Endpoints;
 
 namespace Zap.Api.Filters;
 
