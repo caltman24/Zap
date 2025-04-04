@@ -1,4 +1,5 @@
 using dotenv.net;
+using FluentValidation;
 using Scalar.AspNetCore;
 using Zap.Api.Authorization;
 using Zap.Api.Extensions;
@@ -16,7 +17,8 @@ builder.Services.AddOpenApi()
     .AddAuthService()
     .AddCorsPolicies()
     .AddS3Storage()
-    .AddCurrentUser();
+    .AddCurrentUser()
+    .AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

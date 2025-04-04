@@ -1,9 +1,11 @@
 ﻿using System.Security.Claims;
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Authorization;
 using Zap.Api.Extensions;
+using Zap.Api.Filters;
 using Zap.DataAccess;
 using Zap.DataAccess.Constants;
 using Zap.DataAccess.Models;
@@ -11,9 +13,9 @@ using Zap.DataAccess.Services;
 
 namespace Zap.Api.Endpoints;
 
-internal static class RegisterEndpoints
+public static class RegisterEndpoints
 {
-    internal static IEndpointRouteBuilder MapRegisterUserEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapRegisterUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/register");
 
@@ -24,7 +26,8 @@ internal static class RegisterEndpoints
                     ? new RegisterVerifyResponse("company")
                     : new RegisterVerifyResponse("none")));
 
-        group.MapPost("/user", RegisterUserHandler).AllowAnonymous();
+        group.MapPost("/user", RegisterUserHandler).AllowAnonymous()
+            .AddEndpointFilter<ValidationFilter<RegisterUserRequest>>();
 
         group.MapPost("/company", RegisterCompanyHandler);
 
@@ -38,7 +41,6 @@ internal static class RegisterEndpoints
             RegisterUserRequest request, UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager, ILogger<Program> logger)
     {
-        
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user != null) return TypedResults.BadRequest("An account is already registered with this email");
 
@@ -92,8 +94,19 @@ internal static class RegisterEndpoints
     }
 }
 
-internal record RegisterVerifyResponse(string Result);
+public record RegisterVerifyResponse(string Result);
 
-internal record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
+public record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
 
-internal record RegisterCompanyRequest(string Name, string Description);
+public class RegisterUserRequestValidator : AbstractValidator<RegisterUserRequest>
+{
+    public RegisterUserRequestValidator()
+    {
+        RuleFor(x => x.Email).EmailAddress().NotEmpty().NotNull();
+        RuleFor(x => x.Password).NotEmpty().NotNull().MinimumLength(6);
+        RuleFor(x => x.FirstName).NotNull();
+        RuleFor(x => x.LastName).NotNull();
+    }
+}
+
+public record RegisterCompanyRequest(string Name, string Description);
