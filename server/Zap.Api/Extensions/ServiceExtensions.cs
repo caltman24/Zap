@@ -2,6 +2,7 @@
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
 using Amazon.S3;
+using dotenv.net;
 using dotenv.net.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,11 +24,11 @@ public static class ServiceExtensions
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
         });
-        
-        
+
+
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<IProjectService, ProjectService>();
-        
+
         return services;
     }
 

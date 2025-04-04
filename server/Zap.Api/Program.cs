@@ -32,3 +32,5 @@ app.UseRequiredServices();
 app.MapZapApiEndpoints();
 
 app.Run();
+
+public partial class Program { }
