@@ -19,18 +19,12 @@ public static class RegisterEndpoints
     {
         var group = app.MapGroup("/register");
 
-        // verify user status
-        group.MapPost("/verify",
-            Results<BadRequest<string>, Ok<RegisterVerifyResponse>> (CurrentUser currentUser) => TypedResults.Ok(
-                currentUser.CompanyId != null
-                    ? new RegisterVerifyResponse("company")
-                    : new RegisterVerifyResponse("none")));
+        group.MapPost("/user", RegisterUserHandler)
+            .AllowAnonymous()
+            .WithRequestValidation<RegisterUserRequest>();
 
-        group.MapPost("/user", RegisterUserHandler).AllowAnonymous()
-            .AddEndpointFilter<ValidationFilter<RegisterUserRequest>>();
-
-        group.MapPost("/company", RegisterCompanyHandler);
-
+        group.MapPost("/company", RegisterCompanyHandler)
+            .WithRequestValidation<RegisterCompanyRequest>();
 
         return app;
     }
@@ -70,7 +64,7 @@ public static class RegisterEndpoints
         return TypedResults.SignIn(principal, authenticationScheme: IdentityConstants.BearerScheme);
     }
 
-    private static async Task<Results<BadRequest<string>, InternalServerError, NoContent>>
+    private static async Task<Results<BadRequest<string>, NoContent>>
         RegisterCompanyHandler(
             RegisterCompanyRequest request, ICompanyService companyService, CurrentUser currentUser,
             HttpContext context, ILogger<Program> logger, UserManager<AppUser> userManager)
@@ -94,8 +88,6 @@ public static class RegisterEndpoints
     }
 }
 
-public record RegisterVerifyResponse(string Result);
-
 public record RegisterUserRequest(string Email, string Password, string FirstName, string LastName);
 
 public class RegisterUserRequestValidator : AbstractValidator<RegisterUserRequest>
@@ -110,3 +102,12 @@ public class RegisterUserRequestValidator : AbstractValidator<RegisterUserReques
 }
 
 public record RegisterCompanyRequest(string Name, string Description);
+
+public class RegisterCompanyValidator : AbstractValidator<RegisterCompanyRequest>
+{
+    public RegisterCompanyValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().NotNull().MaximumLength(75);
+        RuleFor(x => x.Description).NotNull().MaximumLength(1000);
+    }
+}

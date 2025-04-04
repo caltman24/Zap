@@ -27,6 +27,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference().AllowAnonymous();
 }
 
+
 app.UseHttpsRedirection();
 app.UseGlobalExceptionHandler(app.Services.GetRequiredService<ILogger<Program>>());
 
