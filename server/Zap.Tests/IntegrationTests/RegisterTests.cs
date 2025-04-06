@@ -38,7 +38,7 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
             FirstName: "Test",
             LastName: "User");
 
-        var res = await _client.PostAsJsonAsync("/register/user", registerRequest);
+        var res = await _client.PostAsJsonAsync("/auth/register", registerRequest);
 
         Assert.True(res.IsSuccessStatusCode);
 
@@ -59,7 +59,7 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
             FirstName: null, // Fails - Null
             LastName: null); // Fails - Null
 
-        var res = await _client.PostAsJsonAsync("/register/user", registerRequest);
+        var res = await _client.PostAsJsonAsync("/auth/register", registerRequest);
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
     }
@@ -73,10 +73,10 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
             FirstName: "Test",
             LastName: "User");
 
-        var res = await _client.PostAsJsonAsync("/register/user", registerRequest);
+        var res = await _client.PostAsJsonAsync("/auth/register", registerRequest);
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
 
-        var badRes = await _client.PostAsJsonAsync("/register/user", registerRequest);
+        var badRes = await _client.PostAsJsonAsync("/auth/register", registerRequest);
         Assert.Equal(HttpStatusCode.BadRequest, badRes.StatusCode);
     }
 
@@ -89,7 +89,7 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
         await _factory.CreateUserAsync(userId);
         var client = _factory.CreateClient(userId);
         
-        var res = await client.PostAsJsonAsync("/register/company", registerRequest);
+        var res = await client.PostAsJsonAsync("/company/register", registerRequest);
         _testOutputHelper.WriteLine($"Response: {res.StatusCode}");
         
         Assert.True(res.IsSuccessStatusCode);

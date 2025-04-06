@@ -1,12 +1,20 @@
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
-using System.Net;
-using System.Text.Json;
 
-namespace Zap.Api.Extensions;
+namespace Zap.Api;
 
-public static class ExceptionHandlingExtension
+public static class ConfigureApp
 {
-    public static IApplicationBuilder UseGlobalExceptionHandler(this IApplicationBuilder app, ILogger logger)
+    public static void UseRequiredServices(this WebApplication app)
+    {
+        app.UseGlobalExceptionHandler(app.Services.GetRequiredService<ILogger<Program>>());
+        app.UseCors();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseRateLimiter();
+    }
+
+    private static IApplicationBuilder UseGlobalExceptionHandler(this IApplicationBuilder app, ILogger logger)
     {
         app.UseExceptionHandler(appError =>
         {
@@ -23,15 +31,15 @@ public static class ExceptionHandlingExtension
                         // Add other exception types as needed
                         _ => StatusCodes.Status500InternalServerError
                     };
-                    
+
                     logger.LogError(contextFeature.Error, "Unhandled exception occurred");
-                    
+
                     context.Response.ContentType = "application/json";
                     var response = new
                     {
                         StatusCode = context.Response.StatusCode,
-                        Message = context.Response.StatusCode == StatusCodes.Status500InternalServerError 
-                            ? "An unexpected error occurred" 
+                        Message = context.Response.StatusCode == StatusCodes.Status500InternalServerError
+                            ? "An unexpected error occurred"
                             : contextFeature.Error.Message
                     };
 

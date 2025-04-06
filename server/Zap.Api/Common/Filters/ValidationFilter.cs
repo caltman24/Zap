@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace Zap.Api.Filters;
+namespace Zap.Api.Common.Filters;
 
 public class ValidationFilter<TRequest> : IEndpointFilter
 {

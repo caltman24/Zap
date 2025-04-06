@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using Zap.DataAccess.Models;
 
-namespace Zap.Api.Authorization;
+namespace Zap.Api.Common.Authorization;
 
 public class CurrentUser
 {

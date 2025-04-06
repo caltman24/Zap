@@ -6,13 +6,15 @@ import { RegisterUserRequest, TokenResponse } from "./types";
 
 export class AuthClient extends BaseApiClient {
   private readonly refreshBuffer = 1000 * 60 * 2; // 2 minutes
+  private prefix: string;
 
   constructor(baseUrl: string) {
     super(baseUrl);
+    this.prefix = baseUrl + "/auth";
   }
 
   public async signInUser(email: string, password: string): Promise<Response> {
-    return fetch(`${this.baseUrl}/signin`, {
+    return fetch(`${this.prefix}/signin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -20,11 +22,11 @@ export class AuthClient extends BaseApiClient {
   }
 
   public async signInTestUser(): Promise<Response> {
-    return fetch(`${this.baseUrl}/signin/testuser`, { method: "POST" });
+    return fetch(`${this.prefix}/signin-test`, { method: "POST" });
   }
 
   public async registerAccount(data: RegisterUserRequest): Promise<Response> {
-    return fetch(`${this.baseUrl}/register/user`, {
+    return fetch(`${this.prefix}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -73,7 +75,7 @@ export class AuthClient extends BaseApiClient {
   }
 
   private async refreshTokens(refreshToken: string): Promise<TokenResponse> {
-    return this.requestJson<TokenResponse>("/refresh", {
+    return this.requestJson<TokenResponse>(this.prefix + "/refreshtokens", {
       method: "POST",
       body: JSON.stringify({ refreshToken }),
     });

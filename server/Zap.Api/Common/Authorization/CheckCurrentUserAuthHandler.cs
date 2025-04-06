@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Zap.Api.Authorization;
+namespace Zap.Api.Common.Authorization;
 
 internal static class AuthorizationHandlerExtensions
 {

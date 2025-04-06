@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Zap.DataAccess.Models;
 
-namespace Zap.Api.Extensions;
+namespace Zap.Api.Common.Extensions;
 
 public static class UserManagerExtension
 {

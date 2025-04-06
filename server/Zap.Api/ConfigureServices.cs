@@ -1,24 +1,38 @@
-﻿using Amazon;
+﻿using System.Threading.RateLimiting;
+using Amazon;
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
 using Amazon.S3;
-using dotenv.net;
 using dotenv.net.Utilities;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Zap.Api.Authorization;
+using Zap.Api.Common.Authorization;
 using Zap.DataAccess;
 using Zap.DataAccess.Configuration;
-using Zap.DataAccess.Constants;
 using Zap.DataAccess.Models;
 using Zap.DataAccess.Services;
 
-namespace Zap.Api.Extensions;
+namespace Zap.Api;
 
-public static class ServiceExtensions
+public static class ConfigureServices
 {
-    public static IServiceCollection AddDataAccess(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddRequiredServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOpenApi()
+            .AddRateLimiting()
+            .AddDataAccess(configuration)
+            .AddIdentityManagement()
+            .AddAuthService()
+            .AddCorsPolicies()
+            .AddS3Storage()
+            .AddCurrentUser()
+            .AddValidatorsFromAssemblyContaining<Program>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddDataAccess(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
         {
@@ -32,7 +46,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddIdentityManagement(this IServiceCollection services)
+    private static IServiceCollection AddIdentityManagement(this IServiceCollection services)
     {
         services.AddIdentityCore<AppUser>(options =>
             {
@@ -48,7 +62,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddAuthService(this IServiceCollection services)
+    private static IServiceCollection AddAuthService(this IServiceCollection services)
     {
         services.AddAuthentication(IdentityConstants.BearerScheme)
             .AddBearerToken(IdentityConstants.BearerScheme);
@@ -69,7 +83,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddCorsPolicies(this IServiceCollection services)
+    private static IServiceCollection AddCorsPolicies(this IServiceCollection services)
     {
         services.AddCors(opts =>
         {
@@ -84,7 +98,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddS3Storage(this IServiceCollection services)
+    private static IServiceCollection AddS3Storage(this IServiceCollection services)
     {
         services.AddAWSService<IAmazonS3>(new AWSOptions()
         {
@@ -99,6 +113,42 @@ public static class ServiceExtensions
             options.Region = EnvReader.GetStringValue("AWS_REGION");
         });
         services.AddScoped<IFileUploadService, S3FileUploadService>();
+        return services;
+    }
+
+    private static IServiceCollection AddRateLimiting(this IServiceCollection services)
+    {
+        services.AddRateLimiter(opts =>
+        {
+            // permit 10 requests per minute by user (identity) or globally:
+            opts.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                return RateLimitPartition.GetTokenBucketLimiter(
+                    context.User?.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+                    partition => new TokenBucketRateLimiterOptions()
+                    {
+                        TokenLimit = 20, // Burst of 20 requests
+                        QueueLimit = 0,
+                        ReplenishmentPeriod = TimeSpan.FromSeconds(30),
+                        TokensPerPeriod = 10, // 10 requests per 30 seconds. 20rpm sustained
+                        AutoReplenishment = true
+                    });
+            });
+
+
+            opts.AddPolicy("upload", context =>
+            {
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    context.User?.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+                    partition => new FixedWindowRateLimiterOptions()
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = 5,
+                        QueueLimit = 1,
+                        Window = TimeSpan.FromMinutes(1)
+                    });
+            });
+        });
         return services;
     }
 }

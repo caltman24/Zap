@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Zap.DataAccess.Models;
 
-namespace Zap.Api.Authorization;
+namespace Zap.Api.Common.Authorization;
 
 internal static class CurrentUserExtensions
 {

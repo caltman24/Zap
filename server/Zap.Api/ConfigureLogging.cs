@@ -1,8 +1,8 @@
 ﻿using Serilog;
 
-namespace Zap.Api.Extensions;
+namespace Zap.Api;
 
-public static class LoggingExtension
+public static class ConfigureLogging
 {
     public static void AddStructuredLogging(this ILoggingBuilder builder, IConfiguration configuration)
     {
