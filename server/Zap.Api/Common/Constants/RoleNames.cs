@@ -1,4 +1,4 @@
-﻿namespace Zap.DataAccess.Constants;
+﻿namespace Zap.Api.Common.Constants;
 
 public static class RoleNames
 {

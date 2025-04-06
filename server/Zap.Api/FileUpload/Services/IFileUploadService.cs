@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace Zap.DataAccess.Services;
+﻿namespace Zap.Api.FileUpload.Services;
 
 public interface IFileUploadService
 {

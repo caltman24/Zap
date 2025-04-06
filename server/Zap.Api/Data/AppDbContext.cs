@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Zap.DataAccess.Models;
+using Zap.Api.Data.Models;
 
-namespace Zap.DataAccess;
+namespace Zap.Api.Data;
 
 public class AppDbContext : IdentityDbContext<AppUser>
 {
@@ -18,12 +17,12 @@ public class AppDbContext : IdentityDbContext<AppUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         builder.Entity<Company>()
             .HasOne(u => u.Owner)
             .WithOne()
             .HasForeignKey<Company>(c => c.OwnerId);
-        
+
         builder.Entity<AppUser>()
             .HasOne(u => u.Company)
             .WithMany(c => c.Members)

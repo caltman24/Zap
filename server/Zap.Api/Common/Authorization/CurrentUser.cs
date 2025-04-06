@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using Zap.DataAccess.Models;
+using Zap.Api.Data.Models;
 
 namespace Zap.Api.Common.Authorization;
 

@@ -1,12 +1,9 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Zap.DataAccess.Configuration;
+using Zap.Api.FileUpload.Configuration;
 
-namespace Zap.DataAccess.Services;
+namespace Zap.Api.FileUpload.Services;
 
 public sealed class S3FileUploadService : IFileUploadService
 {

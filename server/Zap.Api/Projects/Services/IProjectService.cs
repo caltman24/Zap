@@ -1,6 +1,7 @@
-﻿using Zap.DataAccess.Models;
+﻿using Zap.Api.Companies.Services;
+using Zap.Api.Data.Models;
 
-namespace Zap.DataAccess.Services;
+namespace Zap.Api.Projects.Services;
 
 public interface IProjectService
 {

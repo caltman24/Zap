@@ -28,7 +28,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Zap.Api\Zap.Api.csproj" />
-      <ProjectReference Include="..\Zap.DataAccess\Zap.DataAccess.csproj" />
     </ItemGroup>
 
 </Project>

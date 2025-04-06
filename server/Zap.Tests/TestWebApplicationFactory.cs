@@ -1,7 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Hosting;
-using Zap.DataAccess.Models;
+using Zap.Api.Common.Constants;
+using Zap.Api.Data;
+using Zap.Api.Data.Models;
 
 namespace Zap.Tests;
 

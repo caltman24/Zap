@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
+using Zap.Api.Common.Constants;
 using Zap.Api.Common.Filters;
-using Zap.DataAccess.Constants;
-using Zap.DataAccess.Services;
+using Zap.Api.Projects.Services;
 
 namespace Zap.Api.Projects.Endpoints;
 

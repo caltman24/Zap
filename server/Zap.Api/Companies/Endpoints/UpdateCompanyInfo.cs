@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
-using Zap.DataAccess.Constants;
-using Zap.DataAccess.Services;
+using Zap.Api.Common.Constants;
+using Zap.Api.Companies.Services;
 
 namespace Zap.Api.Companies.Endpoints;
 

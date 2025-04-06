@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
-using Zap.DataAccess.Services;
+using Zap.Api.Projects.Services;
 
 namespace Zap.Api.Projects.Endpoints;
 

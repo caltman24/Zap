@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Zap.DataAccess.Models;
+namespace Zap.Api.Data.Models;
 
 public class Ticket
 {

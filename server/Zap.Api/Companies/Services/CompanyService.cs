@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Zap.DataAccess.Constants;
-using Zap.DataAccess.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Zap.Api.Data;
+using Zap.Api.Data.Models;
+using Zap.Api.FileUpload.Services;
 
-namespace Zap.DataAccess.Services;
+namespace Zap.Api.Companies.Services;
 
 public sealed class CompanyService : ICompanyService
 {

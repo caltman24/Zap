@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
-using Zap.DataAccess.Services;
+using Zap.Api.Companies.Services;
 
 namespace Zap.Api.Companies.Endpoints;
 

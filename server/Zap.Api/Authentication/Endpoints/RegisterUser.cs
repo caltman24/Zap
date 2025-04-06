@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Zap.Api.Common;
 using Zap.Api.Common.Extensions;
 using Zap.Api.Common.Filters;
-using Zap.DataAccess.Models;
+using Zap.Api.Data.Models;
 
 namespace Zap.Api.Authentication.Endpoints;
 

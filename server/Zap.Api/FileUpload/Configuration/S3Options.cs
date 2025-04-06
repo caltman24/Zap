@@ -1,4 +1,4 @@
-﻿namespace Zap.DataAccess.Configuration;
+﻿namespace Zap.Api.FileUpload.Configuration;
 
 public class S3Options
 {

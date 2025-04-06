@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Zap.DataAccess.Models;
+﻿using Zap.Api.Data.Models;
 
-namespace Zap.DataAccess.Services;
+namespace Zap.Api.Companies.Services;
 
 public interface ICompanyService
 {

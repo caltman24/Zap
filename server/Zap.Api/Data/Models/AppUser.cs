@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
-namespace Zap.DataAccess.Models;
+namespace Zap.Api.Data.Models;
 
 public class AppUser : IdentityUser
 {

@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Zap.DataAccess.Models;
+using Zap.Api.Data.Models;
 
 namespace Zap.Api.Common.Authorization;
 

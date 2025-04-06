@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.Extensions.Options;
-using Zap.DataAccess.Models;
+using Zap.Api.Common.Constants;
+using Zap.Api.Data.Models;
 
 namespace Zap.Tests;
 

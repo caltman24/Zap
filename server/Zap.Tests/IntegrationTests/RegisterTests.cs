@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Xunit.Abstractions;
+using Zap.Api.Data;
 
 namespace Zap.Tests.IntegrationTests;
 
