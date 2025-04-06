@@ -31,4 +31,4 @@ dotnet restore
 - Add Migrations: ```dotnet ef migrations add <name> -o ./Data/Migrations```
 
 ### Database Seeding
-`appsettings.<env>.json` has a `UseSeeding` option to seed the database with roles.
+When using `EnsureCreated` or `ef database update`, roles will automatically be seeded if they do not already exist.

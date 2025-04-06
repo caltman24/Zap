@@ -40,74 +40,7 @@ public static class ConfigureServices
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
-            var useSeeding = configuration["UseSeeding"]?.ToLower() == "true";
-
-            if (useSeeding)
-            {
-                // Called as part of EnsureCreated, Migrate, and `dotnet ef database update`
-                options.UseSeeding((ctx, _) =>
-                    {
-                        ctx.Set<IdentityRole>().AddRange([
-                            new IdentityRole
-                            {
-                                Name = RoleNames.Admin,
-                                NormalizedName = RoleNames.Admin.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            },
-                            new IdentityRole
-                            {
-                                Name = RoleNames.ProjectManager,
-                                NormalizedName = RoleNames.ProjectManager.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            },
-                            new IdentityRole
-                            {
-                                Name = RoleNames.Developer,
-                                NormalizedName = RoleNames.Developer.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            },
-                            new IdentityRole
-                            {
-                                Name = RoleNames.Submitter,
-                                NormalizedName = RoleNames.Submitter.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            }
-                        ]);
-
-                        ctx.SaveChanges();
-                    })
-                    .UseAsyncSeeding(async (ctx, _, ct) =>
-                    {
-                        await ctx.Set<IdentityRole>().AddRangeAsync([
-                            new IdentityRole
-                            {
-                                Name = RoleNames.Admin,
-                                NormalizedName = RoleNames.Admin.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            },
-                            new IdentityRole
-                            {
-                                Name = RoleNames.ProjectManager,
-                                NormalizedName = RoleNames.ProjectManager.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            },
-                            new IdentityRole
-                            {
-                                Name = RoleNames.Developer,
-                                NormalizedName = RoleNames.Developer.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            },
-                            new IdentityRole
-                            {
-                                Name = RoleNames.Submitter,
-                                NormalizedName = RoleNames.Submitter.ToUpperInvariant(),
-                                ConcurrencyStamp = Guid.NewGuid().ToString()
-                            }
-                        ]);
-
-                        await ctx.SaveChangesAsync(ct);
-                    });
-            }
+            options.UseRoleSeeding();
         });
 
 
