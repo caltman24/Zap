@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace Zap.Api;
+namespace Zap.Api.Configuration;
 
 public static class ConfigureApp
 {

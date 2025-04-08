@@ -1,6 +1,6 @@
 ﻿using Serilog;
 
-namespace Zap.Api;
+namespace Zap.Api.Configuration;
 
 public static class ConfigureLogging
 {

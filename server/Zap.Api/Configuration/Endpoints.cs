@@ -4,7 +4,7 @@ using Zap.Api.Features.Companies.Endpoints;
 using Zap.Api.Features.Projects.Endpoints;
 using Zap.Api.Features.Users.Endpoints;
 
-namespace Zap.Api;
+namespace Zap.Api.Configuration;
 
 public static class Endpoints
 {

@@ -1,6 +1,7 @@
 using dotenv.net;
 using Scalar.AspNetCore;
 using Zap.Api;
+using Zap.Api.Configuration;
 
 DotEnv.Load();
 

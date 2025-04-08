@@ -8,7 +8,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Authorization;
-using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
@@ -16,7 +15,7 @@ using Zap.Api.Features.FileUpload.Configuration;
 using Zap.Api.Features.FileUpload.Services;
 using Zap.Api.Features.Projects.Services;
 
-namespace Zap.Api;
+namespace Zap.Api.Configuration;
 
 public static class ConfigureServices
 {
