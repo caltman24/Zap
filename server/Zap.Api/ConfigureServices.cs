@@ -9,12 +9,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
-using Zap.Api.Companies.Services;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
-using Zap.Api.FileUpload.Configuration;
-using Zap.Api.FileUpload.Services;
-using Zap.Api.Projects.Services;
+using Zap.Api.Features.Companies.Services;
+using Zap.Api.Features.FileUpload.Configuration;
+using Zap.Api.Features.FileUpload.Services;
+using Zap.Api.Features.Projects.Services;
 
 namespace Zap.Api;
 

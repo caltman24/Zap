@@ -1,8 +1,8 @@
-﻿using Zap.Api.Authentication.Endpoints;
-using Zap.Api.Common;
-using Zap.Api.Companies.Endpoints;
-using Zap.Api.Projects.Endpoints;
-using Zap.Api.Users.Endpoints;
+﻿using Zap.Api.Common;
+using Zap.Api.Features.Authentication.Endpoints;
+using Zap.Api.Features.Companies.Endpoints;
+using Zap.Api.Features.Projects.Endpoints;
+using Zap.Api.Features.Users.Endpoints;
 
 namespace Zap.Api;
 

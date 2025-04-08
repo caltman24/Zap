@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Hosting;
+using Zap.Api;
 using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;

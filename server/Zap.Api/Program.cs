@@ -1,9 +1,6 @@
 using dotenv.net;
-using FluentValidation;
 using Scalar.AspNetCore;
 using Zap.Api;
-using Zap.Api.Common.Authorization;
-using Zap.Api.Common.Extensions;
 
 DotEnv.Load();
 
@@ -27,6 +24,9 @@ app.MapZapApiEndpoints();
 
 app.Run();
 
-public partial class Program
+namespace Zap.Api
 {
+    public partial class Program
+    {
+    }
 }
