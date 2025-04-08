@@ -5,29 +5,13 @@ using Zap.Api.Data;
 
 namespace Zap.Tests.IntegrationTests;
 
-public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
+public class RegisterTests
 {
-    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _testOutputHelper;
-    private AppDbContext _db = null!;
-    private HttpClient _client = null!;
 
-    public RegisterTests(TestWebApplicationFactory factory, ITestOutputHelper testOutputHelper)
+    public RegisterTests(ITestOutputHelper testOutputHelper)
     {
-        _factory = factory;
         _testOutputHelper = testOutputHelper;
-    }
-
-    public Task InitializeAsync()
-    {
-        _db = _factory.CreateAppDbContext();
-        _client = _factory.CreateDefaultClient();
-        return Task.CompletedTask;
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _db.DisposeAsync();
     }
 
     [Fact]
@@ -39,11 +23,16 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
             FirstName: "Test",
             LastName: "User");
 
-        var res = await _client.PostAsJsonAsync("/auth/register", registerRequest);
+
+        await using var app = new ZapApplication();
+        await using var db = app.CreateAppDbContext();
+        var client = app.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
 
         Assert.True(res.IsSuccessStatusCode);
 
-        var user = _db.Users.First(x => x.Email == registerRequest.Email);
+        var user = db.Users.First(x => x.Email == registerRequest.Email);
         Assert.NotNull(user);
 
         Assert.Equal(registerRequest.Email, user.UserName);
@@ -60,7 +49,11 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
             FirstName: null, // Fails - Null
             LastName: null); // Fails - Null
 
-        var res = await _client.PostAsJsonAsync("/auth/register", registerRequest);
+
+        await using var app = new ZapApplication();
+        var client = app.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
     }
@@ -74,28 +67,55 @@ public class RegisterTests : IClassFixture<TestWebApplicationFactory>, IAsyncLif
             FirstName: "Test",
             LastName: "User");
 
-        var res = await _client.PostAsJsonAsync("/auth/register", registerRequest);
+        await using var app = new ZapApplication();
+        var client = app.CreateClient();
+
+        var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
 
-        var badRes = await _client.PostAsJsonAsync("/auth/register", registerRequest);
+        var badRes = await client.PostAsJsonAsync("/auth/register", registerRequest);
         Assert.Equal(HttpStatusCode.BadRequest, badRes.StatusCode);
     }
 
     [Fact]
     public async Task Register_Company_Returns_Success()
     {
-        var userId = "toast123";
-        
+        var userId = Guid.NewGuid().ToString();
+
+        await using var app = new ZapApplication();
+        await using var db = app.CreateAppDbContext();
+
+        await app.CreateUserAsync(userId);
+        var client = app.CreateClient(userId);
+
         var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
-        await _factory.CreateUserAsync(userId);
-        var client = _factory.CreateClient(userId);
-        
         var res = await client.PostAsJsonAsync("/company/register", registerRequest);
-        _testOutputHelper.WriteLine($"Response: {res.StatusCode}");
-        
+
         Assert.True(res.IsSuccessStatusCode);
+    }
+
+    [Fact]
+    public async Task Register_Company_With_Existing_Relation_Returns400_BadRequest()
+    {
+        var userId = Guid.NewGuid().ToString();
+
+        var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
+
+        await using var app = new ZapApplication();
+        await using var db = app.CreateAppDbContext();
+        await app.CreateUserAsync(userId);
+        
+        var client = app.CreateClient(userId);
+
+        var res = await client.PostAsJsonAsync("/company/register", registerRequest);
+        Assert.True(res.IsSuccessStatusCode);
+
+        var badRes = await client.PostAsJsonAsync("/company/register", registerRequest);
+
+        Assert.Equal(HttpStatusCode.BadRequest, badRes.StatusCode);
     }
 }
 
-record RegisterRequest(string Email, string Password, string? FirstName, string? LastName);
-record RegisterCompanyRequest(string Name, string Description);
+internal record RegisterRequest(string Email, string Password, string? FirstName, string? LastName);
+
+internal record RegisterCompanyRequest(string Name, string Description);

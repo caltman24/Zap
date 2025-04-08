@@ -8,7 +8,7 @@ using Zap.Api.Data.Models;
 
 namespace Zap.Tests;
 
-public class TestWebApplicationFactory : WebApplicationFactory<Program>
+public class ZapApplication : WebApplicationFactory<Program>
 {
     public AppDbContext CreateAppDbContext()
     {
@@ -18,12 +18,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         return db;
     }
 
-    public async Task CreateUserAsync(string id, string email = "test99@test.com", string? password = null)
+    public async Task CreateUserAsync(string id, string? email = null, string? password = null)
     {
         using var scope = Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var fallbackEmail = email ?? id + "@test.com";
         var user = new AppUser
-            { Id = id, Email = email, UserName = email, FirstName = "John", LastName = "Doe" };
+            { Id = id, Email = fallbackEmail, UserName = fallbackEmail, FirstName = "John", LastName = "Doe" };
         user.SetDefaultAvatar();
         var result = await userManager.CreateAsync(user, password ?? Guid.NewGuid().ToString());
 
@@ -38,7 +39,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        
+
         // Since we use .env file in the api, we manually set the env variables here
         // Currently aren't testing s3, so this is just to successfully run the tests
         Environment.SetEnvironmentVariable("AWS_S3_BUCKET", "Development");
@@ -46,7 +47,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("AWS_REGION", "Development");
         Environment.SetEnvironmentVariable("AWS_ACCESS_KEY", "Development");
         Environment.SetEnvironmentVariable("AWS_SECRET_KEY", "Development");
-        
+
         base.ConfigureWebHost(builder);
     }
 
