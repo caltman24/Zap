@@ -1,7 +1,4 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using Xunit.Abstractions;
-using Zap.Api.Data;
+﻿using Xunit.Abstractions;
 
 namespace Zap.Tests.IntegrationTests;
 
@@ -84,8 +81,8 @@ public class RegisterTests
 
         await using var app = new ZapApplication();
         await using var db = app.CreateAppDbContext();
-
         await app.CreateUserAsync(userId);
+        
         var client = app.CreateClient(userId);
 
         var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
@@ -99,14 +96,13 @@ public class RegisterTests
     {
         var userId = Guid.NewGuid().ToString();
 
-        var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
-
         await using var app = new ZapApplication();
         await using var db = app.CreateAppDbContext();
         await app.CreateUserAsync(userId);
-        
+
         var client = app.CreateClient(userId);
 
+        var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
         var res = await client.PostAsJsonAsync("/company/register", registerRequest);
         Assert.True(res.IsSuccessStatusCode);
 

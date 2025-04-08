@@ -1,10 +1,5 @@
 ﻿using System.Net.Http.Headers;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Hosting;
-using Zap.Api;
-using Zap.Api.Common.Constants;
-using Zap.Api.Data;
-using Zap.Api.Data.Models;
+
 
 namespace Zap.Tests;
 
@@ -24,7 +19,7 @@ public class ZapApplication : WebApplicationFactory<Program>
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var fallbackEmail = email ?? id + "@test.com";
         var user = new AppUser
-            { Id = id, Email = fallbackEmail, UserName = fallbackEmail, FirstName = "John", LastName = "Doe" };
+            { Id = id, Email = fallbackEmail, UserName = fallbackEmail, FirstName = "John", LastName = "Doe", EmailConfirmed = true};
         user.SetDefaultAvatar();
         var result = await userManager.CreateAsync(user, password ?? Guid.NewGuid().ToString());
 
@@ -50,6 +45,7 @@ public class ZapApplication : WebApplicationFactory<Program>
 
         base.ConfigureWebHost(builder);
     }
+ 
 
     protected override IHost CreateHost(IHostBuilder builder)
     {

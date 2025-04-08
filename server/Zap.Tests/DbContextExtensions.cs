@@ -11,7 +11,7 @@ public static class DbContextExtensions
         services.RemoveAll<DbContextOptions<AppDbContext>>();
 
         var ob = new DbContextOptionsBuilder<AppDbContext>();
-        ob.UseInMemoryDatabase("Zap.Tests");
+        ob.UseInMemoryDatabase($"ZapTests_{Guid.NewGuid().ToString()}");
         ob.UseSeeding((ctx, _) =>
         {
             // Do this check because this runs each test for some reason
