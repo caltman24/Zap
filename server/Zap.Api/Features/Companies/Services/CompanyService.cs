@@ -113,6 +113,7 @@ public sealed class CompanyService : ICompanyService
                 p.Name,
                 p.Priority,
                 p.DueDate,
+                p.IsArchived,
                 p.AssignedMembers.Count,
                 p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
             .ToListAsync();
@@ -127,6 +128,7 @@ public sealed class CompanyService : ICompanyService
                 p.Name,
                 p.Priority,
                 p.DueDate,
+                p.IsArchived,
                 p.AssignedMembers.Count,
                 p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
             .ToListAsync();

@@ -37,5 +37,6 @@ public record CompanyProjectDto(
     string Name,
     string Priority,
     DateTime DueDate,
+    bool IsArchived,
     int MemberCount,
     IEnumerable<string> AvatarUrls);

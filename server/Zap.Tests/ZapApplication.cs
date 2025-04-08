@@ -13,15 +13,23 @@ public class ZapApplication : WebApplicationFactory<Program>
         return db;
     }
 
-    public async Task CreateUserAsync(string id, string? email = null, string? password = null)
+    public async Task CreateUserAsync(string id, string? email = null, string? password = null, string? role = null)
     {
         using var scope = Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var fallbackEmail = email ?? id + "@test.com";
         var user = new AppUser
-            { Id = id, Email = fallbackEmail, UserName = fallbackEmail, FirstName = "John", LastName = "Doe", EmailConfirmed = true};
+        {
+            Id = id, Email = fallbackEmail, UserName = fallbackEmail, FirstName = "John", LastName = "Doe",
+            EmailConfirmed = true
+        };
         user.SetDefaultAvatar();
         var result = await userManager.CreateAsync(user, password ?? Guid.NewGuid().ToString());
+        if (role != null)
+        {
+            var res = await userManager.AddToRoleAsync(user, role);
+            Assert.True(res.Succeeded);
+        }
 
         Assert.True(result.Succeeded);
     }
@@ -45,7 +53,7 @@ public class ZapApplication : WebApplicationFactory<Program>
 
         base.ConfigureWebHost(builder);
     }
- 
+
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
