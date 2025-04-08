@@ -297,17 +297,7 @@ public class CompaniesTests
 
         Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
     }
-
-    [Fact]
-    public async Task Update_Company_Unauthorized_Returns_401_Unauthorized()
-    {
-    }
-
-    [Fact]
-    public async Task Update_Company_Bad_Info_Returns_400_BadRequest()
-    {
-    }
-
+    
     private static async Task<Company> CreateTestCompany(AppDbContext db, string userId, AppUser user,
         List<Project>? projects = null, string? companyId = null)
     {
