@@ -241,7 +241,7 @@ public class CompaniesTests
     }
 
     [Fact]
-    public async Task Update_Company_Admin_Returns_Success()
+    public async Task Update_Company_Without_Image_As_Admin_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -270,7 +270,7 @@ public class CompaniesTests
     }
 
     [Fact]
-    public async Task Update_Company_ProjectManager_Returns_Forbidden()
+    public async Task Update_Company_Without_Image_As_ProjectManager_Returns_Forbidden()
     {
         var userId = Guid.NewGuid().ToString();
 
