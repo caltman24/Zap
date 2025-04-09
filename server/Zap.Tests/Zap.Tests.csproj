@@ -30,4 +30,12 @@
       <ProjectReference Include="..\Zap.Api\Zap.Api.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="bin\Debug\net9.0\test-image.jpg" />
+      <None Update=".env">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+    
+
 </Project>

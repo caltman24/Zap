@@ -1,11 +1,12 @@
 using dotenv.net;
+using dotenv.net.Utilities;
 using Scalar.AspNetCore;
 using Zap.Api;
 using Zap.Api.Configuration;
 
-DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+DotEnv.Load();
 
 builder.Logging.AddStructuredLogging(builder.Configuration);
 builder.Services.AddRequiredServices(builder.Configuration);

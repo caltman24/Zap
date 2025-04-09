@@ -43,14 +43,19 @@ public class ZapApplication : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        DotEnv.Load();
 
         base.ConfigureWebHost(builder);
     }
 
-
     protected override IHost CreateHost(IHostBuilder builder)
     {
+        // Overwrite .env file from api
+        DotEnv.Fluent()
+            .WithExceptions()
+            .WithEnvFiles(".env")
+            .WithOverwriteExistingVars()
+            .Load();
+        
         builder.ConfigureServices(services =>
         {
             // DbContext

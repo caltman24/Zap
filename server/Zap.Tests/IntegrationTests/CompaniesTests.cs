@@ -20,7 +20,7 @@ public class CompaniesTests : IAsyncDisposable
         var userId = Guid.NewGuid().ToString();
         await _app.CreateUserAsync(userId);
         var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
-        
+
         var client = _app.CreateClient(userId);
         var res = await client.PostAsJsonAsync("/company/register", registerRequest);
 
@@ -33,7 +33,7 @@ public class CompaniesTests : IAsyncDisposable
         var userId = Guid.NewGuid().ToString();
         await _app.CreateUserAsync(userId);
         var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
-        
+
         var client = _app.CreateClient(userId);
         var res = await client.PostAsJsonAsync("/company/register", registerRequest);
         Assert.True(res.IsSuccessStatusCode);
@@ -49,7 +49,7 @@ public class CompaniesTests : IAsyncDisposable
         await _app.CreateUserAsync(userId);
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
-        
+
         var company = await CreateTestCompany(_db, userId, user);
         var client = _app.CreateClient(userId);
         var res = await client.GetFromJsonAsync<CompanyInfoDto>("/company/info");
@@ -92,7 +92,7 @@ public class CompaniesTests : IAsyncDisposable
         var companyId = Guid.NewGuid().ToString();
         var projectId = Guid.NewGuid().ToString();
         var projectId2 = Guid.NewGuid().ToString();
-        
+
         await CreateTestCompany(_db, userId, user, [
             new Project()
             {
@@ -137,7 +137,7 @@ public class CompaniesTests : IAsyncDisposable
         var companyId = Guid.NewGuid().ToString();
         var projectId = Guid.NewGuid().ToString();
         var projectId2 = Guid.NewGuid().ToString();
-        
+
         await CreateTestCompany(_db, userId, user, [
             new Project()
             {
@@ -182,7 +182,7 @@ public class CompaniesTests : IAsyncDisposable
         var companyId = Guid.NewGuid().ToString();
         var projectId = Guid.NewGuid().ToString();
         var projectId2 = Guid.NewGuid().ToString();
-        
+
         await CreateTestCompany(_db, userId, user, [
             new Project()
             {
@@ -263,8 +263,9 @@ public class CompaniesTests : IAsyncDisposable
 
         Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
     }
-    
-    private static async Task<Company> CreateTestCompany(AppDbContext db, string userId, AppUser user,
+
+
+    internal static async Task<Company> CreateTestCompany(AppDbContext db, string userId, AppUser user,
         List<Project>? projects = null, string? companyId = null)
     {
         var company = new Company()
@@ -288,8 +289,8 @@ public class CompaniesTests : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-       await _app.DisposeAsync();
-       await _db.DisposeAsync();
+        await _app.DisposeAsync();
+        await _db.DisposeAsync();
     }
 }
 
