@@ -2,6 +2,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using dotenv.net.Utilities;
+using Zap.Tests.Helpers;
 
 namespace Zap.Tests.IntegrationTests;
 
@@ -75,13 +76,12 @@ public class UploadFileTests : IAsyncDisposable
 
         Assert.True(res.IsSuccessStatusCode);
 
-        await ClearTestBucketAsync();
+        await _s3Client.ClearTestBucketAsync();
     }
 
     public async ValueTask DisposeAsync()
     {
         _s3Client.Dispose();
-
         await _app.DisposeAsync();
         await _db.DisposeAsync();
     }
@@ -118,32 +118,4 @@ public class UploadFileTests : IAsyncDisposable
         FileStream? FileStream,
         bool AddFileContentType = true,
         string WebsiteUrl = "https://example.com");
-
-    private async Task ClearTestBucketAsync()
-    {
-        try
-        {
-            var bucketName = EnvReader.GetStringValue("AWS_S3_BUCKET");
-            var objects = await _s3Client.ListObjectsV2Async(new ListObjectsV2Request()
-            {
-                BucketName = bucketName
-            });
-
-            if (objects == null || objects.S3Objects.Count == 0) return;
-
-            var res = await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest()
-            {
-                BucketName = bucketName,
-                Objects = objects.S3Objects.Select(o => new KeyVersion { Key = o.Key }).ToList()
-            });
-
-            Assert.NotNull(res);
-            Assert.Empty(res.DeleteErrors);
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine(e);
-            throw new Exception("Failed to delete objects");
-        }
-    }
 }
