@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using dotenv.net;
 
 
 namespace Zap.Tests;
@@ -42,14 +43,7 @@ public class ZapApplication : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-
-        // Since we use .env file in the api, we manually set the env variables here
-        // Currently aren't testing s3, so this is just to successfully run the tests
-        Environment.SetEnvironmentVariable("AWS_S3_BUCKET", "Development");
-        Environment.SetEnvironmentVariable("AWS_PROFILE", "Development");
-        Environment.SetEnvironmentVariable("AWS_REGION", "Development");
-        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY", "Development");
-        Environment.SetEnvironmentVariable("AWS_SECRET_KEY", "Development");
+        DotEnv.Load();
 
         base.ConfigureWebHost(builder);
     }

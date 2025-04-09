@@ -3,20 +3,25 @@ using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Tests.IntegrationTests;
 
-public class CompaniesTests
+public class CompaniesTests : IAsyncDisposable
 {
+    private readonly ZapApplication _app;
+    private readonly AppDbContext _db;
+
+    public CompaniesTests()
+    {
+        _app = new ZapApplication();
+        _db = _app.CreateAppDbContext();
+    }
+
     [Fact]
     public async Task Register_Company_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var client = app.CreateClient(userId);
-
+        await _app.CreateUserAsync(userId);
         var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
+        
+        var client = _app.CreateClient(userId);
         var res = await client.PostAsJsonAsync("/company/register", registerRequest);
 
         Assert.True(res.IsSuccessStatusCode);
@@ -26,19 +31,14 @@ public class CompaniesTests
     public async Task Register_Company_With_Existing_Relation_Returns400_BadRequest()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var client = app.CreateClient(userId);
-
+        await _app.CreateUserAsync(userId);
         var registerRequest = new RegisterCompanyRequest("Test Company", "Description");
+        
+        var client = _app.CreateClient(userId);
         var res = await client.PostAsJsonAsync("/company/register", registerRequest);
         Assert.True(res.IsSuccessStatusCode);
 
         var badRes = await client.PostAsJsonAsync("/company/register", registerRequest);
-
         Assert.Equal(HttpStatusCode.BadRequest, badRes.StatusCode);
     }
 
@@ -46,17 +46,12 @@ public class CompaniesTests
     public async Task Get_Company_Info_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
-
-        var company = await CreateTestCompany(db, userId, user);
-
-        var client = app.CreateClient(userId);
+        
+        var company = await CreateTestCompany(_db, userId, user);
+        var client = _app.CreateClient(userId);
         var res = await client.GetFromJsonAsync<CompanyInfoDto>("/company/info");
 
         Assert.NotNull(res);
@@ -67,9 +62,7 @@ public class CompaniesTests
     [Fact]
     public async Task Get_Company_Info_Unauthorized_Returns_401_Unauthorized()
     {
-        await using var app = new ZapApplication();
-
-        var client = app.CreateClient();
+        var client = _app.CreateClient();
         var res = await client.GetAsync("/company/info");
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
     }
@@ -78,15 +71,11 @@ public class CompaniesTests
     public async Task Get_Company_Info_With_No_Relation_Returns_400_BadRequest()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        var client = app.CreateClient(userId);
+        var client = _app.CreateClient(userId);
         var res = await client.GetAsync("/company/info");
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
@@ -96,18 +85,15 @@ public class CompaniesTests
     public async Task Get_Company_Projects_Unarchived_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
         var companyId = Guid.NewGuid().ToString();
         var projectId = Guid.NewGuid().ToString();
         var projectId2 = Guid.NewGuid().ToString();
-        await CreateTestCompany(db, userId, user, [
+        
+        await CreateTestCompany(_db, userId, user, [
             new Project()
             {
                 Id = projectId,
@@ -132,8 +118,7 @@ public class CompaniesTests
             }
         ], companyId);
 
-        var client = app.CreateClient(userId);
-
+        var client = _app.CreateClient(userId);
         var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>("/company/projects?isArchived=false");
 
         Assert.NotNull(res);
@@ -145,18 +130,15 @@ public class CompaniesTests
     public async Task Get_Company_Projects_Archived_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
         var companyId = Guid.NewGuid().ToString();
         var projectId = Guid.NewGuid().ToString();
         var projectId2 = Guid.NewGuid().ToString();
-        await CreateTestCompany(db, userId, user, [
+        
+        await CreateTestCompany(_db, userId, user, [
             new Project()
             {
                 Id = projectId,
@@ -181,12 +163,10 @@ public class CompaniesTests
             }
         ], companyId);
 
-        var client = app.CreateClient(userId);
-
+        var client = _app.CreateClient(userId);
         var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>("/company/projects?isArchived=true");
 
         Assert.NotNull(res);
-
         Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
         Assert.Null(res.FirstOrDefault(x => x.Id == projectId2 && x.IsArchived == false));
     }
@@ -195,18 +175,15 @@ public class CompaniesTests
     public async Task Get_Company_Projects_All_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
         var companyId = Guid.NewGuid().ToString();
         var projectId = Guid.NewGuid().ToString();
         var projectId2 = Guid.NewGuid().ToString();
-        await CreateTestCompany(db, userId, user, [
+        
+        await CreateTestCompany(_db, userId, user, [
             new Project()
             {
                 Id = projectId,
@@ -231,8 +208,7 @@ public class CompaniesTests
             }
         ], companyId);
 
-        var client = app.CreateClient(userId);
-
+        var client = _app.CreateClient(userId);
         var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>("/company/projects");
 
         Assert.NotNull(res);
@@ -244,17 +220,12 @@ public class CompaniesTests
     public async Task Update_Company_Without_Image_As_Admin_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId, role: RoleNames.Admin);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId, role: RoleNames.Admin);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        var company = await CreateTestCompany(db, userId, user);
-
-        var client = app.CreateClient(userId, role: RoleNames.Admin);
+        await CreateTestCompany(_db, userId, user);
+        var client = _app.CreateClient(userId, role: RoleNames.Admin);
 
         // Create multipart form data content
         using var content = new MultipartFormDataContent();
@@ -273,17 +244,12 @@ public class CompaniesTests
     public async Task Update_Company_Without_Image_As_ProjectManager_Returns_Forbidden()
     {
         var userId = Guid.NewGuid().ToString();
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId, role: RoleNames.ProjectManager);
-
-        var user = await db.Users.FindAsync(userId);
+        await _app.CreateUserAsync(userId, role: RoleNames.ProjectManager);
+        var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        var company = await CreateTestCompany(db, userId, user);
-
-        var client = app.CreateClient(userId, role: RoleNames.ProjectManager);
+        await CreateTestCompany(_db, userId, user);
+        var client = _app.CreateClient(userId, role: RoleNames.ProjectManager);
 
         // Create multipart form data content
         using var content = new MultipartFormDataContent();
@@ -309,7 +275,6 @@ public class CompaniesTests
             OwnerId = userId,
             Members = [user]
         };
-
         if (projects != null)
         {
             company.Projects = projects;
@@ -319,6 +284,12 @@ public class CompaniesTests
         await db.SaveChangesAsync();
 
         return c.Entity;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+       await _app.DisposeAsync();
+       await _db.DisposeAsync();
     }
 }
 

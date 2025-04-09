@@ -2,8 +2,16 @@
 
 namespace Zap.Tests.IntegrationTests;
 
-public class AuthenticationTests
+public class AuthenticationTests : IAsyncDisposable
 {
+    private readonly ZapApplication _app;
+    private readonly AppDbContext _db;
+
+    public AuthenticationTests()
+    {
+        _app = new ZapApplication();
+        _db = _app.CreateAppDbContext();
+    }
 
     [Fact]
     public async Task Register_User_Returns_Success()
@@ -14,16 +22,11 @@ public class AuthenticationTests
             FirstName: "Test",
             LastName: "User");
 
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        var client = app.CreateClient();
-
+        var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
-
         Assert.True(res.IsSuccessStatusCode);
 
-        var user = db.Users.First(x => x.Email == registerRequest.Email);
+        var user = _db.Users.First(x => x.Email == registerRequest.Email);
         Assert.NotNull(user);
 
         Assert.Equal(registerRequest.Email, user.UserName);
@@ -40,10 +43,7 @@ public class AuthenticationTests
             FirstName: null, // Fails - Null
             LastName: null); // Fails - Null
 
-
-        await using var app = new ZapApplication();
-        var client = app.CreateClient();
-
+        var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
@@ -58,9 +58,7 @@ public class AuthenticationTests
             FirstName: "Test",
             LastName: "User");
 
-        await using var app = new ZapApplication();
-        var client = app.CreateClient();
-
+        var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
 
@@ -75,14 +73,10 @@ public class AuthenticationTests
         var userId = Guid.NewGuid().ToString();
         var email = userId + "@test.com";
         var password = "Password22!";
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId, email, password);
-
-        var client = app.CreateClient();
+        await _app.CreateUserAsync(userId, email, password);
 
         var signInRequest = new SignInRequest(email, password);
+        var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/signin", signInRequest);
 
         Assert.True(res.IsSuccessStatusCode);
@@ -94,30 +88,28 @@ public class AuthenticationTests
         var userId = Guid.NewGuid().ToString();
         var email = userId + "@test.com";
         var password = "Password22!";
-
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-        await app.CreateUserAsync(userId, email, password);
-
-        var client = app.CreateClient();
+        await _app.CreateUserAsync(userId, email, password);
 
         var signInRequest = new SignInRequest("Nottheemail@test.com", password);
+        var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/signin", signInRequest);
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
-    } 
-    
+    }
+
     [Fact]
     public async Task Send_Unauthenticated_Request_Returns_401_Unauthorized()
     {
-        await using var app = new ZapApplication();
-        await using var db = app.CreateAppDbContext();
-
-        var client = app.CreateClient();
-
+        var client = _app.CreateClient();
         var res = await client.GetAsync("/");
 
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _app.DisposeAsync();
+        await _db.DisposeAsync();
     }
 }
 
