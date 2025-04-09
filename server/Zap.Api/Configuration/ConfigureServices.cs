@@ -130,10 +130,10 @@ public static class ConfigureServices
                     context.User?.Identity?.Name ?? context.Request.Headers.Host.ToString(),
                     partition => new TokenBucketRateLimiterOptions()
                     {
-                        TokenLimit = 20, // Burst of 20 requests
+                        TokenLimit = 90, // Burst of 90 requests
                         QueueLimit = 0,
                         ReplenishmentPeriod = TimeSpan.FromSeconds(30),
-                        TokensPerPeriod = 10, // 10 requests per 30 seconds. 20rpm sustained
+                        TokensPerPeriod = 30, // 30 requests per 30 seconds. 60rpm sustained
                         AutoReplenishment = true
                     });
             });
