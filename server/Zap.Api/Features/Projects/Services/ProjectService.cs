@@ -62,23 +62,14 @@ public sealed class ProjectService : IProjectService
         await _db.Projects.Where(p => p.Id == projectId).ExecuteDeleteAsync();
     }
 
-    public async Task<bool> ArchiveProjectAsync(string projectId)
+    public async Task<bool> ToggleArchiveProjectAsync(string projectId)
     {
         var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        if (project == null || project.IsArchived == true) return false;
+        if (project == null) return false;
 
-        project.IsArchived = true;
+        project.IsArchived = !project.IsArchived;
         await _db.SaveChangesAsync();
-        return true;
-    }
 
-    public async Task<bool> UnarchiveProjectAsync(string projectId)
-    {
-        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        if (project == null || project.IsArchived == false) return false;
-
-        project.IsArchived = false;
-        await _db.SaveChangesAsync();
         return true;
     }
 }

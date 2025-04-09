@@ -53,7 +53,8 @@ public static class Endpoints
             .WithTags("Projects");
 
         group.MapEndpoint<GetProject>()
-            .MapEndpoint<CreateProject>();
+            .MapEndpoint<CreateProject>()
+            .MapEndpoint<ArchiveProject>();
 
         return app;
     }

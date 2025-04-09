@@ -44,7 +44,7 @@ public class UploadFileTests : IAsyncDisposable
 
         // Make sure content type is set correctly
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
-        var res = await client.PostAsync("/company/info", content);
+        var res = await client.PutAsync("/company/info", content);
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
     }
@@ -72,7 +72,7 @@ public class UploadFileTests : IAsyncDisposable
 
         // Make sure content type is set correctly
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
-        var res = await client.PostAsync("/company/info", content);
+        var res = await client.PutAsync("/company/info", content);
 
         Assert.True(res.IsSuccessStatusCode);
 

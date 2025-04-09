@@ -55,9 +55,10 @@ export class ApiService extends BaseApiClient {
     formData: FormData,
     accessToken: string
   ): Promise<Response> {
+    const method = "PUT";
     const { data: response, error } = await tryCatch(
       fetch(`${this.baseUrl}/company/info`, {
-        method: "POST",
+        method,
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -65,21 +66,12 @@ export class ApiService extends BaseApiClient {
       })
     );
 
-    if (error || !response) {
-      console.error(error);
-      return Promise.reject(new ApiError("Failed to update company info", 500));
-    }
-
-    if (response.status === 401) {
-      return Promise.reject(new ApiError("Unauthorized", 401));
-    }
-
-    if (!response.ok) {
-      console.error(response.url, response.status, response.statusText);
-      return Promise.reject(new ApiError(response.statusText, response.status));
-    }
-
-    return response;
+    return this.handleResponse(
+      response,
+      error,
+      method,
+      "Failed to update comany info"
+    );
   }
 
   public async getCompanyProjects(
@@ -132,9 +124,10 @@ export class ApiService extends BaseApiClient {
     projectData: any,
     accessToken: string
   ): Promise<Response> {
+    const method = "PUT";
     const { data: response, error } = await tryCatch(
       fetch(`${this.baseUrl}/projects/${projectId}`, {
-        method: "PUT",
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
@@ -143,21 +136,26 @@ export class ApiService extends BaseApiClient {
       })
     );
 
-    if (error || !response) {
-      console.error(error);
-      return Promise.reject(new ApiError("Failed to update project", 500));
-    }
+    return this.handleResponse(
+      response,
+      error,
+      method,
+      "Failed to update project"
+    );
+  }
 
-    if (response.status === 401) {
-      return Promise.reject(new AuthenticationError("Unauthorized"));
-    }
+  public async toggleArchiveProject(projectId: string, accessToken: string) {
+    const method = "PUT";
+    const { data: response, error } = await tryCatch(
+      fetch(`${this.baseUrl}/projects/${projectId}/archive`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+    );
 
-    if (!response.ok) {
-      console.error(response.url, response.status, response.statusText);
-      return Promise.reject(new ApiError(response.statusText, response.status));
-    }
-
-    return response;
+    this.handleResponse(response, error, method, "Failed to archive project");
   }
 }
 

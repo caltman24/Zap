@@ -9,9 +9,8 @@ public interface IProjectService
     Task<ProjectDto> CreateProjectAsync(CreateProjectDto project);
     Task DeleteProjectByIdAsync(string projectId);
     // returns false if already archived
-    Task<bool> ArchiveProjectAsync(string projectId);
+    Task<bool> ToggleArchiveProjectAsync(string projectId);
     // returns false if already unarchived
-    Task<bool> UnarchiveProjectAsync(string projectId);
 }
 
 public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, AppUser User);

@@ -235,7 +235,7 @@ public class CompaniesTests : IAsyncDisposable
         content.Add(new StringContent("https://example.com"), "WebsiteUrl");
         // Make sure content type is set correctly
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
-        var res = await client.PostAsync("/company/info", content);
+        var res = await client.PutAsync("/company/info", content);
 
         Assert.True(res.IsSuccessStatusCode);
     }
@@ -259,7 +259,7 @@ public class CompaniesTests : IAsyncDisposable
         content.Add(new StringContent("https://example.com"), "WebsiteUrl");
         // Make sure content type is set correctly
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
-        var res = await client.PostAsync("/company/info", content);
+        var res = await client.PutAsync("/company/info", content);
 
         Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
     }

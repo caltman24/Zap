@@ -81,10 +81,10 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (error) {
-        return Response.json({ error: "Failed to update company info. Please try again later." });
+        return Response.json({ success: false, error: error.message });
     }
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, error: null });
 }
 
 export default function CompanyRoute() {

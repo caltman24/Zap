@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs, redirect, ActionFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation } from "@remix-run/react";
+import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation, useFetcher } from "@remix-run/react";
 import { useMemo, useState, useEffect } from "react";
 import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import apiClient from "~/services/api.server/apiClient";
@@ -30,7 +30,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const { data: project, error } = await tryCatch(apiClient.getProjectById(projectId, tokenResponse.token));
 
   if (error) {
-    return Response.json({ project: null, error: "Failed to get project details. Please try again later." }, { headers: tokenResponse.headers });
+    return Response.json({ project: null, error: error.message }, { headers: tokenResponse.headers });
   }
 
   return Response.json({ project, error: null }, {
@@ -68,10 +68,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   if (error) {
-    return Response.json({ error: "Failed to update project. Please try again later." });
+    return Response.json({ sucess: false, error: error.message });
   }
 
-  return Response.json({ success: true });
+  return Response.json({ success: true, error: null });
 }
 
 export default function ProjectDetailsRoute() {
@@ -83,9 +83,10 @@ export default function ProjectDetailsRoute() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+  const fetcher = useFetcher({ key: "archive-project" })
 
   // State for form fields
-  const [priority, setPriority] = useState<string>(project.priority || "");
+  const [priority, setPriority] = useState<string>(project?.priority || "");
 
   const isAdmin = userInfo?.role?.toLowerCase() === "admin";
   const isProjectManager = userInfo?.role?.toLowerCase() === "projectmanager";
@@ -181,17 +182,19 @@ export default function ProjectDetailsRoute() {
                       Edit
                     </button>
                   )}
-                  {project.isArchived ? (
-                    <button className="btn btn-secondary">
-                      <span className="material-symbols-outlined">folder</span>
-                      Unarchive
-                    </button>
-                  ) : (
-                    <button className="btn btn-warning text-warning-content">
-                      <span className="material-symbols-outlined">folder</span>
-                      Archive
-                    </button>
-                  )}
+                  <fetcher.Form method="post" action={`/projects/${project.id}/archive`}>
+                    {project.isArchived ? (
+                      <button type="submit" className="btn btn-secondary">
+                        <span className="material-symbols-outlined">folder</span>
+                        Unarchive
+                      </button>
+                    ) : (
+                      <button type="submit" className="btn btn-warning text-warning-content">
+                        <span className="material-symbols-outlined">folder</span>
+                        Archive
+                      </button>
+                    )}
+                  </fetcher.Form>
                   <Link to="/projects" className="btn btn-outline">
                     <span className="material-symbols-outlined">arrow_back</span>
                     Back

@@ -10,7 +10,7 @@ namespace Zap.Api.Features.Companies.Endpoints;
 public class UpdateCompanyInfo : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
-        app.MapPost("/info", Handle)
+        app.MapPut("/info", Handle)
             .DisableAntiforgery()
             .Accepts<Request>("multipart/form-data")
             .RequireRateLimiting("upload")

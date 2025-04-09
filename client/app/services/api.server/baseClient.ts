@@ -35,15 +35,17 @@ export class BaseApiClient {
     };
 
     const { data: response, error } = await tryCatch(fetch(url, config));
-    return this.handleResponse<T>(response, error);
+    return this.handleJsonResponse<T>(response, error, "GET");
   }
-  protected async handleResponse<T>(
+  protected async handleResponse(
     response: Response | null,
-    error: Error | null
-  ): Promise<T> {
+    error: Error | null,
+    method: string,
+    errorMessage?: string
+  ): Promise<Response> {
     if (error) {
       console.error(error);
-      throw new ApiError("Failed to fetch", 500);
+      throw new ApiError(errorMessage ?? "Failed to fetch", 500);
     }
 
     if (!response) {
@@ -56,10 +58,47 @@ export class BaseApiClient {
     }
 
     if (!response.ok) {
-      console.error(response.url, response.status, response.statusText);
+      this.logResponse(response, method);
       throw new ApiError(response.statusText, response.status);
     }
 
+    this.logResponse(response, method);
+
+    return response;
+  }
+  protected async handleJsonResponse<T>(
+    response: Response | null,
+    error: Error | null,
+    method: string,
+    errorMessage?: string
+  ): Promise<T> {
+    if (error) {
+      console.error(error);
+      throw new ApiError(errorMessage ?? "Failed to fetch", 500);
+    }
+
+    if (!response) {
+      console.error("No response");
+      throw new ApiError("No response", 500);
+    }
+
+    if (response.status === 401) {
+      throw new AuthenticationError("Unauthorized");
+    }
+
+    if (!response.ok) {
+      this.logResponse(response, method);
+      throw new ApiError(response.statusText, response.status);
+    }
+
+    this.logResponse(response, method);
+
     return (await response.json()) as T;
+  }
+
+  private logResponse(response: Response, method: string) {
+    if (process.env.NODE_ENV !== "production") {
+      console.log(method, response.url, response.status, response.statusText);
+    }
   }
 }
