@@ -10,14 +10,14 @@
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.2"/>
-        <PackageReference Include="dotenv.net" Version="3.2.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+        <PackageReference Include="dotenv.net" Version="3.2.1"/>
+        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0"/>
         <PackageReference Include="xunit" Version="2.9.2"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
     </ItemGroup>
@@ -27,15 +27,22 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Zap.Api\Zap.Api.csproj" />
+        <ProjectReference Include="..\Zap.Api\Zap.Api.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="bin\Debug\net9.0\test-image.jpg" />
-      <None Update=".env">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="test-image.jpg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="bin\Debug\net9.0\test-image.jpg"/>
     </ItemGroup>
-    
+
+    <ItemGroup>
+        <None Update=".env">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="bin\Debug\net9.0\.env"/>
+    </ItemGroup>
+
 
 </Project>
