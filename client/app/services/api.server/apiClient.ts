@@ -9,7 +9,7 @@ import {
   RegisterCompanyRequest,
   UserInfoResponse,
 } from "./types";
-import { ApiError } from "./errors";
+import { ApiError, AuthenticationError } from "./errors";
 
 export class ApiService extends BaseApiClient {
   constructor(baseUrl: string) {
@@ -31,7 +31,7 @@ export class ApiService extends BaseApiClient {
     data: RegisterCompanyRequest,
     accessToken: string
   ): Promise<Response> {
-    return fetch(`${this.baseUrl}/register/company`, {
+    return fetch(`${this.baseUrl}/company/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -86,7 +86,7 @@ export class ApiService extends BaseApiClient {
     accessToken: string
   ): Promise<CompanyProjectsResponse[]> {
     return this.requestJson<CompanyProjectsResponse[]>(
-      "/company/projects?isArchived=false",
+      "/company/projects",
       { method: "GET" },
       accessToken
     );
@@ -125,6 +125,39 @@ export class ApiService extends BaseApiClient {
       },
       body: JSON.stringify(data),
     });
+  }
+
+  public async updateProject(
+    projectId: string,
+    projectData: any,
+    accessToken: string
+  ): Promise<Response> {
+    const { data: response, error } = await tryCatch(
+      fetch(`${this.baseUrl}/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(projectData),
+      })
+    );
+
+    if (error || !response) {
+      console.error(error);
+      return Promise.reject(new ApiError("Failed to update project", 500));
+    }
+
+    if (response.status === 401) {
+      return Promise.reject(new AuthenticationError("Unauthorized"));
+    }
+
+    if (!response.ok) {
+      console.error(response.url, response.status, response.statusText);
+      return Promise.reject(new ApiError(response.statusText, response.status));
+    }
+
+    return response;
   }
 }
 

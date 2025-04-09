@@ -1,9 +1,12 @@
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Link, useLoaderData, useOutletContext, useParams } from "@remix-run/react";
-import { useMemo } from "react";
+import { LoaderFunctionArgs, redirect, ActionFunctionArgs } from "@remix-run/node";
+import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation } from "@remix-run/react";
+import { useMemo, useState, useEffect } from "react";
+import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import apiClient from "~/services/api.server/apiClient";
+import { AuthenticationError } from "~/services/api.server/errors";
 import { ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
+import { useEditMode, getPriorityClass } from "~/utils/editMode";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -15,143 +18,258 @@ export const handle = {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const session = await getSession(request);
-  const user = session.get("user");
-
-  if (!user) {
-    return redirect("/login");
-  }
 
   const projectId = params.projectId!;
 
+  const session = await getSession(request);
   const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
   if (tokenError) {
     return redirect("/logout");
   }
+
   const { data: project, error } = await tryCatch(apiClient.getProjectById(projectId, tokenResponse.token));
 
   if (error) {
-    return Response.json({ error: "Failed to get project details. Please try again later." });
+    return Response.json({ project: null, error: "Failed to get project details. Please try again later." }, { headers: tokenResponse.headers });
   }
 
-  return Response.json(project);
+  return Response.json({ project, error: null }, {
+    headers: tokenResponse.headers
+  });
+}
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  const session = await getSession(request);
+  const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+
+  if (tokenError) {
+    return redirect("/logout");
+  }
+
+  const projectId = params.projectId!;
+  const formData = await request.formData();
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const priority = formData.get("priority") as string;
+  const dueDateValue = formData.get("dueDate") as string;
+  const dueDate = new Date(dueDateValue).toISOString();
+
+  const projectData = {
+    name,
+    description,
+    priority,
+    dueDate
+  };
+
+  const { error } = await tryCatch(apiClient.updateProject(projectId, projectData, tokenResponse.token));
+
+  if (error instanceof AuthenticationError) {
+    return redirect("/logout");
+  }
+
+  if (error) {
+    return Response.json({ error: "Failed to update project. Please try again later." });
+  }
+
+  return Response.json({ success: true });
 }
 
 export default function ProjectDetailsRoute() {
-  const project = useLoaderData<typeof loader>() as ProjectResponse;
+  const { project, error } = useLoaderData<typeof loader>() as {
+    project: ProjectResponse, error: string
+  }
   const userInfo = useOutletContext<UserInfoResponse>();
-  const isAdmin = useMemo(() => userInfo?.role?.toLowerCase() === "admin", [userInfo]);
-  const isProjectManager = useMemo(() => userInfo?.role?.toLowerCase() === "projectmanager", [userInfo]);
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+
+  // State for form fields
+  const [priority, setPriority] = useState<string>(project.priority || "");
+
+  const isAdmin = userInfo?.role?.toLowerCase() === "admin";
+  const isProjectManager = userInfo?.role?.toLowerCase() === "projectmanager";
   const canEdit = isAdmin || isProjectManager;
 
 
-  // Placeholder data for tickets
-  const tickets = [
-    { id: "1", title: "Fix login bug", status: "Open", priority: "High", assignee: "John Doe" },
-    { id: "2", title: "Update dashboard UI", status: "In Progress", priority: "Medium", assignee: "Jane Smith" },
-    { id: "3", title: "Optimize database queries", status: "Open", priority: "Low", assignee: "Unassigned" },
-  ];
-
+  // Reset priority when toggling edit mode
+  const handleEditToggle = () => {
+    if (project) {
+      setPriority(project.priority);
+    }
+    toggleEditMode();
+  };
 
 
   return (
     <div className="w-full bg-base-300 min-h-full p-6">
-      {/* Project Header */}
-      <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">{project.name}</h1>
-            <p className="text-base-content/70 mt-2">{project.description}</p>
-          </div>
-          <div className="flex gap-2">
-            {canEdit && (
-              <Link to={`/projects/${project.id}/edit`} className="btn btn-primary">
-                <span className="material-symbols-outlined">edit</span>
-                Edit
-              </Link>
-            )}
-            {!project.isArchived && (
-              <button className="btn btn-secondary">
-                <span className="material-symbols-outlined">folder</span>
-                Archive
-              </button>
-            )}
-            <Link to="/projects" className="btn btn-outline">
-              <span className="material-symbols-outlined">arrow_back</span>
-              Back
-            </Link>
-          </div>
-        </div>
+      {error ?
+        <p className="text-error mt-4">{error}</p> :
+        <ProjectContent project={project} />}
+    </div >
+  );
 
-        {/* Project Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-title">Priority</div>
-            <div className={`stat-value text-lg ${getPriorityClass(project.priority)}`}>
-              {project.priority}
-            </div>
-          </div>
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-title">Due Date</div>
-            <div className="stat-value text-lg">
-              {new Date(project.dueDate).toLocaleDateString()}
-            </div>
-          </div>
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-title">Team Size</div>
-            <div className="stat-value text-lg">
-              {project.members.length}
-            </div>
-          </div>
-        </div>
-      </div>
+  function ProjectContent({ project }: { project: any }) {
+    return (
+      <>
+        <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+          {isEditing ? (
+            <EditModeForm
+              error={formError}
+              isSubmitting={isSubmitting}
+              onCancel={handleEditToggle}
+            >
+              <div className="form-control mb-4">
+                <label className="label">
+                  <span className="label-text">Project Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  className="input input-bordered w-full"
+                  defaultValue={project.name}
+                  required
+                  maxLength={50}
+                />
+              </div>
 
-      {/* Team Members Section */}
-      <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Assigned Members</h2>
-          {canEdit && (
-            <button className="btn btn-soft btn-sm">
-              <span className="material-symbols-outlined">person_add</span>
-              Add Member
-            </button>
+              <div className="form-control mb-4">
+                <label className="label">
+                  <span className="label-text">Description</span>
+                </label>
+                <textarea
+                  name="description"
+                  className="textarea textarea-bordered w-full"
+                  defaultValue={project.description}
+                  rows={4}
+                  required
+                  maxLength={1000}
+                ></textarea>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <PrioritySelect
+                  value={priority}
+                  onChange={setPriority}
+                />
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Due Date</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="dueDate"
+                    className="input input-bordered w-full"
+                    defaultValue={new Date(project.dueDate).toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+              </div>
+            </EditModeForm>
+          ) : (
+            <>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-bold">{project.name}</h1>
+                  <p className="text-base-content/70 mt-2">{project.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  {canEdit && (
+                    <button onClick={handleEditToggle} className="btn btn-primary">
+                      <span className="material-symbols-outlined">edit</span>
+                      Edit
+                    </button>
+                  )}
+                  {project.isArchived ? (
+                    <button className="btn btn-secondary">
+                      <span className="material-symbols-outlined">folder</span>
+                      Unarchive
+                    </button>
+                  ) : (
+                    <button className="btn btn-warning text-warning-content">
+                      <span className="material-symbols-outlined">folder</span>
+                      Archive
+                    </button>
+                  )}
+                  <Link to="/projects" className="btn btn-outline">
+                    <span className="material-symbols-outlined">arrow_back</span>
+                    Back
+                  </Link>
+                </div>
+              </div>
+
+              {/* Project Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="stat bg-base-200 rounded-lg">
+                  <div className="stat-title">Priority</div>
+                  <div className={`stat-value text-lg ${getPriorityClass(project.priority)}`}>
+                    {project.priority}
+                  </div>
+                </div>
+                <div className="stat bg-base-200 rounded-lg">
+                  <div className="stat-title">Due Date</div>
+                  <div className="stat-value text-lg">
+                    {new Date(project.dueDate).toLocaleDateString()}
+                  </div>
+                </div>
+                <div className="stat bg-base-200 rounded-lg">
+                  <div className="stat-title">Team Size</div>
+                  <div className="stat-value text-lg">
+                    {project.members.length}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
-        {/* Members by Role */}
-        <div className="grid grid-cols-2 md:grid-cols-4  gap-4">
-          {project.members.map((member, index) => (
-            <div key={index} className="flex items-center gap-3 bg-base-200 p-3 rounded-lg">
-              <div className="avatar">
-                <div className="w-10 rounded-full">
-                  <img src={member.avatarUrl} alt={member.name} />
-                </div>
-              </div>
-              <span>{member.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* Team Members Section */}
+        <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Assigned Members</h2>
+            {canEdit && (
+              <button className="btn btn-soft btn-sm">
+                <span className="material-symbols-outlined">person_add</span>
+                Add Member
+              </button>
+            )}
+          </div>
 
-      {/* Tickets Section */}
-      <div className="bg-base-100 rounded-lg shadow-lg p-6" >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Tickets</h2>
-          <div className="flex gap-2">
-            <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm">
-              <span className="material-symbols-outlined">add_circle</span>
-              New Ticket
-            </Link>
-            <Link to={`/projects/${project.id}/tickets`} className="btn btn-outline btn-sm">
-              <span className="material-symbols-outlined">visibility</span>
-              View All
-            </Link>
+          {/* Members by Role */}
+          <div className="grid grid-cols-2 md:grid-cols-4  gap-4">
+            {project.members.map((member: any, index: number) => (
+              <div key={index} className="flex items-center gap-3 bg-base-200 p-3 rounded-lg">
+                <div className="avatar">
+                  <div className="w-10 rounded-full">
+                    <img src={member.avatarUrl} alt={member.name} />
+                  </div>
+                </div>
+                <span>{member.name}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Tickets Table */}
-        <div className="overflow-x-auto">
-          <table className="table table-zebra w-full">
+        {/* Tickets Section */}
+        <div className="bg-base-100 rounded-lg shadow-lg p-6" >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Tickets</h2>
+            <div className="flex gap-2">
+              <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm">
+                <span className="material-symbols-outlined">add_circle</span>
+                New Ticket
+              </Link>
+              <Link to={`/projects/${project.id}/tickets`} className="btn btn-outline btn-sm">
+                <span className="material-symbols-outlined">visibility</span>
+                View All
+              </Link>
+            </div>
+          </div>
+
+          {/* Tickets Table */}
+          <div className="overflow-x-auto">
+            {/* <table className="table table-zebra w-full">
             <thead>
               <tr>
                 <th>Title</th>
@@ -184,39 +302,12 @@ export default function ProjectDetailsRoute() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table> */}
+          </div>
         </div>
-      </div>
-    </div >
-  );
-}
-
-// Helper functions for styling
-function getPriorityClass(priority: string): string {
-  switch (priority.toLowerCase()) {
-    case "high":
-      return "text-error";
-    case "medium":
-      return "text-warning";
-    case "low":
-      return "text-info";
-    default:
-      return "text-neutral";
+      </>
+    )
   }
 }
 
-function getStatusClass(status: string): string {
-  switch (status.toLowerCase()) {
-    case "open":
-      return "badge-primary";
-    case "in progress":
-      return "badge-warning";
-    case "resolved":
-    case "completed":
-      return "badge-success";
-    case "closed":
-      return "badge-neutral";
-    default:
-      return "badge-neutral";
-  }
-}
+// Helper functions have been moved to utils/editMode.tsx

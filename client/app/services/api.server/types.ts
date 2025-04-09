@@ -62,5 +62,6 @@ export type CompanyProjectsResponse = {
   priority: string;
   dueDate: string; // ISO date string format
   memberCount: number;
+  isArchived: boolean;
   avatarUrls: string[];
 };

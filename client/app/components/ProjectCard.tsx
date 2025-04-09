@@ -23,9 +23,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         <h2 className="card-title text-xl mb-1">{project.name}</h2>
 
         {/* Due date */}
-        <div className="flex items-center text-sm text-base-content/70 mb-4">
-          <span className="material-symbols-outlined mr-1">assignment_late</span>
-          Due: {new Date(project.dueDate).toLocaleDateString()}
+        <div className="flex flex-col text-sm text-base-content/70 mb-4">
+          {project.isArchived && (
+            <div className="flex items-center">
+              <span className="material-symbols-outlined mr-1">folder</span>
+              Archived
+            </div>
+          )}
+          <div className="flex items-center">
+            <span className="material-symbols-outlined mr-1">assignment_late</span>
+            Due: {new Date(project.dueDate).toLocaleDateString()}
+          </div>
         </div>
 
         {/* Divider */}

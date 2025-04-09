@@ -1,10 +1,12 @@
 import { LoaderFunctionArgs, ActionFunctionArgs, redirect, HeadersFunction } from "@remix-run/node";
 import { Form, Link, useLoaderData, useOutletContext, useNavigation, useActionData } from "@remix-run/react";
 import { useState, useRef, useEffect } from "react";
+import { EditModeForm } from "~/components/EditModeForm";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyInfoResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
+import { useEditMode } from "~/utils/editMode";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -93,8 +95,13 @@ export default function CompanyRoute() {
     const isSubmitting = navigation.state === "submitting";
 
     // State for edit mode
-    const [isEditing, setIsEditing] = useState(false);
-    const [formError, setFormError] = useState<string | null>(null);
+    const {
+        isEditing,
+        formError,
+        toggleEditMode,
+    } = useEditMode({ actionData });
+
+
     const [removeLogo, setRemoveLogo] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -122,13 +129,6 @@ export default function CompanyRoute() {
         );
     })
 
-    // Toggle edit mode
-    const handleEditToggle = () => {
-        setIsEditing(!isEditing);
-        setRemoveLogo(false);
-        setFormError(null);
-        setPreviewImage(null);
-    };
 
     // Handle file selection for preview
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,12 +161,7 @@ export default function CompanyRoute() {
         if (!isEditing) {
             setPreviewImage(null);
         }
-
     }, [isEditing]);
-
-    useEffect(() => {
-        setIsEditing(false);
-    }, [actionData]);
 
     return (
         <div className="w-full p-6">
@@ -177,7 +172,7 @@ export default function CompanyRoute() {
                         <div className="bg-base-100 rounded shadow p-8 relative">
                             {userData.role.toLowerCase() === "admin" && !isEditing && (
                                 <div className="flex gap-4 mb-4 justify-end absolute right-6 top-6 z-10">
-                                    <button onClick={handleEditToggle} className="btn btn-soft btn-sm">
+                                    <button onClick={() => { toggleEditMode(); }} className="btn btn-soft btn-sm">
                                         <span className="material-symbols-outlined">edit</span> Edit Company
                                     </button>
                                     <Link to="/company/invites" className="btn btn-soft btn-sm">
@@ -187,7 +182,10 @@ export default function CompanyRoute() {
                             )}
 
                             {isEditing ? (
-                                <Form method="post" encType="multipart/form-data">
+                                <EditModeForm
+                                    error={formError}
+                                    isSubmitting={isSubmitting}
+                                    onCancel={() => { toggleEditMode(); }}>
                                     {formError && <p className="text-error mb-4">{formError}</p>}
 
                                     <div className="flex gap-4 mb-6">
@@ -258,46 +256,26 @@ export default function CompanyRoute() {
                                             maxLength={1000}
                                         ></textarea>
                                     </div>
-
-
-                                    <div className="flex justify-end gap-2">
-                                        <button
-                                            type="button"
-                                            className="btn btn-ghost"
-                                            onClick={handleEditToggle}
-                                            disabled={isSubmitting}
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary"
-                                            disabled={isSubmitting}
-                                        >
-                                            {isSubmitting ? "Saving..." : "Save Changes"}
-                                        </button>
-                                    </div>
-                                </Form>
-                            ) : (
-                                <>
-                                    <div className="flex gap-4">
-                                        <div className="avatar">
-                                            <div className="w-24 rounded-md">
-                                                <img src={companyInfo.logoUrl ?? "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-bold">{companyInfo.name}</p>
-                                            <p className="text-sm lg:text-base mt-2 text-base-content/80">{companyInfo.description}</p>
-
+                                </EditModeForm>
+                            ) : (<>
+                                <div className="flex gap-4">
+                                    <div className="avatar">
+                                        <div className="w-24 rounded-md">
+                                            <img src={companyInfo.logoUrl ?? "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} />
                                         </div>
                                     </div>
+                                    <div>
+                                        <p className="text-2xl font-bold">{companyInfo.name}</p>
+                                        <p className="text-sm lg:text-base mt-2 text-base-content/80">{companyInfo.description}</p>
 
-                                    <div className="mt-8">
-                                        <h2 className="text-xl font-bold mb-4">Members</h2>
-                                        {memberList && memberList}
                                     </div>
-                                </>
+                                </div>
+
+                                <div className="mt-8">
+                                    <h2 className="text-xl font-bold mb-4">Members</h2>
+                                    {memberList && memberList}
+                                </div>
+                            </>
                             )}
                         </div>
                         <div className="bg-base-100 rounded shadow p-8 mt-4">
