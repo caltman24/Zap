@@ -26,9 +26,6 @@ app.MapZapApiEndpoints();
 
 app.Run();
 
-namespace Zap.Api
+public partial class Program
 {
-    public partial class Program
-    {
-    }
 }
