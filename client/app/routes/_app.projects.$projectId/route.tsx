@@ -7,7 +7,7 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode, getPriorityClass } from "~/utils/editMode";
-import { ActionResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
+import { ActionResponse, ActionResponseParams, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -74,7 +74,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export default function ProjectDetailsRoute() {
   const { data: project, error } = useLoaderData<typeof loader>() as JsonResponseResult<ProjectResponse>;
   const userInfo = useOutletContext<UserInfoResponse>();
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData<typeof action>() as ActionResponseParams;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
