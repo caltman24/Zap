@@ -7,6 +7,7 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyInfoResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode } from "~/utils/editMode";
+import { JsonResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -30,21 +31,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     if (error) {
-        return Response.json({ data: null, error: "Failed to get company info. Please try again later." }, {
-            headers: {
-                ...tokenResponse.headers,
-            }
-        });
+        return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers });
+        // return Response.json({ data: null, error: "Failed to get company info. Please try again later." }, {
+        //     headers: {
+        //         ...tokenResponse.headers,
+        //     }
+        // });
     }
 
-    return Response.json({
-        data: res,
-        error: null
-    }, {
-        headers: {
-            ...tokenResponse.headers,
-        } // Append headers returned from getValidToken in case token was refreshed
-    });
+    return JsonResponse({ data: res, error: null, headers: tokenResponse.headers });
 
 }
 

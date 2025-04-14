@@ -2,15 +2,16 @@ import { Link, Outlet, redirect, useLoaderData, useLocation, useNavigation } fro
 import SideMenu from "./SideMenu";
 import { useEffect, useMemo } from "react";
 import DashboardNavbar from "./DashboardNavbar";
-import { filterMenuRoutesByRoles, menuRoutes, createRouteNameMap } from "~/data/routes";
+import { filterMenuRoutesByRoles, menuRoutes } from "~/data/routes";
 import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { getSession } from "~/services/sessions.server";
 import { UserInfoResponse } from "~/services/api.server/types";
+import { JsonResponse, JsonResponseResult } from "~/utils/response";
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const user = session.get("user");
+    const user = session.get("user")
 
     // Check if user is authenticated
     if (!user) {
@@ -21,11 +22,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/setup");
     }
 
-    return Response.json(user);
+    return JsonResponse({ data: user, error: null });
 }
 
 export default function AppRoute() {
-    const userData = useLoaderData<typeof loader>() as UserInfoResponse;
+    const { data: userData, error } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
 
     useEffect(() => {
         document.querySelector("body")?.classList.contains("overflow-hidden") || document.querySelector("body")?.classList.add("overflow-hidden")
@@ -43,9 +44,9 @@ export default function AppRoute() {
 
                 {/* contnet */}
                 <div className="w-full">
-                    <DashboardNavbar avatarUrl={userData.avatarUrl} />
+                    <DashboardNavbar avatarUrl={userData!.avatarUrl} />
                     <div className="overflow-y-auto h-[calc(100vh-64px)]">
-                        <Outlet context={userData} />
+                        <Outlet context={userData!} />
                     </div>
                 </div>
             </div>
