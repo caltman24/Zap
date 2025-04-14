@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { commitSession, getSession } from "~/services/sessions.server";
+import { ActionResponse, ActionResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -34,7 +35,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (error) {
-        return Response.json({ message: "Failed to register company. Please try again later." });
+        return ActionResponse({ success: false, error: error.message })
     }
 
     if (res.ok) {
@@ -44,7 +45,7 @@ export async function action({ request }: ActionFunctionArgs) {
             if (error instanceof AuthenticationError) {
                 return redirect("/logout");
             }
-            return Response.json({ message: "Failed to register company. Please try again later." });
+            return ActionResponse({ success: false, error: error.message })
         }
 
 
@@ -58,22 +59,18 @@ export async function action({ request }: ActionFunctionArgs) {
         });
     }
 
-    if (res.status === 400) {
-        return Response.json({ message: await res.json() });
-    }
-
-    return Response.json({ message: "Failed to register company. Please try again later." });
+    return ActionResponse({ success: false, error: "Failed to register company" })
 }
 
 export default function SetupCompanyRoute() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
-    const actionData = useActionData<typeof action>();
+    const actionData = useActionData<typeof action>() as ActionResponseResult;
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (actionData?.message) {
-            setError(actionData.message);
+        if (actionData?.error) {
+            setError(actionData.error);
         }
     }, [actionData]);
 

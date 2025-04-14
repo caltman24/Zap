@@ -7,6 +7,7 @@ import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
+import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -28,24 +29,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     if (error) {
-        return Response.json({ data: null, error: "Failed to get company projects. Please try again later." }, {
-            headers: {
-                ...tokenResponse.headers,
-            }
-        });
+        return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers })
     }
 
-    return Response.json({
-        data: res,
-        error: null
-    }, {
-        headers: {
-            ...tokenResponse.headers,
-        }
-    });
+    return JsonResponse({ data: res, error: null, headers: tokenResponse.headers });
 }
 export default function ProjectsRoute() {
-    const { data, error } = useLoaderData<typeof loader>();
+    const { data, error } = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
     const userInfo = useOutletContext<UserInfoResponse>();
     const createProjectRoles = useMemo(() => getRolesByRouteName("Create Project"), []);
 
@@ -66,7 +56,7 @@ export default function ProjectsRoute() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(data as CompanyProjectsResponse[]).map((project, index) => (
+                {data?.map((project, index) => (
                     <ProjectCard key={index} project={project} />
                 ))}
             </div>

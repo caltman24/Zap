@@ -9,6 +9,12 @@ export type JsonResponseResult<T> = {
   error: string | null;
 };
 
+export type ActionResponseParams = {
+  success: boolean;
+  error: string | null;
+  headers?: HeadersInit;
+};
+
 export type ActionResponseResult = {
   success: boolean;
   error: string | null;
@@ -29,8 +35,16 @@ export function JsonResponse<T>(params: JsonResponseParams<T>): Response {
   );
 }
 
-export function ActionResponse(params: ActionResponseResult): Response {
-  return Response.json({
-    ...params,
-  });
+export function ActionResponse(params: ActionResponseParams): Response {
+  return Response.json(
+    {
+      success: params.success,
+      error: params.error,
+    },
+    {
+      headers: {
+        ...params.headers,
+      },
+    }
+  );
 }

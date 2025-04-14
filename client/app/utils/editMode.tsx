@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { ActionResponseResult } from "./response";
 
 interface EditModeOptions {
   initialState?: boolean;
   onSuccess?: () => void;
   resetOnSuccess?: boolean;
-  actionData?: any
+  actionData?: ActionResponseResult
 }
 
 export function useEditMode({
@@ -45,7 +46,9 @@ export function useEditMode({
   };
 
   useEffect(() => {
-    handleActionSuccess()
+    if (actionData?.success) {
+      handleActionSuccess()
+    }
   }, [actionData]);
 
   return {

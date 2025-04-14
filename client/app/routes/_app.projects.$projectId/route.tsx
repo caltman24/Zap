@@ -7,6 +7,7 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode, getPriorityClass } from "~/utils/editMode";
+import { ActionResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -18,7 +19,6 @@ export const handle = {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-
   const projectId = params.projectId!;
 
   const session = await getSession(request);
@@ -28,14 +28,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   const { data: project, error } = await tryCatch(apiClient.getProjectById(projectId, tokenResponse.token));
-
   if (error) {
-    return Response.json({ project: null, error: error.message }, { headers: tokenResponse.headers });
+    return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers });
   }
 
-  return Response.json({ project, error: null }, {
-    headers: tokenResponse.headers
-  });
+  return JsonResponse({ data: project, error: null, headers: tokenResponse.headers });
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -68,16 +65,14 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   if (error) {
-    return Response.json({ sucess: false, error: error.message });
+    return ActionResponse({ success: false, error: error.message })
   }
 
-  return Response.json({ success: true, error: null });
+  return ActionResponse({ success: true, error: null });
 }
 
 export default function ProjectDetailsRoute() {
-  const { project, error } = useLoaderData<typeof loader>() as {
-    project: ProjectResponse, error: string
-  }
+  const { data: project, error } = useLoaderData<typeof loader>() as JsonResponseResult<ProjectResponse>;
   const userInfo = useOutletContext<UserInfoResponse>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();

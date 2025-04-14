@@ -2,6 +2,7 @@ import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/nod
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { destroySession, getSession } from "~/services/sessions.server";
+import { ActionResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -17,10 +18,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const { data: res, error } = await tryCatch(apiClient.toggleArchiveProject(projectId, tokenResponse.token));
 
     if (error) {
-        return Response.json({ success: false, error: error.message })
+        return ActionResponse({ success: false, error: error.message, headers: tokenResponse.headers })
     }
 
-    return Response.json({ success: true, error: null })
+    return ActionResponse({ success: true, error: null, headers: tokenResponse.headers })
 }
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);

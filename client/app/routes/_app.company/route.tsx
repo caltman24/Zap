@@ -7,7 +7,7 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyInfoResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode } from "~/utils/editMode";
-import { JsonResponse } from "~/utils/response";
+import { ActionResponse, ActionResponseResult, JsonResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 export const handle = {
@@ -71,15 +71,15 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (error) {
-        return Response.json({ success: false, error: error.message });
+        return ActionResponse({ success: false, error: error.message, headers: tokenResponse.headers })
     }
 
-    return Response.json({ success: true, error: null });
+    return ActionResponse({ success: true, error: null, headers: tokenResponse.headers })
 }
 
 export default function CompanyRoute() {
     const { data, error } = useLoaderData<typeof loader>();
-    const actionData = useActionData<typeof action>();
+    const actionData = useActionData<typeof action>() as ActionResponseResult;
     const userData = useOutletContext<UserInfoResponse>();
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
