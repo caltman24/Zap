@@ -14,6 +14,7 @@ export type ActionResponseResult = {
   error: string | null;
 };
 
+// Wrapper for Response.json
 export function JsonResponse<T>(params: JsonResponseParams<T>): Response {
   return Response.json(
     {

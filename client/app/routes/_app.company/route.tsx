@@ -32,11 +32,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     if (error) {
         return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers });
-        // return Response.json({ data: null, error: "Failed to get company info. Please try again later." }, {
-        //     headers: {
-        //         ...tokenResponse.headers,
-        //     }
-        // });
     }
 
     return JsonResponse({ data: res, error: null, headers: tokenResponse.headers });

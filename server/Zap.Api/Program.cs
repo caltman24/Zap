@@ -1,7 +1,5 @@
 using dotenv.net;
-using dotenv.net.Utilities;
 using Scalar.AspNetCore;
-using Zap.Api;
 using Zap.Api.Configuration;
 
 
