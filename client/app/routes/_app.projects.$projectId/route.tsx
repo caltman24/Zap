@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs, redirect, ActionFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation, useFetcher } from "@remix-run/react";
+import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation, useFetcher, Form } from "@remix-run/react";
 import { useMemo, useState, useEffect } from "react";
 import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import apiClient from "~/services/api.server/apiClient";
@@ -10,11 +10,12 @@ import { useEditMode, getPriorityClass } from "~/utils/editMode";
 import { ActionResponse, ActionResponseParams, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import RouteLayout from "~/layouts/RouteLayout";
+import SelectMemberModal from "./components/SelectMemberModal";
 
 export const handle = {
   breadcrumb: (match: any) => {
     const projectId = match.params.projectId;
-    const projectName = match.data?.project?.name || "Project Details";
+    const projectName = match.data?.name || "Project Details";
     return <Link to={`/projects/${projectId}`}>{projectName}</Link>;
   },
 };
@@ -80,6 +81,7 @@ export default function ProjectDetailsRoute() {
   const isSubmitting = navigation.state === "submitting";
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
   const fetcher = useFetcher({ key: "archive-project" })
+  const addMemberFetcher = useFetcher({ key: "add-member" })
 
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");
@@ -99,7 +101,7 @@ export default function ProjectDetailsRoute() {
 
 
   return (
-    <RouteLayout className="w-full bg-base-300 min-h-full p-6">
+    <RouteLayout >
       {error ?
         <p className="text-error mt-4">{error}</p> :
         <ProjectContent project={project} />}
@@ -108,6 +110,7 @@ export default function ProjectDetailsRoute() {
 
   function ProjectContent({ project }: { project: any }) {
     return (
+      // Edit Mode Form
       <>
         <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
           {isEditing ? (
@@ -165,6 +168,7 @@ export default function ProjectDetailsRoute() {
               </div>
             </EditModeForm>
           ) : (
+            // Display project details
             <>
               <div className="flex justify-between items-start">
                 <div>
@@ -178,6 +182,7 @@ export default function ProjectDetailsRoute() {
                       Edit
                     </button>
                   )}
+                  {/* Archive/Unarchive Project button */}
                   <fetcher.Form method="post" action={`/projects/${project.id}/archive`}>
                     {project.isArchived ? (
                       <button type="submit" className="btn btn-secondary">
@@ -227,11 +232,18 @@ export default function ProjectDetailsRoute() {
         <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Assigned Members</h2>
+            {/* Add Member Button */}
+            {/* Show list of available company members
+                excludes self, and any members already assigned to the project */}
             {canEdit && (
-              <button className="btn btn-soft btn-sm">
-                <span className="material-symbols-outlined">person_add</span>
-                Add Member
-              </button>
+              <>
+                {/* Open the modal using document.getElementById('ID').showModal() method */}
+                <button className="btn btn-soft btn-sm" onClick={() => (document.getElementById('add-member-modal') as HTMLDialogElement).showModal()}>
+                  <span className="material-symbols-outlined">person_add</span>
+                  Add Member
+                </button>
+                <SelectMemberModal modalId="add-member-modal" memberList={[]} fetcher={addMemberFetcher} />
+              </>
             )}
           </div>
 

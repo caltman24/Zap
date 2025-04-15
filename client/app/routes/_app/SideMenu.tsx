@@ -63,12 +63,12 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
     }
 
     return (
-        <div className="flex flex-col bg-base-200 text-content 2xl:flex-1/5 xl:flex-1/4 lg:flex-1/3 flex-1/2 border-r border-base-content/10">
+        <div className={`overflow-x-hidden flex flex-col bg-base-200 text-content 2xl:flex-1/5 xl:flex-1/4 lg:flex-1/3 flex-1/2 border-r border-base-content/10`}>
             <div className="">
                 <Link to={"/"} className="text-4xl flex gap-4 items-center justify-center p-4 font-extrabold tracking-wider hover:text-base-content hover:bg-base-300"><AppLogo />
                     ZAP</Link>
             </div>
-            <div className="overflow-y-auto h-[calc(100vh-64px)]">
+            <div className="overflow-x-hidden h-[calc(100vh-64px)]">
                 {menuRoutes.map((item, index) => (
                     <MenuItem key={index} {...item} />
                 ))}

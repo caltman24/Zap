@@ -28,17 +28,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function AppRoute() {
     const { data: userData, error } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
 
-    useEffect(() => {
-        document.querySelector("body")?.classList.contains("overflow-hidden") || document.querySelector("body")?.classList.add("overflow-hidden")
-
-        return () => {
-            document.querySelector("body")?.classList.remove("overflow-hidden")
-        }
-    }, [])
-
     return (
         <div>
-            <div className="flex min-h-screen bg-base-300">
+            <div className="flex min-h-screen h-screen max-h-screen bg-base-300">
                 {/* sidebar */}
                 <SideMenu menuRoutes={filterMenuRoutesByRoles(menuRoutes, ["admin"])} />
 
