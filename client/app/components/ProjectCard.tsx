@@ -3,9 +3,10 @@ import { CompanyProjectsResponse } from "~/services/api.server/types";
 
 interface ProjectCardProps {
   project: CompanyProjectsResponse;
+  showArchived?: boolean;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, showArchived }: ProjectCardProps) {
   return (
     <Link
       to={`/projects/${project.id}`}
@@ -24,7 +25,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
         {/* Due date */}
         <div className="flex flex-col text-sm text-base-content/70 mb-4">
-          {project.isArchived && (
+          {(project.isArchived && showArchived) && (
             <div className="flex items-center">
               <span className="material-symbols-outlined mr-1">folder</span>
               Archived
@@ -71,6 +72,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 // Helper function to get badge color based on priority
 function getPriorityClass(priority: string): string {
   switch (priority.toLowerCase()) {
+    case 'urgent':
+      return 'badge-error font-bold';
     case 'high':
       return 'badge-error';
     case 'medium':

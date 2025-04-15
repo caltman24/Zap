@@ -72,4 +72,19 @@ public sealed class ProjectService : IProjectService
 
         return true;
     }
+
+    public async Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto)
+    {
+        var project = await _db.Projects.FindAsync(projectId);
+        if (project == null) return false;
+
+        project.Name = projectDto.Name;
+        project.Description = projectDto.Description;
+        project.Priority = projectDto.Priority;
+        project.DueDate = projectDto.DueDate;
+
+        await _db.SaveChangesAsync();
+
+        return true;
+    }
 }

@@ -11,6 +11,8 @@ import { getSession } from "~/services/sessions.server";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
+// TODO: Add Filter for archived projects. Default to false
+
 export const handle = {
     breadcrumb: () => <Link to="/projects">All Projects</Link>,
 };
@@ -45,7 +47,7 @@ export default function ProjectsRoute() {
     }
 
     return (
-        <RouteLayout className="w-full bg-base-300 min-h-full p-6">
+        <RouteLayout>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">All Projects</h1>
                 {createProjectRoles.includes(userInfo.role.toLowerCase()) && (
@@ -58,7 +60,7 @@ export default function ProjectsRoute() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data?.map((project, index) => (
-                    <ProjectCard key={index} project={project} />
+                    <ProjectCard key={index} project={project} showArchived={true} />
                 ))}
             </div>
         </RouteLayout>
