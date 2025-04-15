@@ -9,6 +9,7 @@ import { getSession } from "~/services/sessions.server";
 import { useEditMode, getPriorityClass } from "~/utils/editMode";
 import { ActionResponse, ActionResponseParams, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
+import RouteLayout from "~/layouts/RouteLayout";
 
 export const handle = {
   breadcrumb: (match: any) => {
@@ -98,11 +99,11 @@ export default function ProjectDetailsRoute() {
 
 
   return (
-    <div className="w-full bg-base-300 min-h-full p-6">
+    <RouteLayout className="w-full bg-base-300 min-h-full p-6">
       {error ?
         <p className="text-error mt-4">{error}</p> :
         <ProjectContent project={project} />}
-    </div >
+    </RouteLayout >
   );
 
   function ProjectContent({ project }: { project: any }) {

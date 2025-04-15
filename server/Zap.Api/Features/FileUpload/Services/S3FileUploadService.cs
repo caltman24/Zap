@@ -59,7 +59,7 @@ public sealed class S3FileUploadService : IFileUploadService
     {
         return await UploadFileAsync(file, "attachments");
     }
-    
+
     public async Task DeleteFileAsync(string key)
     {
         _logger.LogDebug("Deleting file: {Key}", key);
@@ -110,7 +110,7 @@ public sealed class S3FileUploadService : IFileUploadService
         {
             var checksum = CalculateChecksum(stream);
             request.ChecksumAlgorithm = ChecksumAlgorithm.SHA256;
-            stream.Position = 0; 
+            stream.Position = 0;
         }
 
         try
@@ -137,8 +137,8 @@ public sealed class S3FileUploadService : IFileUploadService
         // List of allowed MIME types
         var allowedTypes = new[]
         {
-            "image/jpeg", "image/png", "image/gif", "image/webp", 
-            "application/pdf", "application/msword", 
+            "image/jpeg", "image/png", "image/gif", "image/webp",
+            "application/pdf", "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.ms-excel",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -155,7 +155,6 @@ public sealed class S3FileUploadService : IFileUploadService
         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
 
         if (allowedExtensions.Contains(extension)) return;
-        
         _logger.LogWarning("Invalid file extension attempted: {Extension}", extension);
         throw new Exception("Invalid file extension. Only images, PDFs, and Office documents are allowed.");
     }

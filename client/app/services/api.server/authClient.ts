@@ -73,12 +73,9 @@ export class AuthClient extends BaseApiClient {
   }
 
   private async refreshTokens(refreshToken: string): Promise<TokenResponse> {
-    return this.requestJson<TokenResponse>(
-      this.baseUrl + "auth/refreshtokens",
-      {
-        method: "POST",
-        body: JSON.stringify({ refreshToken }),
-      }
-    );
+    return this.requestJson<TokenResponse>("/auth/refreshtokens", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    });
   }
 }

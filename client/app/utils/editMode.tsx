@@ -49,6 +49,9 @@ export function useEditMode({
     if (actionData?.success) {
       handleActionSuccess()
     }
+    if (actionData?.error) {
+      setFormError(actionData.error);
+    }
   }, [actionData]);
 
   return {

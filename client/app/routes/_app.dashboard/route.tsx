@@ -1,4 +1,5 @@
 import { Link } from "@remix-run/react";
+import RouteLayout from "~/layouts/RouteLayout";
 
 export const handle = {
     breadcrumb: () => <Link to="/dashboard">Dashboard</Link>,
@@ -6,7 +7,7 @@ export const handle = {
 
 export default function DashboardRoute() {
     return (
-        <div className="text-center w-full bg-base-300 p-6">
+        <RouteLayout>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="stat bg-base-100 shadow rounded-box">
@@ -138,6 +139,6 @@ export default function DashboardRoute() {
                 </div>
             </div>
 
-        </div>
+        </RouteLayout>
     )
 }

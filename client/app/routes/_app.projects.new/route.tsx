@@ -7,6 +7,7 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { CreateProjectRequest } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
+import RouteLayout from "~/layouts/RouteLayout";
 
 export const handle = {
     breadcrumb: () => <Link to="/projects/new">New</Link>,
@@ -41,7 +42,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const description = formData.get("description") as string;
     const priority = formData.get("priority") as string;
 
-    // Get the date value and convert it to ISO format
     const dueDateValue = formData.get("dueDate") as string;
     // Create a Date object and convert to ISO string
     const dueDate = new Date(dueDateValue).toISOString();
@@ -96,7 +96,7 @@ export default function NewProjectRoute() {
     };
 
     return (
-        <div className="w-full bg-base-300 min-h-full p-6">
+        <RouteLayout className="w-full bg-base-300 min-h-full p-6">
             <div className="card w-full bg-base-100 rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold">Create New Project</h1>
@@ -185,6 +185,6 @@ export default function NewProjectRoute() {
                     </fieldset>
                 </Form>
             </div>
-        </div>
+        </RouteLayout>
     );
 }

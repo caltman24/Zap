@@ -1,3 +1,4 @@
+import RouteLayout from "~/layouts/RouteLayout";
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { Link, redirect, useLoaderData, useOutletContext } from "@remix-run/react";
 import { useMemo } from "react";
@@ -44,7 +45,7 @@ export default function ProjectsRoute() {
     }
 
     return (
-        <div className="w-full bg-base-300 min-h-full p-6">
+        <RouteLayout className="w-full bg-base-300 min-h-full p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">All Projects</h1>
                 {createProjectRoles.includes(userInfo.role.toLowerCase()) && (
@@ -60,7 +61,7 @@ export default function ProjectsRoute() {
                     <ProjectCard key={index} project={project} />
                 ))}
             </div>
-        </div>
+        </RouteLayout>
     );
 }
 

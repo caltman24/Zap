@@ -1,4 +1,5 @@
 import { LoaderFunctionArgs, ActionFunctionArgs, redirect, HeadersFunction } from "@remix-run/node";
+import RouteLayout from "~/layouts/RouteLayout";
 import { Form, Link, useLoaderData, useOutletContext, useNavigation, useActionData } from "@remix-run/react";
 import { useState, useRef, useEffect } from "react";
 import { EditModeForm } from "~/components/EditModeForm";
@@ -60,6 +61,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
     // Handle file upload if provided
     const logoFile = formData.get("logo") as File;
+
+    const maxMB = 2;
+    if (logoFile.size > maxMB * 1024 * 1024) {
+        return ActionResponse({ success: false, error: `Logo file is too large. Maximum size is ${maxMB}MB.`, headers: tokenResponse.headers })
+    }
     if (logoFile && logoFile.size > 0) {
         requestFormData.append("file", logoFile);
     }
@@ -90,6 +96,7 @@ export default function CompanyRoute() {
         formError,
         toggleEditMode,
     } = useEditMode({ actionData });
+
 
 
     const [removeLogo, setRemoveLogo] = useState(false);
@@ -154,7 +161,7 @@ export default function CompanyRoute() {
     }, [isEditing]);
 
     return (
-        <div className="w-full p-6">
+        <RouteLayout className="w-full p-6">
             {error && <p className="text-error mt-4">{error}</p>}
             {
                 companyInfo && (
@@ -175,15 +182,17 @@ export default function CompanyRoute() {
                                 <EditModeForm
                                     error={formError}
                                     isSubmitting={isSubmitting}
+                                    encType="multipart/form-data"
                                     onCancel={() => { toggleEditMode(); }}>
-                                    {formError && <p className="text-error mb-4">{formError}</p>}
 
                                     <div className="flex gap-4 mb-6">
                                         <div className="avatar">
                                             <div className="w-24 h-24 rounded-md bg-base-200 grid place-items-center text-center overflow-hidden">
                                                 {!removeLogo && (
                                                     <img
-                                                        src={previewImage || companyInfo.logoUrl || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+                                                        src={previewImage ||
+                                                            companyInfo.logoUrl ||
+                                                            "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
                                                         alt="Company logo"
                                                         className="object-cover w-full h-full"
                                                     />
@@ -274,6 +283,6 @@ export default function CompanyRoute() {
                     </div>
                 )
             }
-        </div>
+        </RouteLayout>
     );
 }
