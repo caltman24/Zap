@@ -27,28 +27,8 @@ public sealed class CompanyService : ICompanyService
 
         if (company == null) return null;
 
-
-        var membersByRole = new Dictionary<string, List<MemberInfoDto>>();
-
-        var memberIds = company.Members.Select(m => m.Id).ToList();
-
-        var rolesLookup = await GetMembersPerRoleAsync(memberIds);
-
-        foreach (var member in company.Members)
-        {
-            var roleName = rolesLookup.GetValueOrDefault(member.Id, "None");
-
-            if (!membersByRole.TryGetValue(roleName, out var memberList))
-            {
-                memberList = [];
-                membersByRole[roleName] = memberList;
-            }
-
-            memberList.Add(new MemberInfoDto(
-                $"{member.FirstName} {member.LastName}",
-                member.AvatarUrl
-            ));
-        }
+        // Where string is the role name
+        Dictionary<string, List<MemberInfoDto>> membersByRole = await GetMembersPerRoleAsync(company.Members);
 
         return new CompanyInfoDto(company.Name,
             company.Description,
@@ -153,14 +133,31 @@ public sealed class CompanyService : ICompanyService
         await _db.Companies.Where(c => c.Id == companyId).ExecuteDeleteAsync();
     }
 
+    public async Task<Dictionary<string, List<MemberInfoDto>>?> GetCompanyMembersPerRoleAsync(string companyId)
+    {
+        var company = await _db.Companies
+                .Where(c => c.Id == companyId)
+                .Include(c => c.Members)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+        if (company == null) return null;
+
+        var membersPerRole = await GetMembersPerRoleAsync(company.Members);
+
+        return membersPerRole;
+    }
+
     /// <summary>
     /// Gets each member from each role in the company
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
-    private async Task<Dictionary<string, string>> GetMembersPerRoleAsync(List<string> memberIds)
+    private async Task<Dictionary<string, List<MemberInfoDto>>> GetMembersPerRoleAsync(ICollection<AppUser> companyMembers)
     {
-        return await _db.UserRoles
+        var memberIds = companyMembers.Select(m => m.Id).ToList();
+
+        var rolesLookup = await _db.UserRoles
             .Where(ur => memberIds.Contains(ur.UserId))
             .Join(_db.Roles,
                 userRole => userRole.RoleId,
@@ -169,5 +166,27 @@ public sealed class CompanyService : ICompanyService
             .GroupBy(ur => ur.UserId)
             .Select(g => new { UserId = g.Key, Role = g.Select(x => x.Role).FirstOrDefault() ?? "None" })
             .ToDictionaryAsync(ur => ur.UserId, ur => ur.Role);
+
+        var membersByRole = new Dictionary<string, List<MemberInfoDto>>();
+
+        foreach (var member in companyMembers)
+        {
+            var roleName = rolesLookup.GetValueOrDefault(member.Id, "None");
+
+            if (!membersByRole.TryGetValue(roleName, out var memberList))
+            {
+                memberList = [];
+                membersByRole[roleName] = memberList;
+            }
+
+            memberList.Add(new MemberInfoDto(
+                $"{member.FirstName} {member.LastName}",
+                member.AvatarUrl,
+                roleName
+            ));
+        }
+
+        return membersByRole;
     }
+
 }

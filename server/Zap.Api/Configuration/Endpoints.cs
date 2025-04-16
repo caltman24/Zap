@@ -39,9 +39,11 @@ public static class Endpoints
         group.MapEndpoint<GetCompanyInfo>()
             .MapEndpoint<UpdateCompanyInfo>()
             .MapEndpoint<RegisterCompany>();
+
         group.MapGroup("/projects")
             .WithTags("CompanyProjects")
             .MapEndpoint<GetCompanyProjects>();
+
 
         return app;
     }
@@ -55,6 +57,10 @@ public static class Endpoints
             .MapEndpoint<CreateProject>()
             .MapEndpoint<ArchiveProject>()
             .MapEndpoint<UpdateProject>();
+
+        group.MapGroup("/{projectId}/members")
+            .WithTags("ProjectMembers")
+            .MapEndpoint<GetUnassignedCompanyMembers>();
 
         return app;
     }

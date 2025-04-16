@@ -12,6 +12,7 @@ public interface ICompanyService
     Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId);
     Task CreateCompanyAsync(CreateCompanyDto company);
     Task DeleteCompanyByIdAsync(string companyId);
+    Task<Dictionary<string, List<MemberInfoDto>>?> GetCompanyMembersPerRoleAsync(string companyId);
 }
 
 public record CreateCompanyDto(string Name, string Description, AppUser User);
@@ -30,7 +31,7 @@ public record CompanyInfoDto(
     string? LogoUrl,
     Dictionary<string, List<MemberInfoDto>> Members);
 
-public record MemberInfoDto(string Name, string AvatarUrl);
+public record MemberInfoDto(string Name, string AvatarUrl, string? Role = null);
 
 public record CompanyProjectDto(
     string Id,
@@ -40,3 +41,4 @@ public record CompanyProjectDto(
     bool IsArchived,
     int MemberCount,
     IEnumerable<string> AvatarUrls);
+
