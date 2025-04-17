@@ -12,7 +12,6 @@ public interface ICompanyService
     Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId);
     Task CreateCompanyAsync(CreateCompanyDto company);
     Task DeleteCompanyByIdAsync(string companyId);
-    Task<Dictionary<string, List<MemberInfoDto>>?> GetCompanyMembersPerRoleAsync(string companyId);
 }
 
 public record CreateCompanyDto(string Name, string Description, AppUser User);

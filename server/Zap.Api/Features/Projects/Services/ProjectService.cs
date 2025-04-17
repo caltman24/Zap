@@ -87,4 +87,53 @@ public sealed class ProjectService : IProjectService
 
         return true;
     }
+
+    public async Task<Dictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId)
+    {
+        var project = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .Include(p => p.Company)
+            .ThenInclude(c => c.Members)
+            .FirstOrDefaultAsync();
+
+        if (project == null) return null;
+
+        var unassignedMembers = project.Company.Members
+            .Where(m => project.AssignedMembers.Select(am => am.Id).Contains(m.Id));
+
+        var membersByRole = new Dictionary<string, List<MemberInfoDto>>();
+
+        if (unassignedMembers.Count() == 0) return membersByRole;
+
+        // userId: RoleName
+        Dictionary<string, string> rolesLookup = await _db.UserRoles
+            .Where(ur => unassignedMembers.Select(um => um.Id).Contains(ur.UserId))
+            .Join(_db.Roles,
+                userRole => userRole.RoleId,
+                identityRole => identityRole.Id,
+                (userRole, identityRole) => new { userRole.UserId, Role = identityRole.Name })
+            .GroupBy(ur => ur.UserId)
+            .Select(g => new { UserId = g.Key, Role = g.Select(x => x.Role).FirstOrDefault() ?? "None" })
+            .ToDictionaryAsync(ur => ur.UserId, ur => ur.Role);
+
+
+        foreach (var member in unassignedMembers)
+        {
+            var roleName = rolesLookup.GetValueOrDefault(member.Id, "None");
+
+            if (!membersByRole.TryGetValue(roleName, out var memberList))
+            {
+                memberList = [];
+                membersByRole[roleName] = memberList;
+            }
+
+            memberList.Add(new MemberInfoDto(
+                $"{member.FirstName} {member.LastName}",
+                member.AvatarUrl,
+                roleName
+            ));
+        }
+
+        return membersByRole;
+    }
 }

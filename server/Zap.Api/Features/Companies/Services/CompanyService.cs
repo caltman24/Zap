@@ -153,7 +153,7 @@ public sealed class CompanyService : ICompanyService
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
-    private async Task<Dictionary<string, List<MemberInfoDto>>> GetMembersPerRoleAsync(ICollection<AppUser> companyMembers)
+    public async Task<Dictionary<string, List<MemberInfoDto>>> GetMembersPerRoleAsync(ICollection<AppUser> companyMembers)
     {
         var memberIds = companyMembers.Select(m => m.Id).ToList();
 

@@ -30,7 +30,7 @@ public class CreateProject : IEndpoint
             RuleFor(x => x.Name).NotEmpty().NotNull().MaximumLength(50);
             RuleFor(x => x.Description).NotEmpty().NotNull().MaximumLength(1000);
             RuleFor(x => x.Priority).NotEmpty().NotNull().MaximumLength(50);
-            RuleFor(x => x.DueDate).NotEmpty().NotNull();
+            RuleFor(x => x.DueDate).NotNull().GreaterThan(DateTime.UtcNow);
         }
     }
 

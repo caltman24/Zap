@@ -3,6 +3,7 @@ import { AuthClient } from "./authClient";
 import { BaseApiClient } from "./baseClient";
 import {
   CompanyInfoResponse,
+  CompanyMemberPerRole,
   CompanyProjectsResponse,
   CreateProjectRequest,
   ProjectResponse,
@@ -141,6 +142,17 @@ export class ApiService extends BaseApiClient {
       error,
       method,
       "Failed to update project"
+    );
+  }
+
+  public async getUnassignedProjectMembers(
+    projectId: string,
+    accessToken: string
+  ): Promise<CompanyMemberPerRole> {
+    return this.requestJson<CompanyMemberPerRole>(
+      `/projects/${projectId}/members/unassigned`,
+      { method: "GET" },
+      accessToken
     );
   }
 
