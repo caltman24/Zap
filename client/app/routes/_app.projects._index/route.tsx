@@ -19,28 +19,42 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
 
     if (tokenError) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(apiClient.getCompanyProjects(tokenResponse.token));
+    const { data: res, error } = await tryCatch(
+        apiClient.getCompanyProjects(tokenResponse.token));
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");
     }
 
     if (error) {
-        return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers })
+        return JsonResponse({
+            data: null,
+            error: error.message,
+            headers: tokenResponse.headers
+        })
     }
 
-    return JsonResponse({ data: res, error: null, headers: tokenResponse.headers });
+    return JsonResponse({
+        data: res,
+        error: null,
+        headers: tokenResponse.headers
+    });
 }
 export default function ProjectsRoute() {
-    const { data, error } = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
+    const { data, error } = useLoaderData<JsonResponseResult<CompanyProjectsResponse[]>>()
     const userInfo = useOutletContext<UserInfoResponse>();
-    const createProjectRoles = useMemo(() => getRolesByRouteName("Create Project"), []);
+    const createProjectRoles = useMemo(() =>
+        getRolesByRouteName("Create Project"),
+        []);
 
     if (error) {
         return <p className="text-error">{error}</p>;

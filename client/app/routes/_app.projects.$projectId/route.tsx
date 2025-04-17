@@ -23,22 +23,40 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const projectId = params.projectId!;
 
   const session = await getSession(request);
-  const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+  const {
+    data: tokenResponse,
+    error: tokenError
+  } = await tryCatch(apiClient.auth.getValidToken(session));
+
   if (tokenError) {
     return redirect("/logout");
   }
 
-  const { data: project, error } = await tryCatch(apiClient.getProjectById(projectId, tokenResponse.token));
+  const { data: project, error } = await tryCatch(
+    apiClient.getProjectById(
+      projectId,
+      tokenResponse.token));
+
   if (error) {
-    return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers });
+    return JsonResponse({
+      data: null,
+      error: error.message,
+      headers: tokenResponse.headers
+    });
   }
 
-  return JsonResponse({ data: project, error: null, headers: tokenResponse.headers });
+  return JsonResponse({
+    data: project,
+    error: null,
+    headers: tokenResponse.headers
+  });
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const session = await getSession(request);
-  const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+
+  const { data: tokenResponse, error: tokenError } = await tryCatch(
+    apiClient.auth.getValidToken(session));
 
   if (tokenError) {
     return redirect("/logout");
@@ -59,28 +77,37 @@ export async function action({ request, params }: ActionFunctionArgs) {
     dueDate
   };
 
-  const { error } = await tryCatch(apiClient.updateProject(projectId, projectData, tokenResponse.token));
+  const { error } = await tryCatch(
+    apiClient.updateProject(
+      projectId,
+      projectData,
+      tokenResponse.token));
 
   if (error instanceof AuthenticationError) {
     return redirect("/logout");
   }
 
   if (error) {
-    return ActionResponse({ success: false, error: error.message })
+    return ActionResponse({
+      success: false,
+      error: error.message
+    })
   }
 
-  return ActionResponse({ success: true, error: null });
+  return ActionResponse({
+    success: true,
+    error: null
+  });
 }
 
 export default function ProjectDetailsRoute() {
-  const { data: project, error } = useLoaderData<typeof loader>() as JsonResponseResult<ProjectResponse>;
+  const { data: project, error } = useLoaderData<JsonResponseResult<ProjectResponse>>();
   const userInfo = useOutletContext<UserInfoResponse>();
   const actionData = useActionData<typeof action>() as ActionResponseParams;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
-  const fetcher = useFetcher({ key: "archive-project" })
-
+  const fetcher = useFetcher({ key: "archive-project" });
 
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");

@@ -20,12 +20,13 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ message: "Passwords do not match" });
     }
 
-    const { data: res, error } = await tryCatch(apiClient.auth.registerAccount({
-        firstName: firstName as string,
-        lastName: lastName as string,
-        email: email as string,
-        password: password as string,
-    }));
+    const { data: res, error } = await tryCatch(
+        apiClient.auth.registerAccount({
+            firstName: firstName as string,
+            lastName: lastName as string,
+            email: email as string,
+            password: password as string,
+        }));
 
     if (error) {
         return Response.json({ message: "Failed to register. Please try again later." });

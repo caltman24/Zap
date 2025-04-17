@@ -12,19 +12,33 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     const projectId = params.projectId!
 
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
 
     if (tokenError) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(apiClient.getUnassignedProjectMembers(projectId, tokenResponse.token));
+    const { data: res, error } = await tryCatch(
+        apiClient.getUnassignedProjectMembers(
+            projectId,
+            tokenResponse.token));
 
     if (error) {
-        return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers })
+        return JsonResponse({
+            data: null,
+            error: error.message,
+            headers: tokenResponse.headers
+        })
     }
 
-    return JsonResponse({ data: res, error: null, headers: tokenResponse.headers })
+    return JsonResponse({
+        data: res,
+        error: null,
+        headers: tokenResponse.headers
+    })
 }
 
 export default function UnassignedProjectMembers() {

@@ -22,7 +22,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/setup");
     }
 
-    return JsonResponse({ data: user, error: null });
+    return JsonResponse({
+        data: user,
+        error: null
+    });
 }
 
 export default function AppRoute() {

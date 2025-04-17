@@ -13,7 +13,10 @@ export async function action({ request }: ActionFunctionArgs) {
     // Try to get valid token
     // Returns error if token is invalid or expired -> logout
     // Returns token if token is valid, and headers if token was refreshed
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
 
     if (tokenError) {
         return redirect("/logout");
@@ -25,27 +28,34 @@ export async function action({ request }: ActionFunctionArgs) {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
 
-    const { data: res, error } = await tryCatch(apiClient.registerCompany({
-        name,
-        description,
-    }, token));
+    const { data: res, error } = await tryCatch(
+        apiClient.registerCompany({
+            name,
+            description,
+        }, token));
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");
     }
-
     if (error) {
-        return ActionResponse({ success: false, error: error.message })
+        return ActionResponse({
+            success: false,
+            error: error.message
+        })
     }
 
     if (res.ok) {
-        const { data, error } = await tryCatch(apiClient.getUserInfo(token));
+        const { data, error } = await tryCatch(
+            apiClient.getUserInfo(token));
 
         if (error) {
             if (error instanceof AuthenticationError) {
                 return redirect("/logout");
             }
-            return ActionResponse({ success: false, error: error.message })
+            return ActionResponse({
+                success: false,
+                error: error.message
+            })
         }
 
 

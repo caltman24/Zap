@@ -17,8 +17,13 @@ export default function Index() {
         <div className="min-h-screen flex flex-col">
             <div className="max-w-7xl mx-auto p-4 flex-1">
                 <header className="py-12 md:py-20 text-center">
-                    <h1 className="text-5xl md:text-6xl font-bold text-base-content mb-4">Welcome to <span className="text-primary">Zap!</span></h1>
-                    <p className="text-xl md:text-2xl text-base-content/80 max-w-3xl mx-auto">Track, manage, and resolve bugs faster with our streamlined issue tracking system.</p>
+                    <h1 className="text-5xl md:text-6xl font-bold text-base-content mb-4">
+                        Welcome to
+                        <span className="text-primary">Zap!</span>
+                    </h1>
+                    <p className="text-xl md:text-2xl text-base-content/80 max-w-3xl mx-auto">
+                        Track, manage, and resolve bugs faster with our streamlined issue tracking system.
+                    </p>
 
                     <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                         <a href="/register" className="btn btn-primary btn-lg">Get Started</a>
@@ -58,7 +63,9 @@ export default function Index() {
                 <section className="py-12 md:py-16 text-center">
                     <div className="bg-primary/10 rounded-box p-8 md:p-12">
                         <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
-                        <p className="text-lg mb-6 max-w-2xl mx-auto">Join thousands of teams already using Zap to streamline their bug tracking process.</p>
+                        <p className="text-lg mb-6 max-w-2xl mx-auto">
+                            Join thousands of teams already using Zap to streamline their bug tracking process.
+                        </p>
                         <a href="/register" className="btn btn-primary btn-lg">Sign Up Now</a>
                     </div>
                 </section>

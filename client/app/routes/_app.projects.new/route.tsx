@@ -31,7 +31,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
 
     if (tokenError) {
         return redirect("/logout");
@@ -53,14 +56,19 @@ export async function action({ request }: ActionFunctionArgs) {
         dueDate
     };
 
-    const { error } = await tryCatch(apiClient.createProject(projectData, tokenResponse.token));
+    const { error } = await tryCatch(
+        apiClient.createProject(
+            projectData,
+            tokenResponse.token));
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");
     }
 
     if (error) {
-        return Response.json({ error: "Failed to create project. Please try again later." });
+        return Response.json({
+            error: "Failed to create project. Please try again later."
+        });
     }
 
     return redirect("/projects");

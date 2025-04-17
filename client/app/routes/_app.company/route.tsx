@@ -20,22 +20,37 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
+
     if (tokenError) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(apiClient.getCompanyInfo(tokenResponse.token));
+    const {
+        data: res,
+        error
+    } = await tryCatch(apiClient.getCompanyInfo(tokenResponse.token));
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");
     }
-
     if (error) {
-        return JsonResponse({ data: null, error: error.message, headers: tokenResponse.headers });
+        return JsonResponse({
+            data: null,
+            error: error.message,
+            headers: tokenResponse.headers
+        });
     }
 
-    return JsonResponse({ data: res, error: null, headers: tokenResponse.headers });
+    return JsonResponse({
+        data: res,
+        error: null,
+        headers: tokenResponse.headers
+    });
 
 }
 

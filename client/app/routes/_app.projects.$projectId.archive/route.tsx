@@ -9,19 +9,33 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
 
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
 
     if (tokenError) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(apiClient.toggleArchiveProject(projectId, tokenResponse.token));
+    const { data: res, error } = await tryCatch(
+        apiClient.toggleArchiveProject(
+            projectId,
+            tokenResponse.token));
 
     if (error) {
-        return ActionResponse({ success: false, error: error.message, headers: tokenResponse.headers })
+        return ActionResponse({
+            success: false,
+            error: error.message,
+            headers: tokenResponse.headers
+        })
     }
 
-    return ActionResponse({ success: true, error: null, headers: tokenResponse.headers })
+    return ActionResponse({
+        success: true,
+        error: null,
+        headers: tokenResponse.headers
+    })
 }
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
