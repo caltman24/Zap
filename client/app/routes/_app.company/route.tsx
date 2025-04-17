@@ -123,7 +123,7 @@ export default function CompanyRoute() {
         return (
             <div key={role} className="my-4">
                 <h3 className="text-lg font-medium">{role}</h3>
-                <ul className="flex flex-wrap gap-2 mt-4">
+                <ul className="flex flex-wrap gap-6 mt-4">
                     {members.map((member, index) => (
                         <li key={index}>
                             <div className="flex gap-2 items-center">
