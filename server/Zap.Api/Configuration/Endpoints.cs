@@ -10,8 +10,9 @@ public static class Endpoints
 {
     public static void MapZapApiEndpoints(this WebApplication app)
     {
-        app.MapAuthenticationEndpoints(app.Environment)
-            .MapCompaniesEndpoints()
+        app.MapAuthenticationEndpoints(app.Environment);
+
+        app.MapCompaniesEndpoints(app.Environment)
             .MapProjectsEndpoints()
             .MapUsersEndpoints();
     }
@@ -31,7 +32,7 @@ public static class Endpoints
         return app;
     }
 
-    private static IEndpointRouteBuilder MapCompaniesEndpoints(this IEndpointRouteBuilder app)
+    private static IEndpointRouteBuilder MapCompaniesEndpoints(this IEndpointRouteBuilder app, IWebHostEnvironment env)
     {
         var group = app.MapGroup("/company")
             .WithTags("Company");
@@ -44,6 +45,7 @@ public static class Endpoints
             .WithTags("CompanyProjects")
             .MapEndpoint<GetCompanyProjects>();
 
+        if (env.IsDevelopment()) group.MapEndpoint<AddTestMembers>();
 
         return app;
     }

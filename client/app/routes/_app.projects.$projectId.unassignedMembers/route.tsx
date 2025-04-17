@@ -26,6 +26,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
             projectId,
             tokenResponse.token));
 
+    console.log(res)
+
     if (error) {
         return JsonResponse({
             data: null,
@@ -53,6 +55,8 @@ export default function UnassignedProjectMembers() {
         }
     }, [])
 
+    //TODO: Add search for member list
+
     return (
         <dialog id="member-modal" className="modal" ref={modalRef}>
             {error || !members && <p className="text-error text-sm">{error}</p>}
@@ -65,8 +69,8 @@ export default function UnassignedProjectMembers() {
                             {Object.entries(members ?? {})
                                 .map(([role, m]) => {
                                     return (
-                                        <li className="list-row">
-                                            <p>{role}</p>
+                                        <li className="list-row flex flex-col gap-2">
+                                            <p className="font-bold">{role}</p>
                                             <ul className="list">
                                                 {m.map(x =>
                                                 (<li className="list-row flex items-center cursor-pointer hover:bg-base-200 rounded">

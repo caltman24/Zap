@@ -8,10 +8,12 @@ namespace Zap.Api.Features.Projects.Services;
 public sealed class ProjectService : IProjectService
 {
     private readonly AppDbContext _db;
+    private readonly ILogger<ProjectService> _logger;
 
-    public ProjectService(AppDbContext db)
+    public ProjectService(AppDbContext db, ILogger<ProjectService> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     public async Task<ProjectDto?> GetProjectByIdAsync(string projectId)
@@ -94,12 +96,13 @@ public sealed class ProjectService : IProjectService
             .Where(p => p.Id == projectId)
             .Include(p => p.Company)
             .ThenInclude(c => c.Members)
+            .Include(p => p.AssignedMembers)
             .FirstOrDefaultAsync();
 
         if (project == null) return null;
 
         var unassignedMembers = project.Company.Members
-            .Where(m => project.AssignedMembers.Select(am => am.Id).Contains(m.Id));
+            .Where(m => !project.AssignedMembers.Select(am => am.Id).Contains(m.Id));
 
         var membersByRole = new Dictionary<string, List<MemberInfoDto>>();
 
@@ -134,6 +137,8 @@ public sealed class ProjectService : IProjectService
             ));
         }
 
-        return membersByRole;
+        //TODO: Sort the members alpha
+        return membersByRole.OrderBy(kvp => kvp.Key)
+            .ToDictionary();
     }
 }
