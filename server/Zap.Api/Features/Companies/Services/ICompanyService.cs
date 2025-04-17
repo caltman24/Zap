@@ -30,7 +30,7 @@ public record CompanyInfoDto(
     string? LogoUrl,
     Dictionary<string, List<MemberInfoDto>> Members);
 
-public record MemberInfoDto(string Name, string AvatarUrl, string? Role = null);
+public record MemberInfoDto(string Id, string Name, string AvatarUrl, string? Role = null);
 
 public record CompanyProjectDto(
     string Id,

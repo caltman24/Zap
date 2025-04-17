@@ -180,10 +180,11 @@ public sealed class CompanyService : ICompanyService
             }
 
             memberList.Add(new MemberInfoDto(
-                $"{member.FirstName} {member.LastName}",
-                member.AvatarUrl,
-                roleName
-            ));
+                member.Id,
+                    $"{member.FirstName} {member.LastName}",
+                    member.AvatarUrl,
+                    roleName
+                ));
         }
 
         return membersByRole;

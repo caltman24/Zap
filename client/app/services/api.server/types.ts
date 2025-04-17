@@ -28,7 +28,7 @@ export type CompanyInfoResponse = {
 };
 
 export type CompanyMemberPerRole = {
-  [key: string]: { name: string; avatarUrl: string }[];
+  [key: string]: { id: string; name: string; avatarUrl: string }[];
 };
 
 export type RegisterUserRequest = {

@@ -32,7 +32,7 @@ public sealed class ProjectService : IProjectService
             project.CompanyId,
             project.IsArchived,
             project.DueDate,
-            project.AssignedMembers.Select(m => new MemberInfoDto($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
+            project.AssignedMembers.Select(m => new MemberInfoDto(m.Id, $"{m.FirstName} {m.LastName}", m.AvatarUrl)));
     }
 
     public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto project)
@@ -56,7 +56,7 @@ public sealed class ProjectService : IProjectService
             newProject.Description, newProject.Priority, newProject.CompanyId, newProject.IsArchived,
             newProject.DueDate,
             newProject.AssignedMembers.Select(m =>
-                new MemberInfoDto($"{m.FirstName} {m.LastName}", m.AvatarUrl)));
+                new MemberInfoDto(m.Id, $"{m.FirstName} {m.LastName}", m.AvatarUrl)));
     }
 
     public async Task DeleteProjectByIdAsync(string projectId)
@@ -131,6 +131,7 @@ public sealed class ProjectService : IProjectService
             }
 
             memberList.Add(new MemberInfoDto(
+                member.Id,
                 $"{member.FirstName} {member.LastName}",
                 member.AvatarUrl,
                 roleName

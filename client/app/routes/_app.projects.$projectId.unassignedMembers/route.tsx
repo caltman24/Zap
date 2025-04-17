@@ -63,18 +63,23 @@ export default function UnassignedProjectMembers() {
             <div className="modal-box">
                 <h3 className="font-bold text-lg mb-8">Select Members</h3>
                 <div>
-                    {Object.keys(members as object).length === 0
+                    {Object.keys(members ?? {}).length === 0
                         ? <p>No more members to add</p>
-                        : (<ul className="list rounded bg-base-300 max-h-[350px] overflow-y-auto">
+                        : (<ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto">
                             {Object.entries(members ?? {})
                                 .map(([role, m]) => {
                                     return (
-                                        <li className="list-row flex flex-col gap-2">
+                                        <li key={role} className="list-row flex flex-col gap-2">
                                             <p className="font-bold">{role}</p>
                                             <ul className="list">
                                                 {m.map(x =>
-                                                (<li className="list-row flex items-center cursor-pointer hover:bg-base-200 rounded">
-                                                    {x.name}
+                                                (<li key={x.id} className="list-row flex items-center cursor-pointer hover:bg-base-200 rounded">
+                                                    <div className="flex gap-4 items-center">
+                                                        <div className="avatar rounded-full w-10 h-10">
+                                                            <img src={x.avatarUrl} className="w-full h-auto rounded-full" />
+                                                        </div>
+                                                        <p className="">{x.name}</p>
+                                                    </div>
                                                 </li>))}
                                             </ul>
                                         </li>
