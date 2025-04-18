@@ -5,7 +5,7 @@ export type RouteLayoutProps = {
 
 export default function RouteLayotut({ children, className }: RouteLayoutProps) {
   return (
-    <div className={`w-full bg-base-300 h-full p-6 ${className ?? ''}`}>
+    <div className={`w-full bg-base-300 h-auto p-6 ${className ?? ''}`}>
       {children}
     </div>
   );
