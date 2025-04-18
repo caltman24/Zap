@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import apiClient from "~/services/api.server/apiClient";
 import { CompanyMemberPerRole } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
@@ -48,6 +48,7 @@ export default function UnassignedProjectMembers() {
 
     const modalRef = useRef<HTMLDialogElement>(null);
     const navigate = useNavigate()
+    const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null);
 
     useEffect(() => {
         if (modalRef) {
@@ -60,9 +61,10 @@ export default function UnassignedProjectMembers() {
     return (
         <dialog id="member-modal" className="modal" ref={modalRef}>
             {error || !members && <p className="text-error text-sm">{error}</p>}
-            <div className="modal-box">
-                <h3 className="font-bold text-lg mb-8">Select Members</h3>
-                <div>
+            <div className="modal-box ">
+                <h3 className="font-bold text-lg mb-2">Select Members</h3>
+                {selectedMember && (<span className="flex gap-2">x<p className="badge badge-neutral cursor-pointer hover:bg-neutral-900">{selectedMember.name}</p> </span>)}
+                <div className="mt-4">
                     {Object.keys(members ?? {}).length === 0
                         ? <p>No more members to add</p>
                         : (<ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto">
@@ -73,7 +75,9 @@ export default function UnassignedProjectMembers() {
                                             <p className="font-bold">{role}</p>
                                             <ul className="list">
                                                 {m.map(x =>
-                                                (<li key={x.id} className="list-row flex items-center cursor-pointer hover:bg-base-200 rounded">
+                                                (<li key={x.id}
+                                                    className="list-row flex items-center cursor-pointer hover:bg-base-200 rounded"
+                                                    onClick={() => setSelectedMember({ id: x.id, name: x.name })}>
                                                     <div className="flex gap-4 items-center">
                                                         <div className="avatar rounded-full w-10 h-10">
                                                             <img src={x.avatarUrl} className="w-full h-auto rounded-full" />
