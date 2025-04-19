@@ -23,14 +23,14 @@ export class ApiService extends BaseApiClient {
     return this.requestJson<UserInfoResponse>(
       "/user/info",
       { method: "GET" },
-      accessToken
+      accessToken,
     );
   }
 
   // Company endpoints
   public async registerCompany(
     data: RegisterCompanyRequest,
-    accessToken: string
+    accessToken: string,
   ): Promise<Response> {
     return fetch(`${this.baseUrl}/company/register`, {
       method: "POST",
@@ -43,18 +43,18 @@ export class ApiService extends BaseApiClient {
   }
 
   public async getCompanyInfo(
-    accessToken: string
+    accessToken: string,
   ): Promise<CompanyInfoResponse> {
     return this.requestJson<CompanyInfoResponse>(
       "/company/info",
       { method: "GET" },
-      accessToken
+      accessToken,
     );
   }
 
   public async updateCompanyInfo(
     formData: FormData,
-    accessToken: string
+    accessToken: string,
   ): Promise<Response> {
     const method = "PUT";
     const { data: response, error } = await tryCatch(
@@ -64,51 +64,51 @@ export class ApiService extends BaseApiClient {
           Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
-      })
+      }),
     );
 
     return this.handleResponse(
       response,
       error,
       method,
-      "Failed to update comany info"
+      "Failed to update comany info",
     );
   }
 
   public async getCompanyProjects(
-    accessToken: string
+    accessToken: string,
   ): Promise<CompanyProjectsResponse[]> {
     return this.requestJson<CompanyProjectsResponse[]>(
       "/company/projects",
       { method: "GET" },
-      accessToken
+      accessToken,
     );
   }
 
   public async getCompanyArchivedProjects(
-    accessToken: string
+    accessToken: string,
   ): Promise<CompanyProjectsResponse[]> {
     return this.requestJson<CompanyProjectsResponse[]>(
       "/company/projects?isArchived=true",
       { method: "GET" },
-      accessToken
+      accessToken,
     );
   }
 
   public async getProjectById(
     id: string,
-    accessToken: string
+    accessToken: string,
   ): Promise<ProjectResponse> {
     return this.requestJson<ProjectResponse>(
       `/projects/${id}`,
       { method: "GET" },
-      accessToken
+      accessToken,
     );
   }
 
   public async createProject(
     data: CreateProjectRequest,
-    accessToken: string
+    accessToken: string,
   ): Promise<Response> {
     return fetch(`${this.baseUrl}/projects`, {
       method: "POST",
@@ -123,7 +123,7 @@ export class ApiService extends BaseApiClient {
   public async updateProject(
     projectId: string,
     projectData: any,
-    accessToken: string
+    accessToken: string,
   ): Promise<Response> {
     const method = "PUT";
     const { data: response, error } = await tryCatch(
@@ -134,25 +134,25 @@ export class ApiService extends BaseApiClient {
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(projectData),
-      })
+      }),
     );
 
     return this.handleResponse(
       response,
       error,
       method,
-      "Failed to update project"
+      "Failed to update project",
     );
   }
 
   public async getUnassignedProjectMembers(
     projectId: string,
-    accessToken: string
+    accessToken: string,
   ): Promise<CompanyMemberPerRole> {
     return this.requestJson<CompanyMemberPerRole>(
       `/projects/${projectId}/members/unassigned`,
       { method: "GET" },
-      accessToken
+      accessToken,
     );
   }
 
@@ -164,7 +164,7 @@ export class ApiService extends BaseApiClient {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      })
+      }),
     );
 
     this.handleResponse(response, error, method, "Failed to archive project");
@@ -173,6 +173,6 @@ export class ApiService extends BaseApiClient {
 
 // Create and export a singleton instance
 const apiClient = new ApiService(
-  process.env.API_BASE_URL || "http://localhost:5090"
+  process.env.API_BASE_URL || "http://localhost:5090",
 );
 export default apiClient;

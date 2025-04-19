@@ -13,6 +13,7 @@ public class RefreshTokens : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPost("/refresh", Handle)
+            .AllowAnonymous()
             .WithRequestValidation<Request>();
 
     public record Request(string RefreshToken);

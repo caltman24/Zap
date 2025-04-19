@@ -12,6 +12,7 @@ import { JsonResponse, JsonResponseResult } from "~/utils/response";
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
     const user = session.get("user")
+    console.log(session.get("tokens").accessToken)
 
     // Check if user is authenticated
     if (!user) {
@@ -30,6 +31,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function AppRoute() {
     const { data: userData, error } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
+    const navigation = useNavigation()
 
     return (
         <div>
@@ -41,7 +43,12 @@ export default function AppRoute() {
                 <div className="w-full">
                     <DashboardNavbar avatarUrl={userData!.avatarUrl} />
                     <div className="overflow-y-auto h-[calc(100vh-64px)]">
-                        <Outlet context={userData!} />
+                        {navigation.state === "loading"
+                            ? (<div className="w-full h-full grid place-items-center">
+                                <div className="loading loading-dots loading-xl"></div>
+                            </div>)
+                            : <Outlet context={userData!} />}
+
                     </div>
                 </div>
             </div>
