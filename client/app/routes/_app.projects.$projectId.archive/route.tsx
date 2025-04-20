@@ -1,14 +1,21 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
-import { AuthenticationError } from "~/services/api.server/errors";
+import { UserInfoResponse } from "~/services/api.server/types";
 import { destroySession, getSession } from "~/services/sessions.server";
-import { ActionResponse } from "~/utils/response";
+import { ActionResponse, ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
+import { validateRole } from "~/utils/validate";
 
 export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
-
     const session = await getSession(request);
+    const userRole = session.get("user").role
+
+    if (!validateRole(userRole, permissions.project.edit)) {
+        return ForbiddenResponse()
+    }
+
     const {
         data: tokenResponse,
         error: tokenError
@@ -36,21 +43,4 @@ export async function action({ request, params }: ActionFunctionArgs) {
         error: null,
         headers: tokenResponse.headers
     })
-}
-export async function loader({ request }: LoaderFunctionArgs) {
-    const session = await getSession(request);
-
-    if (!session.get("user")) {
-        return redirect("/login");
-    } else {
-        return redirect("/", {
-            headers: {
-                "Set-Cookie": await destroySession(session),
-            },
-        });
-    }
-}
-
-export default function ArchiveProject() {
-    return null;
 }

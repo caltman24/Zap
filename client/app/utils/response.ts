@@ -31,7 +31,7 @@ export function JsonResponse<T>(params: JsonResponseParams<T>): Response {
       headers: {
         ...params.headers,
       },
-    }
+    },
   );
 }
 
@@ -45,6 +45,13 @@ export function ActionResponse(params: ActionResponseParams): Response {
       headers: {
         ...params.headers,
       },
-    }
+    },
   );
+}
+
+export function ForbiddenResponse() {
+  return new Response("Forbidden", {
+    status: 403,
+    statusText: "Forbidden",
+  });
 }

@@ -1,4 +1,4 @@
-import { Await, useNavigate } from "@remix-run/react";
+import { Await, FetcherWithComponents, useNavigate } from "@remix-run/react";
 import { LegacyRef, RefObject, Suspense, useEffect, useRef, useState } from "react";
 import { CompanyMemberPerRole } from "~/services/api.server/types";
 
@@ -29,8 +29,10 @@ export type MemberListModalProps = {
   members?: CompanyMemberPerRole | null,
   loading: boolean,
   error?: string | null
+  addMembersFetcher: FetcherWithComponents<unknown>
+  projectId?: string
 }
-export default function MemberListModal({ modalRef, members, error, loading }: MemberListModalProps) {
+export default function MemberListModal({ modalRef, members, error, loading, addMembersFetcher, projectId }: MemberListModalProps) {
   const [selectedMembers, setSelectedMembers] = useState<{ id: string; name: string }[]>([]);
 
   const memberSelectItemClassName = (memberId: string) =>
@@ -96,6 +98,14 @@ export default function MemberListModal({ modalRef, members, error, loading }: M
             )}
         </div>
         <div className="modal-action">
+          <addMembersFetcher.Form method="post" action={`/projects/${projectId}/add-members`}>
+            <button
+              disabled={selectedMembers.length === 0}
+              type="submit"
+              className={`btn  ${selectedMembers.length === 0 ? "btn-soft" : "btn-primary"}`}>
+              Add Members
+            </button>
+          </addMembersFetcher.Form>
           <form method="dialog">
             <button className="btn">Close</button>
           </form>

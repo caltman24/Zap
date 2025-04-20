@@ -7,10 +7,13 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyMemberPerRole, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode, getPriorityClass } from "~/utils/editMode";
-import { ActionResponse, ActionResponseParams, JsonResponse, JsonResponseResult } from "~/utils/response";
+import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import RouteLayout from "~/layouts/RouteLayout";
 import MemberListModal from "./components/MemberListModal";
+import roleNames from "~/data/roles";
+import { validateRole } from "~/utils/validate";
+import permissions from "~/data/permissions";
 
 export const handle = {
   breadcrumb: (match: any) => {
@@ -55,6 +58,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const session = await getSession(request);
+  const userRole = session.get('user').role
+
+  if (!validateRole(userRole, permissions.project.edit)) {
+    return ForbiddenResponse()
+  }
 
   const { data: tokenResponse, error: tokenError } = await tryCatch(
     apiClient.auth.getValidToken(session));
@@ -104,22 +112,23 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export default function ProjectDetailsRoute() {
   const { data: project, error } = useLoaderData<JsonResponseResult<ProjectResponse>>();
   const userInfo = useOutletContext<UserInfoResponse>();
+  const userRole = userInfo?.role?.toLowerCase()
   const actionData = useActionData<typeof action>() as ActionResponseParams;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
   const archiveFetcher = useFetcher({ key: "archive-project" });
   const getMembersFetcher = useFetcher({ key: "get-members-list" })
-  const [membersList, setMembersList] = useState<CompanyMemberPerRole | null>(null)
+  const addMembersFetcher = useFetcher({ key: "add-members" })
 
   const { projectId } = useParams()
 
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");
 
-  const isAdmin = userInfo?.role?.toLowerCase() === "admin";
-  const isProjectManager = userInfo?.role?.toLowerCase() === "projectmanager";
-  const canEdit = isAdmin || isProjectManager;
+  const canEdit =
+    userRole === roleNames.admin ||
+    userRole === roleNames.projectManager
 
   const modalRef = useRef<HTMLDialogElement>(null)
 
@@ -135,7 +144,7 @@ export default function ProjectDetailsRoute() {
   const handleOnGetMembersList = () => {
     if (modalRef && projectId) {
       modalRef.current?.showModal()
-      getMembersFetcher.load(`/projects/${projectId}/unassignedMembers`)
+      getMembersFetcher.load(`/projects/${projectId}/unassigned-members`)
     }
   }
 
@@ -276,6 +285,8 @@ export default function ProjectDetailsRoute() {
                     modalRef={modalRef}
                     loading={getMembersFetcher.state === "loading"}
                     members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
+                    addMembersFetcher={addMembersFetcher}
+                    projectId={projectId}
                   />
                 </>
               )}

@@ -8,8 +8,11 @@ import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyInfoResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode } from "~/utils/editMode";
-import { ActionResponse, ActionResponseResult, JsonResponse } from "~/utils/response";
+import { ActionResponse, ActionResponseResult, ForbiddenResponse, JsonResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
+import { validateRole } from "~/utils/validate";
+import permissions from "~/data/permissions";
+import roleNames from "~/data/roles";
 
 export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
@@ -56,6 +59,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
     const session = await getSession(request);
+    const userRole = session.get("user").role;
+
+    if (!validateRole(userRole, permissions.company.edit)) {
+        return ForbiddenResponse()
+    }
+
     const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
     if (tokenError) {
         return redirect("/logout");
@@ -104,6 +113,7 @@ export default function CompanyRoute() {
     const userData = useOutletContext<UserInfoResponse>();
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
+    const canEdit = validateRole(userData.role, permissions.company.edit);
 
     // State for edit mode
     const {
@@ -182,7 +192,7 @@ export default function CompanyRoute() {
                 companyInfo && (
                     <div>
                         <div className="bg-base-100 rounded shadow p-8 relative">
-                            {userData.role.toLowerCase() === "admin" && !isEditing && (
+                            {canEdit && !isEditing && (
                                 <div className="flex gap-4 mb-4 justify-end absolute right-6 top-6 z-10">
                                     <button onClick={() => { toggleEditMode(); }} className="btn btn-soft btn-sm">
                                         <span className="material-symbols-outlined">edit</span> Edit Company

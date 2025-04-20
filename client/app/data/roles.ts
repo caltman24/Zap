@@ -1,8 +1,15 @@
-const roleNames = {
+const roleNames: {
+  admin: RoleName;
+  projectManager: RoleName;
+  developer: RoleName;
+  submitter: RoleName;
+} = {
   admin: "admin",
-  projectmanager: "projectmanager",
+  projectManager: "projectmanager",
   developer: "developer",
   submitter: "submitter",
-} as const;
+};
+
+export type RoleName = "admin" | "projectmanager" | "developer" | "submitter";
 
 export default roleNames;
