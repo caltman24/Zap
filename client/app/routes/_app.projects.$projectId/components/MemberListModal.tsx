@@ -69,33 +69,36 @@ export default function MemberListModal({ modalRef, members, error, loading, add
             )))}
         </ul>
         <div className="mt-4">
-          {loading && <MemberListSkeleton />}
-          {!loading && Object.keys(members ?? {}).length === 0
-            ? <p>No more members to add</p>
-            : (<ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto">
-              {Object.entries(members ?? {})
-                .map(([role, m]) => {
-                  return (
-                    <li key={role} className="list-row flex flex-col gap-2">
-                      <p className="font-bold">{role}</p>
-                      <ul className="list">
-                        {m.map((x: any) =>
-                        (<li key={`${x.id}-${x.name}`}
-                          className={`list-row flex items-center cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(x.id)}`}
-                          onClick={() => handleOnMemberSelect(x)}>
-                          <div className="flex gap-4 items-center">
-                            <div className="avatar rounded-full w-10 h-10">
-                              <img src={x.avatarUrl} className="w-full h-auto rounded-full" />
-                            </div>
-                            <p className="">{x.name}</p>
-                          </div>
-                        </li>))}
-                      </ul>
-                    </li>
-                  )
-                })}
-            </ul>
-            )}
+          {loading ? <MemberListSkeleton /> : (
+            <>
+              {Object.keys(members ?? {}).length === 0
+                ? <p>No more members to add</p>
+                : (<ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto">
+                  {Object.entries(members ?? {})
+                    .map(([role, m]) => {
+                      return (
+                        <li key={role} className="list-row flex flex-col gap-2">
+                          <p className="font-bold">{role}</p>
+                          <ul className="list">
+                            {m.map((x: any) =>
+                            (<li key={`${x.id}-${x.name}`}
+                              className={`list-row flex items-center cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(x.id)}`}
+                              onClick={() => handleOnMemberSelect(x)}>
+                              <div className="flex gap-4 items-center">
+                                <div className="avatar rounded-full w-10 h-10">
+                                  <img src={x.avatarUrl} className="w-full h-auto rounded-full" />
+                                </div>
+                                <p className="">{x.name}</p>
+                              </div>
+                            </li>))}
+                          </ul>
+                        </li>
+                      )
+                    })}
+                </ul>
+                )}
+            </>
+          )}
         </div>
         <div className="modal-action">
           <addMembersFetcher.Form method="post" action={`/projects/${projectId}/add-members`}>

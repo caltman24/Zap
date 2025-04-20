@@ -1,14 +1,13 @@
 import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
-import { UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
 
 
-export async function loader({ request, params, context }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
     const userRole = session.get("user").role
