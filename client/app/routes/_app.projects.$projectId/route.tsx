@@ -14,6 +14,7 @@ import MemberListModal from "./components/MemberListModal";
 import roleNames from "~/data/roles";
 import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
+import RemoveMemberListModal from "./components/RemoveMemberListModal";
 
 export const handle = {
   breadcrumb: (match: any) => {
@@ -56,58 +57,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   });
 }
 
-export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await getSession(request);
-  const userRole = session.get('user').role
-
-  if (!validateRole(userRole, permissions.project.edit)) {
-    return ForbiddenResponse()
-  }
-
-  const { data: tokenResponse, error: tokenError } = await tryCatch(
-    apiClient.auth.getValidToken(session));
-
-  if (tokenError) {
-    return redirect("/logout");
-  }
-
-  const projectId = params.projectId!;
-  const formData = await request.formData();
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-  const priority = formData.get("priority") as string;
-  const dueDateValue = formData.get("dueDate") as string;
-  const dueDate = new Date(dueDateValue).toISOString();
-
-  const projectData = {
-    name,
-    description,
-    priority,
-    dueDate
-  };
-
-  const { error } = await tryCatch(
-    apiClient.updateProject(
-      projectId,
-      projectData,
-      tokenResponse.token));
-
-  if (error instanceof AuthenticationError) {
-    return redirect("/logout");
-  }
-
-  if (error) {
-    return ActionResponse({
-      success: false,
-      error: error.message
-    })
-  }
-
-  return ActionResponse({
-    success: true,
-    error: null
-  });
-}
 
 export default function ProjectDetailsRoute() {
   const { data: project, error } = useLoaderData<JsonResponseResult<ProjectResponse>>();
@@ -120,6 +69,7 @@ export default function ProjectDetailsRoute() {
   const archiveFetcher = useFetcher({ key: "archive-project" });
   const getMembersFetcher = useFetcher({ key: "get-members-list" })
   const addMembersFetcher = useFetcher({ key: "add-members" })
+  const removeMemberFetcher = useFetcher({ key: "remove-member" })
 
   const { projectId } = useParams()
 
@@ -131,7 +81,7 @@ export default function ProjectDetailsRoute() {
     userRole === roleNames.projectManager
 
   const modalRef = useRef<HTMLDialogElement>(null)
-
+  const removeMemberModalRef = useRef<HTMLDialogElement>(null)
 
   // Reset priority when toggling edit mode
   const handleEditToggle = () => {
@@ -145,6 +95,12 @@ export default function ProjectDetailsRoute() {
     if (modalRef && projectId) {
       modalRef.current?.showModal()
       getMembersFetcher.load(`/projects/${projectId}/unassigned-members`)
+    }
+  }
+
+  const handleOnRemoveMembersList = () => {
+    if (removeMemberModalRef && projectId) {
+      removeMemberModalRef.current?.showModal()
     }
   }
 
@@ -218,7 +174,7 @@ export default function ProjectDetailsRoute() {
                   </div>
                   <div className="flex gap-2">
                     {canEdit && (
-                      <button onClick={handleEditToggle} className="btn btn-primary">
+                      <button onClick={handleEditToggle} className="btn btn-info">
                         <span className="material-symbols-outlined">edit</span>
                         Edit
                       </button>
@@ -275,20 +231,29 @@ export default function ProjectDetailsRoute() {
               <h2 className="text-2xl font-bold">Assigned Members</h2>
               {/* Add members */}
               {canEdit && (
-                <>
-                  <button className="btn btn-soft btn-sm" onClick={() => handleOnGetMembersList()}>
+                <div className="flex gap-2">
+                  <button className="btn btn-info success btn-sm" onClick={() => handleOnGetMembersList()}>
                     <span className="material-symbols-outlined">person_add</span>
-                    Add Member
+                    Add
                   </button>
-                  {/* Outlet for select member modal */}
+                  <button className="btn btn-error btn-sm" onClick={() => handleOnRemoveMembersList()}>
+                    <span className="material-symbols-outlined">person_remove</span>
+                    Remove
+                  </button>
                   <MemberListModal
                     modalRef={modalRef}
                     loading={getMembersFetcher.state === "loading"}
                     members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
-                    addMembersFetcher={addMembersFetcher}
+                    actionFetcher={addMembersFetcher}
                     projectId={projectId}
                   />
-                </>
+                  <RemoveMemberListModal
+                    modalRef={removeMemberModalRef}
+                    projectId={projectId}
+                    members={project.members}
+                    actionFetcher={removeMemberFetcher}
+                  />
+                </div>
               )}
             </div>
 
@@ -365,7 +330,56 @@ export default function ProjectDetailsRoute() {
       }
     </RouteLayout >
   );
-
 }
 
-// Helper functions have been moved to utils/editMode.tsx
+export async function action({ request, params }: ActionFunctionArgs) {
+  const session = await getSession(request);
+  const userRole = session.get('user').role
+
+  if (!validateRole(userRole, permissions.project.edit)) {
+    return ForbiddenResponse()
+  }
+  const { data: tokenResponse, error: tokenError } = await tryCatch(
+    apiClient.auth.getValidToken(session));
+
+  if (tokenError) {
+    return redirect("/logout");
+  }
+
+  const projectId = params.projectId!;
+  const formData = await request.formData();
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const priority = formData.get("priority") as string;
+  const dueDateValue = formData.get("dueDate") as string;
+  const dueDate = new Date(dueDateValue).toISOString();
+
+  const projectData = {
+    name,
+    description,
+    priority,
+    dueDate
+  };
+
+  const { error } = await tryCatch(
+    apiClient.updateProject(
+      projectId,
+      projectData,
+      tokenResponse.token));
+
+  if (error instanceof AuthenticationError) {
+    return redirect("/logout");
+  }
+
+  if (error) {
+    return ActionResponse({
+      success: false,
+      error: error.message
+    })
+  }
+
+  return ActionResponse({
+    success: true,
+    error: null
+  });
+}

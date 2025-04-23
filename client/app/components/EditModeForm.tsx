@@ -8,6 +8,7 @@ interface EditModeFormProps {
   onCancel: () => void;
   children: ReactNode;
   encType?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain" | undefined;
+  action?: string;
 }
 
 export function EditModeForm({
@@ -16,10 +17,11 @@ export function EditModeForm({
   isSubmitting = false,
   onCancel,
   children,
-  encType
+  encType,
+  action
 }: EditModeFormProps) {
   return (
-    <Form method={method} encType={encType}>
+    <Form method={method} encType={encType} action={action}>
       {error && <p className="text-error mb-4">{error}</p>}
 
       {children}

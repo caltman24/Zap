@@ -13,6 +13,8 @@ public interface IProjectService
     Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto);
     // returns false if already unarchived
     Task<Dictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId);
+    Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds);
+    Task<bool> RemoveMemberFromProjectAsync(string projectId, string memberId);
 }
 
 public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, AppUser User);

@@ -17,7 +17,7 @@ export class BaseApiClient {
   protected async requestJson<T>(
     endpoint: string,
     options?: RequestInit,
-    token?: string
+    token?: string,
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: any = {
@@ -41,16 +41,16 @@ export class BaseApiClient {
     response: Response | null,
     error: Error | null,
     method: string,
-    errorMessage?: string
   ): Promise<Response> {
+    // Error from fetch
     if (error) {
       console.error(error);
-      throw new ApiError(errorMessage ?? "Failed to fetch", 500);
+      throw new Error("Unexpected error: Failed to fetch", { cause: error });
     }
 
     if (!response) {
-      console.error("No response");
-      throw new ApiError("No response", 500);
+      console.error("Unexpected error: No response");
+      throw new Error("No response");
     }
 
     if (response.status === 401) {
@@ -70,16 +70,15 @@ export class BaseApiClient {
     response: Response | null,
     error: Error | null,
     method: string,
-    errorMessage?: string
   ): Promise<T> {
     if (error) {
       console.error(error);
-      throw new ApiError(errorMessage ?? "Failed to fetch", 500);
+      throw new Error("Unexpected error: Failed to fetch", { cause: error });
     }
 
     if (!response) {
-      console.error("No response");
-      throw new ApiError("No response", 500);
+      console.error("Unexpected error: No response");
+      throw new Error("No response");
     }
 
     if (response.status === 401) {

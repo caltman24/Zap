@@ -1,16 +1,18 @@
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { ActionFunctionArgs, data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
 import { getSession } from "~/services/sessions.server";
-import { ForbiddenResponse } from "~/utils/response";
+import { ActionResponse, ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
+import removeMember from "./api.server";
 
-
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
     const userRole = session.get("user").role
+    const formData = await request.formData();
+    const memberId = formData.get("memberId");
 
     if (!validateRole(userRole, permissions.project.edit)) {
         return ForbiddenResponse()
@@ -25,23 +27,23 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         return redirect("/logout");
     }
 
-    // Return promise to show skeleton
-    try {
-        const unassignedMembersPromise = await apiClient.getUnassignedProjectMembers(
-            projectId,
-            tokenResponse.token);
+    const { data: res, error } = await tryCatch(removeMember(
+        projectId,
+        memberId as string,
+        tokenResponse.token
+    ))
 
-        return data({
-            data: unassignedMembersPromise,
-            error: null,
-            headers: tokenResponse.headers
-        })
-    } catch (e: any) {
-        return data({
-            data: null,
-            error: e,
+    if (error) {
+        return ActionResponse({
+            success: false,
+            error: error.message,
             headers: tokenResponse.headers
         })
     }
-}
 
+    return ActionResponse({
+        success: true,
+        error: null,
+        headers: tokenResponse.headers
+    })
+}

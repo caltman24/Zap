@@ -10,7 +10,6 @@ import {
   RegisterCompanyRequest,
   UserInfoResponse,
 } from "./types";
-import { ApiError, AuthenticationError } from "./errors";
 
 export class ApiService extends BaseApiClient {
   constructor(baseUrl: string) {
@@ -67,12 +66,7 @@ export class ApiService extends BaseApiClient {
       }),
     );
 
-    return this.handleResponse(
-      response,
-      error,
-      method,
-      "Failed to update comany info",
-    );
+    return this.handleResponse(response, error, method);
   }
 
   public async getCompanyProjects(
@@ -137,12 +131,7 @@ export class ApiService extends BaseApiClient {
       }),
     );
 
-    return this.handleResponse(
-      response,
-      error,
-      method,
-      "Failed to update project",
-    );
+    return this.handleResponse(response, error, method);
   }
 
   public async getUnassignedProjectMembers(
@@ -156,6 +145,26 @@ export class ApiService extends BaseApiClient {
     );
   }
 
+  public async assignProjectMembers(
+    projectId: string,
+    memberIds: string[],
+    accessToken: string,
+  ): Promise<Response> {
+    const method = "POST";
+    const { data: response, error } = await tryCatch(
+      fetch(`${this.baseUrl}/projects/${projectId}/members`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ memberIds: [...memberIds] }),
+      }),
+    );
+
+    return this.handleResponse(response, error, method);
+  }
+
   public async toggleArchiveProject(projectId: string, accessToken: string) {
     const method = "PUT";
     const { data: response, error } = await tryCatch(
@@ -167,7 +176,7 @@ export class ApiService extends BaseApiClient {
       }),
     );
 
-    this.handleResponse(response, error, method, "Failed to archive project");
+    return this.handleResponse(response, error, method);
   }
 }
 

@@ -142,4 +142,57 @@ public sealed class ProjectService : IProjectService
         return membersByRole.OrderBy(kvp => kvp.Key)
             .ToDictionary();
     }
+
+    public async Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds)
+    {
+        var project = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .Include(p => p.AssignedMembers)
+            .FirstOrDefaultAsync();
+        if (project == null) return false;
+
+        try
+        {
+            var users = await _db.Users.Where(u => memberIds.Contains(u.Id)).ToListAsync();
+            foreach (var user in users)
+            {
+                project.AssignedMembers.Add(user);
+            }
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error adding members to project");
+            return false;
+        }
+        return true;
+    }
+
+    public async Task<bool> RemoveMemberFromProjectAsync(string projectId, string memberId)
+    {
+        bool removeResult = false;
+
+        var project = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .Include(p => p.AssignedMembers)
+            .FirstOrDefaultAsync();
+
+        if (project == null) return removeResult;
+
+        try
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == memberId);
+            if (user == null) return removeResult;
+
+            removeResult = project.AssignedMembers.Remove(user);
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error removing member from project");
+            return false;
+        }
+
+        return removeResult;
+    }
 }
