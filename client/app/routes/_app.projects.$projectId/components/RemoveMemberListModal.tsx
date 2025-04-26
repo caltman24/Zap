@@ -5,7 +5,7 @@ import MemberListSkeleton from "./MemberListSkeleton"
 
 export type RemoveMemberListModalProps = {
   projectId?: string,
-  members?: { id: string, name: string, avatarUrl: string }[] | null,
+  members?: { id: string, name: string, avatarUrl: string, role: string }[] | null,
   error?: string | null,
   actionFetcher: FetcherWithComponents<unknown>
   modalRef: RefObject<HTMLDialogElement> | undefined
@@ -74,13 +74,16 @@ export default function RemoveMemberListModal({
                 {members?.map(m => {
                   return (
                     <li key={`${m.id}-${m.name}`}
-                      className={`list-row flex items-center cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(m.id)}`}
+                      className={`list-row flex w-fullitems-center cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(m.id)}`}
                       onClick={() => handleOnMemberSelect(m)}>
                       <div className="flex gap-4 items-center">
                         <div className="avatar rounded-full w-10 h-10">
                           <img src={m.avatarUrl} className="w-full h-auto rounded-full" />
                         </div>
+                      </div>
+                      <div className="w-full flex justify-between items-center">
                         <p className="">{m.name}</p>
+                        <p className="text-neutral-content/40">{m.role}</p>
                       </div>
                     </li>)
                 })}

@@ -6,7 +6,7 @@ import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyMemberPerRole, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
-import { useEditMode, getPriorityClass } from "~/utils/editMode";
+import { useEditMode, getPriorityClass, getStatusClass } from "~/utils/editMode";
 import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import RouteLayout from "~/layouts/RouteLayout";
@@ -15,6 +15,7 @@ import roleNames from "~/data/roles";
 import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
 import RemoveMemberListModal from "./components/RemoveMemberListModal";
+import MembersListTable from "~/components/MembersListTable";
 
 export const handle = {
   breadcrumb: (match: any) => {
@@ -250,7 +251,7 @@ export default function ProjectDetailsRoute() {
                   <RemoveMemberListModal
                     modalRef={removeMemberModalRef}
                     projectId={projectId}
-                    members={project.members}
+                    members={project.members.filter(m => m.id !== userInfo.id)}
                     actionFetcher={removeMemberFetcher}
                   />
                 </div>
@@ -258,18 +259,7 @@ export default function ProjectDetailsRoute() {
             </div>
 
             {/* Members by Role */}
-            <div className="grid grid-cols-2 md:grid-cols-4  gap-4">
-              {project.members.map((member: any, index: number) => (
-                <div key={index} className="flex items-center gap-3 bg-base-200 p-3 rounded-lg">
-                  <div className="avatar">
-                    <div className="w-10 rounded-full">
-                      <img src={member.avatarUrl} alt={member.name} />
-                    </div>
-                  </div>
-                  <span>{member.name}</span>
-                </div>
-              ))}
-            </div>
+            <MembersListTable members={project.members} />
           </div>
 
           {/* Tickets Section */}
@@ -290,40 +280,40 @@ export default function ProjectDetailsRoute() {
 
             {/* Tickets Table */}
             <div className="overflow-x-auto">
-              {/* <table className="table table-zebra w-full">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Assignee</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.map((ticket) => (
-                <tr key={ticket.id}>
-                  <td>{ticket.title}</td>
-                  <td>
-                    <div className={`badge ${getStatusClass(ticket.status)}`}>
-                      {ticket.status}
-                    </div>
-                  </td>
-                  <td>
-                    <div className={`badge ${getPriorityClass(ticket.priority)}`}>
-                      {ticket.priority}
-                    </div>
-                  </td>
-                  <td>{ticket.assignee}</td>
-                  <td>
-                    <Link to={`/tickets/${ticket.id}`} className="btn btn-xs btn-ghost">
-                      <span className="material-symbols-outlined">visibility</span>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table> */}
+              <table className="table table-zebra w-full">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assignee</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* {tickets.map((ticket) => ( */}
+                  {/*   <tr key={ticket.id}> */}
+                  {/*     <td>{ticket.title}</td> */}
+                  {/*     <td> */}
+                  {/*       <div className={`badge ${getStatusClass(ticket.status)}`}> */}
+                  {/*         {ticket.status} */}
+                  {/*       </div> */}
+                  {/*     </td> */}
+                  {/*     <td> */}
+                  {/*       <div className={`badge ${getPriorityClass(ticket.priority)}`}> */}
+                  {/*         {ticket.priority} */}
+                  {/*       </div> */}
+                  {/*     </td> */}
+                  {/*     <td>{ticket.assignee}</td> */}
+                  {/*     <td> */}
+                  {/*       <Link to={`/tickets/${ticket.id}`} className="btn btn-xs btn-ghost"> */}
+                  {/*         <span className="material-symbols-outlined">visibility</span> */}
+                  {/*       </Link> */}
+                  {/*     </td> */}
+                  {/*   </tr> */}
+                  {/* ))} */}
+                </tbody>
+              </table>
             </div>
           </div>
         </>

@@ -19,20 +19,29 @@ public sealed class ProjectService : IProjectService
     public async Task<ProjectDto?> GetProjectByIdAsync(string projectId)
     {
         var project = await _db.Projects
+            .Where(p => p.Id == projectId)
             .Include(p => p.AssignedMembers)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == projectId);
-        if (project == null) return null;
+            .Select(p => new ProjectDto(
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Priority,
+                p.CompanyId,
+                p.IsArchived,
+                p.DueDate,
+                p.AssignedMembers.Select(m => new MemberInfoDto(
+                        m.Id,
+                        $"{m.FirstName} {m.LastName}",
+                        m.AvatarUrl,
+                        (
+                         from ur in _db.UserRoles
+                         join r in _db.Roles on ur.RoleId equals r.Id
+                         where ur.UserId == m.Id
+                         select r.Name
+                        ).FirstOrDefault()))))
+            .FirstOrDefaultAsync();
 
-        return new ProjectDto(
-            project.Id,
-            project.Name,
-            project.Description,
-            project.Priority,
-            project.CompanyId,
-            project.IsArchived,
-            project.DueDate,
-            project.AssignedMembers.Select(m => new MemberInfoDto(m.Id, $"{m.FirstName} {m.LastName}", m.AvatarUrl)));
+        return project;
     }
 
     public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto project)
