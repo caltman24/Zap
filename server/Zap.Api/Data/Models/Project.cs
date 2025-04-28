@@ -15,6 +15,5 @@ public class Project
     public required string CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 
-    public ICollection<AppUser> AssignedMembers { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
 }
