@@ -32,8 +32,7 @@ public sealed class CompanyService : ICompanyService
 
         return new CompanyInfoDto(company.Name,
             company.Description,
-            company.LogoUrl,
-            membersByRole);
+            company.LogoUrl);
     }
 
     public async Task<bool> UpdateCompanyInfoAsync(UpdateCompanyInfoDto updateCompanyDto)
@@ -93,9 +92,7 @@ public sealed class CompanyService : ICompanyService
                 p.Name,
                 p.Priority,
                 p.DueDate,
-                p.IsArchived,
-                p.AssignedMembers.Count,
-                p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
+                p.IsArchived))
             .ToListAsync();
     }
 
@@ -108,9 +105,7 @@ public sealed class CompanyService : ICompanyService
                 p.Name,
                 p.Priority,
                 p.DueDate,
-                p.IsArchived,
-                p.AssignedMembers.Count,
-                p.AssignedMembers.Select(m => m.AvatarUrl).Take(5)))
+                p.IsArchived))
             .ToListAsync();
     }
 

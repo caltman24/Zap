@@ -22,21 +22,6 @@ namespace Zap.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AppUserProject", b =>
-                {
-                    b.Property<string>("AssignedMembersId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AssignedProjectsId")
-                        .HasColumnType("text");
-
-                    b.HasKey("AssignedMembersId", "AssignedProjectsId");
-
-                    b.HasIndex("AssignedProjectsId");
-
-                    b.ToTable("AppUserProject");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -300,6 +285,9 @@ namespace Zap.Api.Data.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("AppUserId")
+                        .HasColumnType("text");
+
                     b.Property<string>("CompanyId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -326,6 +314,8 @@ namespace Zap.Api.Data.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
 
                     b.HasIndex("CompanyId");
 
@@ -381,21 +371,6 @@ namespace Zap.Api.Data.Migrations
                     b.HasIndex("SubmitterId");
 
                     b.ToTable("Tickets");
-                });
-
-            modelBuilder.Entity("AppUserProject", b =>
-                {
-                    b.HasOne("Zap.Api.Data.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedMembersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Zap.Api.Data.Models.Project", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedProjectsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -470,6 +445,10 @@ namespace Zap.Api.Data.Migrations
 
             modelBuilder.Entity("Zap.Api.Data.Models.Project", b =>
                 {
+                    b.HasOne("Zap.Api.Data.Models.AppUser", null)
+                        .WithMany("AssignedProjects")
+                        .HasForeignKey("AppUserId");
+
                     b.HasOne("Zap.Api.Data.Models.Company", "Company")
                         .WithMany("Projects")
                         .HasForeignKey("CompanyId")
@@ -498,6 +477,11 @@ namespace Zap.Api.Data.Migrations
                     b.Navigation("Assignee");
 
                     b.Navigation("Submitter");
+                });
+
+            modelBuilder.Entity("Zap.Api.Data.Models.AppUser", b =>
+                {
+                    b.Navigation("AssignedProjects");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Company", b =>

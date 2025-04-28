@@ -61,10 +61,7 @@ public static class Endpoints
             .MapEndpoint<UpdateProject>();
 
         group.MapGroup("/{projectId}/members")
-            .WithTags("ProjectMembers")
-            .MapEndpoint<GetUnassignedCompanyMembers>()
-            .MapEndpoint<AddMember>()
-            .MapEndpoint<RemoveMember>();
+            .WithTags("ProjectMembers");
 
         return app;
     }

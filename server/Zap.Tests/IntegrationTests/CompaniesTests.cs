@@ -102,7 +102,6 @@ public class CompaniesTests : IAsyncDisposable
                 Priority = "Urgent",
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
-                AssignedMembers = [user],
                 IsArchived = true
             },
             new Project()
@@ -113,7 +112,6 @@ public class CompaniesTests : IAsyncDisposable
                 Priority = "Urgent",
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
-                AssignedMembers = [user],
                 IsArchived = false
             }
         ], companyId);
@@ -147,7 +145,6 @@ public class CompaniesTests : IAsyncDisposable
                 Priority = "Urgent",
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
-                AssignedMembers = [user],
                 IsArchived = true
             },
             new Project()
@@ -158,7 +155,6 @@ public class CompaniesTests : IAsyncDisposable
                 Priority = "Urgent",
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
-                AssignedMembers = [user],
                 IsArchived = false
             }
         ], companyId);
@@ -192,7 +188,6 @@ public class CompaniesTests : IAsyncDisposable
                 Priority = "Urgent",
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
-                AssignedMembers = [user],
                 IsArchived = true
             },
             new Project()
@@ -203,7 +198,6 @@ public class CompaniesTests : IAsyncDisposable
                 Priority = "Urgent",
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
-                AssignedMembers = [user],
                 IsArchived = false
             }
         ], companyId);

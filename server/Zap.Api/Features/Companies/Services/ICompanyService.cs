@@ -27,8 +27,7 @@ public record UpdateCompanyInfoDto(
 public record CompanyInfoDto(
     string Name,
     string Description,
-    string? LogoUrl,
-    Dictionary<string, List<MemberInfoDto>> Members);
+    string? LogoUrl);
 
 public record MemberInfoDto(string Id, string Name, string AvatarUrl, string? Role = null);
 
@@ -37,7 +36,5 @@ public record CompanyProjectDto(
     string Name,
     string Priority,
     DateTime DueDate,
-    bool IsArchived,
-    int MemberCount,
-    IEnumerable<string> AvatarUrls);
+    bool IsArchived);
 

@@ -1,5 +1,4 @@
 ﻿using Zap.Api.Data.Models;
-using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Projects.Services;
 
@@ -11,10 +10,6 @@ public interface IProjectService
     // returns false if already archived
     Task<bool> ToggleArchiveProjectAsync(string projectId);
     Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto);
-    // returns false if already unarchived
-    Task<Dictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId);
-    Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds);
-    Task<bool> RemoveMemberFromProjectAsync(string projectId, string memberId);
 }
 
 public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, AppUser User);
@@ -27,5 +22,4 @@ public record ProjectDto(
     string Priority,
     string CompanyId,
     bool IsArchived,
-    DateTime DueDate,
-    IEnumerable<MemberInfoDto> Members);
+    DateTime DueDate);

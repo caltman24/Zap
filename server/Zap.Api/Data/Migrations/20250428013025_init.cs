@@ -48,18 +48,6 @@ namespace Zap.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AppUserProject",
-                columns: table => new
-                {
-                    AssignedMembersId = table.Column<string>(type: "text", nullable: false),
-                    AssignedProjectsId = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AppUserProject", x => new { x.AssignedMembersId, x.AssignedProjectsId });
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
@@ -188,11 +176,17 @@ namespace Zap.Api.Data.Migrations
                     Priority = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsArchived = table.Column<bool>(type: "boolean", nullable: false),
                     DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CompanyId = table.Column<string>(type: "text", nullable: false)
+                    CompanyId = table.Column<string>(type: "text", nullable: false),
+                    AppUserId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_AppUserId",
+                        column: x => x.AppUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_Companies_CompanyId",
                         column: x => x.CompanyId,
@@ -235,11 +229,6 @@ namespace Zap.Api.Data.Migrations
                         principalTable: "Projects",
                         principalColumn: "Id");
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AppUserProject_AssignedProjectsId",
-                table: "AppUserProject",
-                column: "AssignedProjectsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -290,6 +279,11 @@ namespace Zap.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Projects_AppUserId",
+                table: "Projects",
+                column: "AppUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_CompanyId",
                 table: "Projects",
                 column: "CompanyId");
@@ -308,22 +302,6 @@ namespace Zap.Api.Data.Migrations
                 name: "IX_Tickets_SubmitterId",
                 table: "Tickets",
                 column: "SubmitterId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AppUserProject_AspNetUsers_AssignedMembersId",
-                table: "AppUserProject",
-                column: "AssignedMembersId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AppUserProject_Projects_AssignedProjectsId",
-                table: "AppUserProject",
-                column: "AssignedProjectsId",
-                principalTable: "Projects",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserClaims_AspNetUsers_UserId",
@@ -364,9 +342,6 @@ namespace Zap.Api.Data.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Companies_AspNetUsers_OwnerId",
                 table: "Companies");
-
-            migrationBuilder.DropTable(
-                name: "AppUserProject");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
