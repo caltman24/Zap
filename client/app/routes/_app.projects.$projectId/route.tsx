@@ -215,52 +215,44 @@ export default function ProjectDetailsRoute() {
                       {new Date(project.dueDate).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title">Team Size</div>
-                    <div className="stat-value text-lg">
-                      {project.members.length}
-                    </div>
-                  </div>
                 </div>
               </>
             )}
           </div>
 
           {/* Team Members Section */}
-          <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Assigned Members</h2>
-              {/* Add members */}
-              {canEdit && (
-                <div className="flex gap-2">
-                  <button className="btn btn-info success btn-sm" onClick={() => handleOnGetMembersList()}>
-                    <span className="material-symbols-outlined">person_add</span>
-                    Add
-                  </button>
-                  <button className="btn btn-error btn-sm" onClick={() => handleOnRemoveMembersList()}>
-                    <span className="material-symbols-outlined">person_remove</span>
-                    Remove
-                  </button>
-                  <MemberListModal
-                    modalRef={modalRef}
-                    loading={getMembersFetcher.state === "loading"}
-                    members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
-                    actionFetcher={addMembersFetcher}
-                    projectId={projectId}
-                  />
-                  <RemoveMemberListModal
-                    modalRef={removeMemberModalRef}
-                    projectId={projectId}
-                    members={project.members.filter(m => m.id !== userInfo.id)}
-                    actionFetcher={removeMemberFetcher}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Members by Role */}
-            <MembersListTable members={project.members} />
-          </div>
+          {/* <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6"> */}
+          {/*   <div className="flex justify-between items-center mb-4"> */}
+          {/*     <h2 className="text-2xl font-bold">Assigned Members</h2> */}
+          {/*     {canEdit && ( */}
+          {/*       <div className="flex gap-2"> */}
+          {/*         <button className="btn btn-info success btn-sm" onClick={() => handleOnGetMembersList()}> */}
+          {/*           <span className="material-symbols-outlined">person_add</span> */}
+          {/*           Add */}
+          {/*         </button> */}
+          {/*         <button className="btn btn-error btn-sm" onClick={() => handleOnRemoveMembersList()}> */}
+          {/*           <span className="material-symbols-outlined">person_remove</span> */}
+          {/*           Remove */}
+          {/*         </button> */}
+          {/*         <MemberListModal */}
+          {/*           modalRef={modalRef} */}
+          {/*           loading={getMembersFetcher.state === "loading"} */}
+          {/*           members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data} */}
+          {/*           actionFetcher={addMembersFetcher} */}
+          {/*           projectId={projectId} */}
+          {/*         /> */}
+          {/*         <RemoveMemberListModal */}
+          {/*           modalRef={removeMemberModalRef} */}
+          {/*           projectId={projectId} */}
+          {/*           members={project.members.filter(m => m.id !== userInfo.id)} */}
+          {/*           actionFetcher={removeMemberFetcher} */}
+          {/*         /> */}
+          {/*       </div> */}
+          {/*     )} */}
+          {/*   </div> */}
+          {/**/}
+          {/*   <MembersListTable members={project.members} /> */}
+          {/* </div> */}
 
           {/* Tickets Section */}
           <div className="bg-base-100 rounded-lg shadow-lg p-6" >

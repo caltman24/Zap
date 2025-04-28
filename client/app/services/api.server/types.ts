@@ -57,7 +57,6 @@ export type ProjectResponse = {
   priority: string;
   dueDate: string; // ISO date string format
   isArchived: boolean;
-  members: { id: string; name: string; avatarUrl: string; role: string }[];
 };
 
 export type CompanyProjectsResponse = {
@@ -65,7 +64,6 @@ export type CompanyProjectsResponse = {
   name: string;
   priority: string;
   dueDate: string; // ISO date string format
-  memberCount: number;
   isArchived: boolean;
   avatarUrls: string[];
 };
