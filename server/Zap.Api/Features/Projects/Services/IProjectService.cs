@@ -12,7 +12,7 @@ public interface IProjectService
     Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto);
 }
 
-public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, CompanyMember User);
+public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, CompanyMember Member);
 public record UpdateProjectDto(string Name, string Description, string Priority, DateTime DueDate);
 
 public record ProjectDto(

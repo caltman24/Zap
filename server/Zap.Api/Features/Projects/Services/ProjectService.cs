@@ -40,7 +40,7 @@ public sealed class ProjectService : IProjectService
             Description = project.Description,
             Priority = project.Priority,
             DueDate = project.DueDate,
-            CompanyId = project.User.CompanyId!
+            CompanyId = project.Member.CompanyId!
         };
 
         var addResult = await _db.Projects.AddAsync(addProject);

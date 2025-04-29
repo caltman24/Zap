@@ -119,8 +119,13 @@ public sealed class CompanyService : ICompanyService
             Name = company.Name,
             Description = company.Description,
             OwnerId = company.User.Id,
-            Members = new List<CompanyMember> { company.User },
         };
+
+        newCompany.Members.Add(new CompanyMember
+        {
+            UserId = company.User.Id,
+            CompanyId = newCompany.Id
+        });
 
         await _db.Companies.AddAsync(newCompany);
         await _db.SaveChangesAsync();

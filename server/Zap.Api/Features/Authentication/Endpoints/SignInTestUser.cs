@@ -11,7 +11,6 @@ public class SignInTestUser : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPost("/signin-test", Handle);
-    
     private static async Task<Results<BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> Handle(
         SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, ILogger<Program> logger)
     {
@@ -37,7 +36,6 @@ public class SignInTestUser : IEndpoint
         if (!res.Succeeded) return TypedResults.BadRequest(res.Errors);
 
         await userManager.AddCustomClaimsAsync(user);
-        await userManager.AddToRoleAsync(user, RoleNames.Admin);
 
         logger.LogDebug("Created test user {Email} with password Password1! and Role {Role}",
             user.Email, RoleNames.Admin);

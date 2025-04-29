@@ -46,7 +46,6 @@ public class RegisterCompany : IEndpoint
             Description: request.Description,
             User: currentUser.User));
 
-        await userManager.AddToRoleAsync(currentUser.User, RoleNames.Admin);
         logger.LogDebug("Added user {Email} to role {Role}", currentUser.Email, RoleNames.Admin);
 
         return TypedResults.NoContent();

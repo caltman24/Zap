@@ -12,8 +12,8 @@ public class ArchiveProject : IEndpoint
         app.MapPut("/{projectId}/archive", Handle)
             .RequireAuthorization(pb =>
             {
-                pb.RequireRole(RoleNames.Admin, RoleNames.ProjectManager);
                 pb.RequireCurrentUser();
+                pb.RequireCompanyRole(RoleNames.Admin, RoleNames.ProjectManager);
                 pb.Build();
             });
 

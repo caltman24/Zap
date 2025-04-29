@@ -9,11 +9,11 @@ using Zap.Api.Data;
 
 #nullable disable
 
-namespace Zap.Api.Data.Migrations
+namespace Zap.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250428013025_init")]
-    partial class init
+    [Migration("20250429021134_init1")]
+    partial class init1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -174,9 +174,6 @@ namespace Zap.Api.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("CompanyId")
-                        .HasColumnType("text");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -233,8 +230,6 @@ namespace Zap.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -283,12 +278,35 @@ namespace Zap.Api.Data.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("Zap.Api.Data.Models.Project", b =>
+            modelBuilder.Entity("Zap.Api.Data.Models.CompanyMember", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("AppUserId")
+                    b.Property<string>("CompanyId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CompanyMembers");
+                });
+
+            modelBuilder.Entity("Zap.Api.Data.Models.Project", b =>
+                {
+                    b.Property<string>("Id")
                         .HasColumnType("text");
 
                     b.Property<string>("CompanyId")
@@ -317,8 +335,6 @@ namespace Zap.Api.Data.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
 
                     b.HasIndex("CompanyId");
 
@@ -427,31 +443,35 @@ namespace Zap.Api.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Zap.Api.Data.Models.AppUser", b =>
-                {
-                    b.HasOne("Zap.Api.Data.Models.Company", "Company")
-                        .WithMany("Members")
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("Zap.Api.Data.Models.Company", b =>
                 {
-                    b.HasOne("Zap.Api.Data.Models.AppUser", "Owner")
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", "Owner")
                         .WithOne()
                         .HasForeignKey("Zap.Api.Data.Models.Company", "OwnerId");
 
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Zap.Api.Data.Models.CompanyMember", b =>
+                {
+                    b.HasOne("Zap.Api.Data.Models.Company", "Company")
+                        .WithMany("Members")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Zap.Api.Data.Models.AppUser", "User")
+                        .WithOne()
+                        .HasForeignKey("Zap.Api.Data.Models.CompanyMember", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Zap.Api.Data.Models.Project", b =>
                 {
-                    b.HasOne("Zap.Api.Data.Models.AppUser", null)
-                        .WithMany("AssignedProjects")
-                        .HasForeignKey("AppUserId");
-
                     b.HasOne("Zap.Api.Data.Models.Company", "Company")
                         .WithMany("Projects")
                         .HasForeignKey("CompanyId")
@@ -463,7 +483,7 @@ namespace Zap.Api.Data.Migrations
 
             modelBuilder.Entity("Zap.Api.Data.Models.Ticket", b =>
                 {
-                    b.HasOne("Zap.Api.Data.Models.AppUser", "Assignee")
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", "Assignee")
                         .WithMany()
                         .HasForeignKey("AssigneeId");
 
@@ -471,7 +491,7 @@ namespace Zap.Api.Data.Migrations
                         .WithMany("Tickets")
                         .HasForeignKey("ProjectId");
 
-                    b.HasOne("Zap.Api.Data.Models.AppUser", "Submitter")
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", "Submitter")
                         .WithMany()
                         .HasForeignKey("SubmitterId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -480,11 +500,6 @@ namespace Zap.Api.Data.Migrations
                     b.Navigation("Assignee");
 
                     b.Navigation("Submitter");
-                });
-
-            modelBuilder.Entity("Zap.Api.Data.Models.AppUser", b =>
-                {
-                    b.Navigation("AssignedProjects");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Company", b =>

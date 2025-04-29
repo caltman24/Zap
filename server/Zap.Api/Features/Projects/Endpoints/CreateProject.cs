@@ -15,8 +15,8 @@ public class CreateProject : IEndpoint
             .WithName("CreateProject")
             .RequireAuthorization(pb =>
             {
-                pb.RequireRole(RoleNames.Admin, RoleNames.ProjectManager);
                 pb.RequireCurrentUser();
+                pb.RequireCompanyRole(RoleNames.Admin, RoleNames.ProjectManager);
                 pb.Build();
             })
             .WithRequestValidation<Request>();
@@ -38,8 +38,7 @@ public class CreateProject : IEndpoint
     private static async Task<Results<BadRequest<string>, CreatedAtRoute<ProjectDto>>> Handle(
         Request request, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
     {
-        var user = currentUser.User;
-        if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
+        if (currentUser.Member == null) return TypedResults.BadRequest("User not in company");
 
         var newProject = await projectService.CreateProjectAsync(new CreateProjectDto
         (
@@ -47,7 +46,7 @@ public class CreateProject : IEndpoint
             Description: request.Description,
             Priority: request.Priority,
             DueDate: request.DueDate,
-            User: currentUser.User!
+            Member: currentUser.Member
         ));
 
         return TypedResults.CreatedAtRoute(newProject, "GetProject", new { ProjectId = newProject.Id });

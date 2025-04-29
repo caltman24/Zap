@@ -6,6 +6,7 @@ namespace Zap.Api.Data;
 
 public static class DbContextOptionsExtensions
 {
+    // TODO: Seed Roles into different table
     public static void UseRoleSeeding(this DbContextOptionsBuilder optionsBuilder)
     {
         // Called as part of EnsureCreated, Migrate, and `dotnet ef database update`

@@ -32,7 +32,7 @@ public class GetUserInfo : IEndpoint
             LastName: user.LastName,
             AvatarUrl: user.AvatarUrl,
             Role: currentUser.Role,
-            CompanyId: user.CompanyId
+            CompanyId: currentUser.CompanyId
         );
 
         return TypedResults.Ok(response);

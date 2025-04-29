@@ -15,12 +15,11 @@ public class GetCompanyProjects : IEndpoint
         ICompanyService companyService, CurrentUser currentUser, ILogger<Program> logger,
         [FromQuery] bool? isArchived = null)
     {
-        var user = currentUser.User;
-        if (user?.CompanyId == null) return TypedResults.BadRequest("User not in company");
+        if (currentUser.CompanyId == null) return TypedResults.BadRequest("User not in company");
 
         var projects = isArchived == null
-            ? await companyService.GetAllCompanyProjectsAsync(user.CompanyId)
-            : await companyService.GetCompanyProjectsAsync(user.CompanyId, isArchived.Value);
+            ? await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId)
+            : await companyService.GetCompanyProjectsAsync(currentUser.CompanyId, isArchived.Value);
 
         return TypedResults.Ok(projects);
     }

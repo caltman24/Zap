@@ -7,6 +7,9 @@ internal static class AuthorizationHandlerExtensions
     internal static AuthorizationBuilder AddCurrentUserHandler(this AuthorizationBuilder builder)
     {
         builder.Services.AddScoped<IAuthorizationHandler, CheckCurrentUserAuthHandler>();
+
+        // HACK: Just for now add this when registering the currentUser handler. Break out into seperate static class
+        builder.Services.AddScoped<IAuthorizationHandler, CompanyRolesAuthorizationHandler>();
         return builder;
     }
 
@@ -14,6 +17,12 @@ internal static class AuthorizationHandlerExtensions
     {
         return builder.RequireAuthenticatedUser()
             .AddRequirements(new CheckCurrentUserRequirement());
+    }
+
+    internal static AuthorizationPolicyBuilder RequireCompanyRole(this AuthorizationPolicyBuilder builder, params string[] roles)
+    {
+        return builder.RequireAuthenticatedUser()
+            .AddRequirements(new CompanyRolesAuthorizationRequirement(roles));
     }
 
     private class CheckCurrentUserRequirement : IAuthorizationRequirement

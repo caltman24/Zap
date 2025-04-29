@@ -57,7 +57,6 @@ public static class ConfigureServices
                 options.SignIn.RequireConfirmedEmail = true;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
             .AddSignInManager<SignInManager<AppUser>>();

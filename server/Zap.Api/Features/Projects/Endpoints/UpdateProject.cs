@@ -14,7 +14,7 @@ public class UpdateProject : IEndpoint
         .Accepts<Request>("application/json")
         .RequireAuthorization(pb =>
                 {
-                    pb.RequireRole([RoleNames.Admin, RoleNames.ProjectManager]);
+                    pb.RequireCompanyRole(RoleNames.Admin, RoleNames.ProjectManager);
                 });
 
     public record Request(string Name, string Description, string Priority, DateTime DueDate);
