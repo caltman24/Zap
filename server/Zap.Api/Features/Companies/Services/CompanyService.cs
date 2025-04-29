@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 using Zap.Api.Features.FileUpload.Services;
@@ -21,14 +22,16 @@ public sealed class CompanyService : ICompanyService
     public async Task<CompanyInfoDto?> GetCompanyInfoAsync(string companyId)
     {
         var company = await _db.Companies
+            .Where(c => c.Id == companyId)
             .Include(c => c.Members)
+            .ThenInclude(m => m.User)
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == companyId);
+            .FirstOrDefaultAsync();
 
         if (company == null) return null;
 
         // Where string is the role name
-        Dictionary<string, List<MemberInfoDto>> membersByRole = await GetMembersPerRoleAsync(company.Members);
+        Dictionary<string, List<MemberInfoDto>> membersByRole = GetMembersPerRole(company.Members);
 
         return new CompanyInfoDto(company.Name,
             company.Description,
@@ -118,15 +121,18 @@ public sealed class CompanyService : ICompanyService
         {
             Name = company.Name,
             Description = company.Description,
-            OwnerId = company.User.Id,
+            OwnerId = company.User.Id
         };
 
-        newCompany.Members.Add(new CompanyMember
+        var newMember = new CompanyMember
         {
             UserId = company.User.Id,
-            CompanyId = newCompany.Id
-        });
+            CompanyId = newCompany.Id,
+            Role = RoleNames.Admin
+        };
+        newCompany.Members.Add(newMember);
 
+        // await _db.CompanyMembers.AddAsync(newMember);
         await _db.Companies.AddAsync(newCompany);
         await _db.SaveChangesAsync();
     }
@@ -136,57 +142,29 @@ public sealed class CompanyService : ICompanyService
         await _db.Companies.Where(c => c.Id == companyId).ExecuteDeleteAsync();
     }
 
-    public async Task<Dictionary<string, List<MemberInfoDto>>?> GetCompanyMembersPerRoleAsync(string companyId)
-    {
-        var company = await _db.Companies
-                .Where(c => c.Id == companyId)
-                .Include(c => c.Members)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
-
-        if (company == null) return null;
-
-        var membersPerRole = await GetMembersPerRoleAsync(company.Members);
-
-        return membersPerRole;
-    }
-
     /// <summary>
     /// Gets each member from each role in the company
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
-    public async Task<Dictionary<string, List<MemberInfoDto>>> GetMembersPerRoleAsync(ICollection<CompanyMember> companyMembers)
+    public Dictionary<string, List<MemberInfoDto>> GetMembersPerRole(ICollection<CompanyMember> companyMembers)
     {
-        var memberIds = companyMembers.Select(m => m.Id).ToList();
-
-        var rolesLookup = await _db.UserRoles
-            .Where(ur => memberIds.Contains(ur.UserId))
-            .Join(_db.Roles,
-                userRole => userRole.RoleId,
-                identityRole => identityRole.Id,
-                (userRole, identityRole) => new { userRole.UserId, Role = identityRole.Name })
-            .GroupBy(ur => ur.UserId)
-            .Select(g => new { UserId = g.Key, Role = g.Select(x => x.Role).FirstOrDefault() ?? "None" })
-            .ToDictionaryAsync(ur => ur.UserId, ur => ur.Role);
-
         var membersByRole = new Dictionary<string, List<MemberInfoDto>>();
 
         foreach (var member in companyMembers)
         {
-            var roleName = rolesLookup.GetValueOrDefault(member.Id, "None");
 
-            if (!membersByRole.TryGetValue(roleName, out var memberList))
+            if (!membersByRole.TryGetValue(member.Role, out var memberList))
             {
                 memberList = [];
-                membersByRole[roleName] = memberList;
+                membersByRole[member.Role] = memberList;
             }
 
             memberList.Add(new MemberInfoDto(
                 member.Id,
                     $"{member.User.FirstName} {member.User.LastName}",
                     member.User.AvatarUrl,
-                    roleName
+                    member.Role
                 ));
         }
 

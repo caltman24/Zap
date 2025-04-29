@@ -16,7 +16,7 @@ public class Company
     [StringLength(500)] public string? WebsiteUrl { get; set; }
 
     public string? OwnerId { get; set; }
-    public CompanyMember? Owner { get; set; }
+    public AppUser? Owner { get; set; }
 
     public ICollection<CompanyMember> Members { get; set; } = [];
     public ICollection<Project> Projects { get; set; } = [];
