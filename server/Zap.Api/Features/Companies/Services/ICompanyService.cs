@@ -14,7 +14,7 @@ public interface ICompanyService
     Task DeleteCompanyByIdAsync(string companyId);
 }
 
-public record CreateCompanyDto(string Name, string Description, AppUser User);
+public record CreateCompanyDto(string Name, string Description, CompanyMember User);
 
 public record UpdateCompanyInfoDto(
     string CompanyId,

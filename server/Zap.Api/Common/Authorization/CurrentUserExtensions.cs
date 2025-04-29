@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Zap.Api.Data;
 using Zap.Api.Data.Models;
 
 namespace Zap.Api.Common.Authorization;
@@ -15,7 +17,7 @@ internal static class CurrentUserExtensions
         return services;
     }
 
-    private sealed class ClaimsTransformation(CurrentUser currentUser, UserManager<AppUser> userManager)
+    private sealed class ClaimsTransformation(CurrentUser currentUser, UserManager<AppUser> userManager, AppDbContext db)
         : IClaimsTransformation
     {
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -29,6 +31,13 @@ internal static class CurrentUserExtensions
                 // Resolve the user manager and see if the current user is a valid user in the database
                 // we do this once and store it on the current user.
                 currentUser.User = await userManager.FindByIdAsync(id);
+                if (currentUser.User != null)
+                {
+                    currentUser.Member = await db.CompanyMembers
+                        .Where(m => m.UserId == currentUser.User.Id)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync();
+                }
             }
 
             return principal;

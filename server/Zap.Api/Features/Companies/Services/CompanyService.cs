@@ -119,7 +119,7 @@ public sealed class CompanyService : ICompanyService
             Name = company.Name,
             Description = company.Description,
             OwnerId = company.User.Id,
-            Members = new List<AppUser> { company.User },
+            Members = new List<CompanyMember> { company.User },
         };
 
         await _db.Companies.AddAsync(newCompany);
@@ -151,7 +151,7 @@ public sealed class CompanyService : ICompanyService
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
-    public async Task<Dictionary<string, List<MemberInfoDto>>> GetMembersPerRoleAsync(ICollection<AppUser> companyMembers)
+    public async Task<Dictionary<string, List<MemberInfoDto>>> GetMembersPerRoleAsync(ICollection<CompanyMember> companyMembers)
     {
         var memberIds = companyMembers.Select(m => m.Id).ToList();
 
@@ -179,8 +179,8 @@ public sealed class CompanyService : ICompanyService
 
             memberList.Add(new MemberInfoDto(
                 member.Id,
-                    $"{member.FirstName} {member.LastName}",
-                    member.AvatarUrl,
+                    $"{member.User.FirstName} {member.User.LastName}",
+                    member.User.AvatarUrl,
                     roleName
                 ));
         }

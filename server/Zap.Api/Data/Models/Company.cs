@@ -16,8 +16,8 @@ public class Company
     [StringLength(500)] public string? WebsiteUrl { get; set; }
 
     public string? OwnerId { get; set; }
-    public virtual AppUser? Owner { get; set; }
+    public virtual CompanyMember? Owner { get; set; }
 
-    public virtual ICollection<AppUser> Members { get; set; } = [];
+    public virtual ICollection<CompanyMember> Members { get; set; } = [];
     public virtual ICollection<Project> Projects { get; set; } = [];
 }
