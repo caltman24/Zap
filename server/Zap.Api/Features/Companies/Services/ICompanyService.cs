@@ -28,7 +28,7 @@ public record CompanyInfoDto(
     string Name,
     string Description,
     string? LogoUrl,
-    Dictionary<string, List<MemberInfoDto>> Members);
+    SortedDictionary<string, List<MemberInfoDto>> Members);
 
 public record MemberInfoDto(string Id, string Name, string AvatarUrl, string? Role = null);
 

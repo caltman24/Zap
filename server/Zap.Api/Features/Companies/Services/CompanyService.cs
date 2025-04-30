@@ -31,7 +31,7 @@ public sealed class CompanyService : ICompanyService
         if (company == null) return null;
 
         // Where string is the role name
-        Dictionary<string, List<MemberInfoDto>> membersByRole = GetMembersPerRole(company.Members);
+        var membersByRole = GetMembersPerRole(company.Members);
 
         return new CompanyInfoDto(company.Name,
             company.Description,
@@ -148,13 +148,13 @@ public sealed class CompanyService : ICompanyService
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
-    public Dictionary<string, List<MemberInfoDto>> GetMembersPerRole(ICollection<CompanyMember> companyMembers)
+    public SortedDictionary<string, List<MemberInfoDto>> GetMembersPerRole(ICollection<CompanyMember> companyMembers)
     {
-        var membersByRole = new Dictionary<string, List<MemberInfoDto>>();
+        var membersByRole = new SortedDictionary<string, List<MemberInfoDto>>();
 
         foreach (var member in companyMembers)
         {
-            var roleName = member.Role.Name;
+            var roleName = member.Role!.Name;
             if (!membersByRole.TryGetValue(roleName, out var memberList))
             {
                 memberList = [];

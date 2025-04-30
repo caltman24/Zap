@@ -40,8 +40,8 @@ public class AppDbContext : IdentityUserContext<AppUser>
 
         builder.Entity<CompanyMember>()
             .HasOne(u => u.Role)
-            .WithOne()
-            .HasForeignKey<CompanyMember>(u => u.RoleId)
+            .WithMany()
+            .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
