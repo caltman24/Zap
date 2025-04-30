@@ -27,7 +27,7 @@ internal class CompanyRolesAuthorizationHandler : AuthorizationHandler<CompanyRo
             var found = false;
             foreach (var role in requirement.AllowedRoles)
             {
-                if (_currentUser.Member.Role == role)
+                if (_currentUser.Member.Role?.Name == role)
                 {
                     found = true;
                     break;

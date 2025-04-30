@@ -36,6 +36,7 @@ internal static class CurrentUserExtensions
                 {
                     currentUser.Member = await db.CompanyMembers
                         .Where(m => m.UserId == currentUser.User.Id)
+                        .Include(m => m.Role)
                         .AsNoTracking()
                         .FirstOrDefaultAsync();
                 }

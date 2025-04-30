@@ -41,7 +41,7 @@ class AddTestMembers : IEndpoint
             .RuleFor(u => u.UserName, (f, u) => u.Email)
             .Generate(count);
 
-        List<string> roles = [RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Developer, RoleNames.Submitter];
+        List<CompanyRole> roles = await db.CompanyRoles.ToListAsync();
 
         foreach (var user in newUsers)
         {
@@ -52,7 +52,7 @@ class AddTestMembers : IEndpoint
                 {
                     UserId = user.Id,
                     CompanyId = companyId,
-                    Role = role ?? roles[Random.Shared.Next(0, roles.Count() - 1)]
+                    RoleId = roles.FirstOrDefault(r => r.Name == role)?.Id ?? roles[Random.Shared.Next(0, roles.Count() - 1)].Id
 
                 });
                 await db.SaveChangesAsync();

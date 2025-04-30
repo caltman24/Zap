@@ -217,8 +217,7 @@ namespace Zap.Api.Migrations
                     b.Property<string>("CompanyId")
                         .HasColumnType("text");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
+                    b.Property<string>("RoleId")
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
@@ -229,10 +228,31 @@ namespace Zap.Api.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("RoleId")
+                        .IsUnique();
+
                     b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("CompanyMembers");
+                });
+
+            modelBuilder.Entity("Zap.Api.Data.Models.CompanyRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CompanyRoles");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Project", b =>
@@ -364,7 +384,12 @@ namespace Zap.Api.Migrations
                     b.HasOne("Zap.Api.Data.Models.Company", "Company")
                         .WithMany("Members")
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Zap.Api.Data.Models.CompanyRole", "Role")
+                        .WithOne()
+                        .HasForeignKey("Zap.Api.Data.Models.CompanyMember", "RoleId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Zap.Api.Data.Models.AppUser", "User")
                         .WithOne()
@@ -373,6 +398,8 @@ namespace Zap.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
+
+                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });

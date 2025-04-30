@@ -13,5 +13,7 @@ public class CompanyMember
     public string? CompanyId { get; set; }
     public Company? Company { get; set; }
 
-    public string Role { get; set; } = RoleNames.Submitter;
+
+    public string? RoleId { get; set; }
+    public CompanyRole? Role { get; set; }
 }

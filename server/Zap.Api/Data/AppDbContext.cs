@@ -12,6 +12,7 @@ public class AppDbContext : IdentityUserContext<AppUser>
 
     public DbSet<Company> Companies { get; set; }
     public DbSet<CompanyMember> CompanyMembers { get; set; }
+    public DbSet<CompanyRole> CompanyRoles { get; set; }
 
     public DbSet<Project> Projects { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
@@ -35,6 +36,12 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .HasOne(u => u.Company)
             .WithMany(c => c.Members)
             .HasForeignKey(u => u.CompanyId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CompanyMember>()
+            .HasOne(u => u.Role)
+            .WithOne()
+            .HasForeignKey<CompanyMember>(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

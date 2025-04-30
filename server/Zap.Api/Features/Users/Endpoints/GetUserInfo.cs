@@ -31,7 +31,7 @@ public class GetUserInfo : IEndpoint
             FirstName: user.FirstName,
             LastName: user.LastName,
             AvatarUrl: user.AvatarUrl,
-            Role: currentUser.Member?.Role ?? "",
+            Role: currentUser.Member?.Role?.Name ?? "",
             CompanyId: currentUser.CompanyId
         );
 

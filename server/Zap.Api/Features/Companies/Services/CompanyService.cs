@@ -23,8 +23,8 @@ public sealed class CompanyService : ICompanyService
     {
         var company = await _db.Companies
             .Where(c => c.Id == companyId)
-            .Include(c => c.Members)
-            .ThenInclude(m => m.User)
+            .Include(c => c.Members).ThenInclude(m => m.User)
+            .Include(c => c.Members).ThenInclude(m => m.Role)
             .AsNoTracking()
             .FirstOrDefaultAsync();
 
@@ -124,11 +124,12 @@ public sealed class CompanyService : ICompanyService
             OwnerId = company.User.Id
         };
 
+        var roleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Admin).Select(r => r.Id).FirstAsync();
         var newMember = new CompanyMember
         {
             UserId = company.User.Id,
             CompanyId = newCompany.Id,
-            Role = RoleNames.Admin
+            RoleId = roleId
         };
         newCompany.Members.Add(newMember);
 
@@ -153,18 +154,18 @@ public sealed class CompanyService : ICompanyService
 
         foreach (var member in companyMembers)
         {
-
-            if (!membersByRole.TryGetValue(member.Role, out var memberList))
+            var roleName = member.Role.Name;
+            if (!membersByRole.TryGetValue(roleName, out var memberList))
             {
                 memberList = [];
-                membersByRole[member.Role] = memberList;
+                membersByRole[roleName] = memberList;
             }
 
             memberList.Add(new MemberInfoDto(
                 member.Id,
                     $"{member.User.FirstName} {member.User.LastName}",
                     member.User.AvatarUrl,
-                    member.Role
+                    roleName
                 ));
         }
 

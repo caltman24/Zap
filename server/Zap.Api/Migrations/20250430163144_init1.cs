@@ -42,6 +42,19 @@ namespace Zap.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CompanyRoles",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    NormalizedName = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompanyRoles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
@@ -131,7 +144,7 @@ namespace Zap.Api.Migrations
                     Id = table.Column<string>(type: "text", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     CompanyId = table.Column<string>(type: "text", nullable: true),
-                    Role = table.Column<string>(type: "text", nullable: false)
+                    RoleId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -147,7 +160,13 @@ namespace Zap.Api.Migrations
                         column: x => x.CompanyId,
                         principalTable: "Companies",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CompanyMembers_CompanyRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "CompanyRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -241,6 +260,12 @@ namespace Zap.Api.Migrations
                 column: "CompanyId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CompanyMembers_RoleId",
+                table: "CompanyMembers",
+                column: "RoleId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CompanyMembers_UserId",
                 table: "CompanyMembers",
                 column: "UserId",
@@ -287,6 +312,9 @@ namespace Zap.Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "Projects");
+
+            migrationBuilder.DropTable(
+                name: "CompanyRoles");
 
             migrationBuilder.DropTable(
                 name: "Companies");

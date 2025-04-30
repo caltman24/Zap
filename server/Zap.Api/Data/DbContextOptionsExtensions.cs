@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Constants;
+using Zap.Api.Data.Models;
 
 namespace Zap.Api.Data;
 
@@ -12,33 +13,29 @@ public static class DbContextOptionsExtensions
         // Called as part of EnsureCreated, Migrate, and `dotnet ef database update`
         optionsBuilder.UseSeeding((ctx, _) =>
             {
-                var role = ctx.Set<IdentityRole>().FirstOrDefault(x => x.Name == RoleNames.Admin);
+                var role = ctx.Set<CompanyRole>().FirstOrDefault(x => x.Name == RoleNames.Admin);
                 if (role != null) return;
 
-                ctx.Set<IdentityRole>().AddRange([
-                    new IdentityRole
+                ctx.Set<CompanyRole>().AddRange([
+                    new CompanyRole
                     {
                         Name = RoleNames.Admin,
                         NormalizedName = RoleNames.Admin.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     },
-                    new IdentityRole
+                    new CompanyRole
                     {
                         Name = RoleNames.ProjectManager,
                         NormalizedName = RoleNames.ProjectManager.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     },
-                    new IdentityRole
+                    new CompanyRole
                     {
                         Name = RoleNames.Developer,
                         NormalizedName = RoleNames.Developer.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     },
-                    new IdentityRole
+                    new CompanyRole
                     {
                         Name = RoleNames.Submitter,
                         NormalizedName = RoleNames.Submitter.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     }
                 ]);
 
@@ -46,34 +43,30 @@ public static class DbContextOptionsExtensions
             })
             .UseAsyncSeeding(async (ctx, _, ct) =>
             {
-                var role = await ctx.Set<IdentityRole>()
+                var role = await ctx.Set<CompanyRole>()
                     .FirstOrDefaultAsync(x => x.Name == RoleNames.Admin, cancellationToken: ct);
                 if (role != null) return;
 
-                await ctx.Set<IdentityRole>().AddRangeAsync([
-                    new IdentityRole
+                await ctx.Set<CompanyRole>().AddRangeAsync([
+                    new CompanyRole
                     {
                         Name = RoleNames.Admin,
                         NormalizedName = RoleNames.Admin.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     },
-                    new IdentityRole
+                    new CompanyRole
                     {
                         Name = RoleNames.ProjectManager,
                         NormalizedName = RoleNames.ProjectManager.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     },
-                    new IdentityRole
+                    new CompanyRole
                     {
                         Name = RoleNames.Developer,
                         NormalizedName = RoleNames.Developer.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     },
-                    new IdentityRole
+                    new CompanyRole
                     {
                         Name = RoleNames.Submitter,
                         NormalizedName = RoleNames.Submitter.ToUpperInvariant(),
-                        ConcurrencyStamp = Guid.NewGuid().ToString()
                     }
                 ]);
 
