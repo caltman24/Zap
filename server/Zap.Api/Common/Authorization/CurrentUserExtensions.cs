@@ -17,7 +17,7 @@ internal static class CurrentUserExtensions
         return services;
     }
 
-    private sealed class ClaimsTransformation(CurrentUser currentUser, UserManager<AppUser> userManager, AppDbContext db)
+    private sealed class ClaimsTransformation(CurrentUser currentUser, UserManager<AppUser> userManager, AppDbContext db, ILogger<ClaimsTransformation> logger)
         : IClaimsTransformation
     {
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -25,6 +25,7 @@ internal static class CurrentUserExtensions
             // We're not going to transform anything. We're using this as a hook into authorization
             // to set the current user without adding custom middleware.
             currentUser.Principal = principal;
+            logger.LogDebug("Current User Claims {0}", principal.Claims);
 
             if (principal.FindFirstValue(ClaimTypes.NameIdentifier) is { Length: > 0 } id)
             {

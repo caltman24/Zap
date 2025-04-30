@@ -4,7 +4,7 @@ using Zap.Api.Data.Models;
 
 namespace Zap.Api.Data;
 
-public class AppDbContext : IdentityDbContext<AppUser>
+public class AppDbContext : IdentityUserContext<AppUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
