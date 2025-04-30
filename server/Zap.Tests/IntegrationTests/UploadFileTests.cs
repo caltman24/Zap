@@ -24,11 +24,11 @@ public class UploadFileTests : IAsyncDisposable
     public async Task Update_Company_With_Image_Invalid_MIME_As_Admin_Returns_400_BadRequest()
     {
         var userId = Guid.NewGuid().ToString();
-        await _app.CreateUserAsync(userId, role: RoleNames.Admin);
+        await _app.CreateUserAsync(userId);
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        await CompaniesTests.CreateTestCompany(_db, userId, user);
+        await CompaniesTests.CreateTestCompany(_db, userId, user, role: RoleNames.Admin);
         var client = _app.CreateClient(userId, role: RoleNames.Admin);
 
         //Image
@@ -53,7 +53,7 @@ public class UploadFileTests : IAsyncDisposable
     public async Task Update_Company_With_Image_Valid_As_Admin_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-        await _app.CreateUserAsync(userId, role: RoleNames.Admin);
+        await _app.CreateUserAsync(userId);
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 

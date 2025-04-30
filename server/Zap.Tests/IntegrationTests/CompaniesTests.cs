@@ -214,11 +214,11 @@ public class CompaniesTests : IAsyncDisposable
     public async Task Update_Company_Without_Image_As_Admin_Returns_Success()
     {
         var userId = Guid.NewGuid().ToString();
-        await _app.CreateUserAsync(userId, role: RoleNames.Admin);
+        await _app.CreateUserAsync(userId);
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        await CreateTestCompany(_db, userId, user);
+        await CreateTestCompany(_db, userId, user, role: RoleNames.Admin);
         var client = _app.CreateClient(userId, role: RoleNames.Admin);
 
         // Create multipart form data content
@@ -238,11 +238,11 @@ public class CompaniesTests : IAsyncDisposable
     public async Task Update_Company_Without_Image_As_ProjectManager_Returns_Forbidden()
     {
         var userId = Guid.NewGuid().ToString();
-        await _app.CreateUserAsync(userId, role: RoleNames.ProjectManager);
+        await _app.CreateUserAsync(userId);
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        await CreateTestCompany(_db, userId, user);
+        await CreateTestCompany(_db, userId, user, role: RoleNames.ProjectManager);
         var client = _app.CreateClient(userId, role: RoleNames.ProjectManager);
 
         // Create multipart form data content
@@ -260,15 +260,27 @@ public class CompaniesTests : IAsyncDisposable
 
 
     internal static async Task<Company> CreateTestCompany(AppDbContext db, string userId, AppUser user,
-        List<Project>? projects = null, string? companyId = null)
+        List<Project>? projects = null, string? companyId = null, string? role = null)
     {
+        var roleName = role ?? RoleNames.Admin;
+
         var company = new Company()
         {
             Id = companyId ?? Guid.NewGuid().ToString(),
             Name = "Test Company",
             Description = "Test Description",
             OwnerId = userId,
-            Members = [user]
+            Members =
+                [
+                    new CompanyMember
+                    {
+                        UserId = userId,
+                        RoleId = await db.CompanyRoles
+                            .Where(r => r.Name == roleName)
+                            .Select(r => r.Id)
+                            .FirstAsync()
+                    }
+                ]
         };
         if (projects != null)
         {
