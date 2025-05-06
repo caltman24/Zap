@@ -14,6 +14,6 @@ public class CompanyMember
     public Company? Company { get; set; }
 
 
-    public string? RoleId { get; set; }
-    public CompanyRole? Role { get; set; }
+    public string RoleId { get; set; } = default!;
+    public CompanyRole Role { get; set; } = default!;
 }

@@ -15,5 +15,8 @@ public class Project
     public required string CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 
+    public string? ProjectManagerId { get; set; }
+    public CompanyMember? ProjectManager { get; set; }
+
     public ICollection<Ticket> Tickets { get; set; } = [];
 }

@@ -57,6 +57,12 @@ export type ProjectResponse = {
   priority: string;
   dueDate: string; // ISO date string format
   isArchived: boolean;
+  projectManager: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    role: string;
+  } | null;
 };
 
 export type CompanyProjectsResponse = {

@@ -9,11 +9,11 @@ using Zap.Api.Data;
 
 #nullable disable
 
-namespace Zap.Api.Migrations
+namespace Zap.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250430180337_Member_role_fk")]
-    partial class Member_role_fk
+    [Migration("20250501142131_init1")]
+    partial class init1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

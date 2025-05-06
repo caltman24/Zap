@@ -51,7 +51,7 @@ export const menuRoutes: MenuRoutes = [
         name: "Create Project",
         to: "/projects/new",
         materialIcon: "add_circle",
-        roles: [roleNames.admin, roleNames.projectManager],
+        roles: [roleNames.admin],
       },
     ],
   },

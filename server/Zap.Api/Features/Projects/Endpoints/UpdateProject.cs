@@ -19,12 +19,22 @@ public class UpdateProject : IEndpoint
 
     public record Request(string Name, string Description, string Priority, DateTime DueDate);
 
-    private static async Task<Results<NoContent, BadRequest<string>>> Handle(
+    private static async Task<Results<NoContent, ForbidHttpResult, BadRequest<string>>> Handle(
             [FromRoute] string projectId,
             Request updateProjectRequest,
             CurrentUser currentUser,
             IProjectService projectService)
     {
+
+        if (currentUser.Member == null)
+        {
+            return TypedResults.BadRequest("User not in company");
+        }
+        var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member.Id);
+        if (!isPm)
+        {
+            return TypedResults.Forbid();
+        }
 
         var success = await projectService.UpdateProjectByIdAsync(
                 projectId,

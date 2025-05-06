@@ -2,21 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Zap.Api.Data;
 
 #nullable disable
 
-namespace Zap.Api.Migrations
+namespace Zap.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250430163144_init1")]
-    partial class init1
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -221,6 +218,7 @@ namespace Zap.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("RoleId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
@@ -231,8 +229,7 @@ namespace Zap.Api.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.HasIndex("RoleId")
-                        .IsUnique();
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -288,9 +285,14 @@ namespace Zap.Api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("ProjectManagerId")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Projects");
                 });
@@ -390,9 +392,10 @@ namespace Zap.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Zap.Api.Data.Models.CompanyRole", "Role")
-                        .WithOne()
-                        .HasForeignKey("Zap.Api.Data.Models.CompanyMember", "RoleId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Zap.Api.Data.Models.AppUser", "User")
                         .WithOne()
@@ -415,7 +418,13 @@ namespace Zap.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", "ProjectManager")
+                        .WithMany()
+                        .HasForeignKey("ProjectManagerId");
+
                     b.Navigation("Company");
+
+                    b.Navigation("ProjectManager");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Ticket", b =>

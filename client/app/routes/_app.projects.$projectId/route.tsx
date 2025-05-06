@@ -77,9 +77,11 @@ export default function ProjectDetailsRoute() {
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");
 
+  const isAssignedPM = project?.projectManager?.id === userInfo.id
   const canEdit =
     userRole === roleNames.admin ||
-    userRole === roleNames.projectManager
+    (userRole === roleNames.projectManager && isAssignedPM)
+
 
   const modalRef = useRef<HTMLDialogElement>(null)
   const removeMemberModalRef = useRef<HTMLDialogElement>(null)
@@ -175,25 +177,27 @@ export default function ProjectDetailsRoute() {
                   </div>
                   <div className="flex gap-2">
                     {canEdit && (
-                      <button onClick={handleEditToggle} className="btn btn-info">
-                        <span className="material-symbols-outlined">edit</span>
-                        Edit
-                      </button>
+                      <>
+                        <button onClick={handleEditToggle} className="btn btn-info">
+                          <span className="material-symbols-outlined">edit</span>
+                          Edit
+                        </button>
+                        {/* Archive/Unarchive Project button */}
+                        <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`}>
+                          {project.isArchived ? (
+                            <button type="submit" className="btn btn-secondary">
+                              <span className="material-symbols-outlined">folder</span>
+                              Unarchive
+                            </button>
+                          ) : (
+                            <button type="submit" className="btn btn-warning text-warning-content">
+                              <span className="material-symbols-outlined">folder</span>
+                              Archive
+                            </button>
+                          )}
+                        </archiveFetcher.Form>
+                      </>
                     )}
-                    {/* Archive/Unarchive Project button */}
-                    <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`}>
-                      {project.isArchived ? (
-                        <button type="submit" className="btn btn-secondary">
-                          <span className="material-symbols-outlined">folder</span>
-                          Unarchive
-                        </button>
-                      ) : (
-                        <button type="submit" className="btn btn-warning text-warning-content">
-                          <span className="material-symbols-outlined">folder</span>
-                          Archive
-                        </button>
-                      )}
-                    </archiveFetcher.Form>
                     <Link to="/projects" className="btn btn-outline">
                       <span className="material-symbols-outlined">arrow_back</span>
                       Back
@@ -213,6 +217,21 @@ export default function ProjectDetailsRoute() {
                     <div className="stat-title">Due Date</div>
                     <div className="stat-value text-lg">
                       {new Date(project.dueDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="stat bg-base-200 rounded-lg">
+                    <div className="stat-title">Project Manager</div>
+                    <div className="stat-value text-lg">
+                      {project.projectManager
+                        ? (<div>
+                          <img
+                            src={project.projectManager.avatarUrl}
+                            alt="Project Manager Avatar"
+                            className="w-10 h-10 rounded-full"
+                          />
+                          <div>{project.projectManager.name}</div>
+                        </div>)
+                        : ("N/A")}
                     </div>
                   </div>
                 </div>

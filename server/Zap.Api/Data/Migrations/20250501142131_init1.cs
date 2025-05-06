@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Zap.Api.Migrations
+namespace Zap.Api.Data.Migrations
 {
     /// <inheritdoc />
     public partial class init1 : Migration
@@ -262,8 +262,7 @@ namespace Zap.Api.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_CompanyMembers_RoleId",
                 table: "CompanyMembers",
-                column: "RoleId",
-                unique: true);
+                column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CompanyMembers_UserId",

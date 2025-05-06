@@ -3,8 +3,8 @@ import roleNames, { RoleName } from "./roles";
 const permissions: ActionPermissions = {
   project: {
     edit: [roleNames.admin, roleNames.projectManager],
-    delete: [roleNames.admin, roleNames.projectManager],
-    create: [roleNames.admin, roleNames.projectManager],
+    delete: [roleNames.admin],
+    create: [roleNames.admin],
   },
   company: {
     edit: [roleNames.admin],
