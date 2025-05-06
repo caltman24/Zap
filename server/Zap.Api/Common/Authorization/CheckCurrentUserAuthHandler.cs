@@ -7,7 +7,7 @@ internal static class AuthorizationHandlerExtensions
     internal static AuthorizationBuilder AddCurrentUserHandler(this AuthorizationBuilder builder)
     {
         builder.Services.AddScoped<IAuthorizationHandler, CheckCurrentUserAuthHandler>();
-        builder.Services.AddScoped<IAuthorizationHandler, CheckCurrentUserAuthHandler>();
+        builder.Services.AddScoped<IAuthorizationHandler, CheckCurrentMemberAuthHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, CompanyRolesAuthorizationHandler>();
 
         return builder;
