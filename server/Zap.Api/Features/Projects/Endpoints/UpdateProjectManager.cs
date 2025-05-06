@@ -16,7 +16,7 @@ public class UpdateProjectManager : IEndpoint
         .RequireAuthorization(pb =>
                 {
                     pb.RequireCurrentUser();
-                    pb.RequireCompanyRole(RoleNames.Admin);
+                    pb.RequireCompanyMember(RoleNames.Admin);
                     pb.Build();
                 });
 

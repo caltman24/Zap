@@ -9,17 +9,16 @@ namespace Zap.Api.Features.Companies.Endpoints;
 public class GetCompanyProjects : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/", Handle);
+        app.MapGet("/", Handle)
+        .WithCompanyMember();
 
     private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectDto>>>> Handle(
         ICompanyService companyService, CurrentUser currentUser, ILogger<Program> logger,
         [FromQuery] bool? isArchived = null)
     {
-        if (currentUser.CompanyId == null) return TypedResults.BadRequest("User not in company");
-
         var projects = isArchived == null
-            ? await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId)
-            : await companyService.GetCompanyProjectsAsync(currentUser.CompanyId, isArchived.Value);
+            ? await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId!)
+            : await companyService.GetCompanyProjectsAsync(currentUser.CompanyId!, isArchived.Value);
 
         return TypedResults.Ok(projects);
     }

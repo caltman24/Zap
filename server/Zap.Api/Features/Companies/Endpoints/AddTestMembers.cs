@@ -14,23 +14,21 @@ namespace Zap.Api.Features.Companies.Endpoints;
 class AddTestMembers : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
-        app.MapPost("/testmembers", Handle);
+        app.MapPost("/testmembers", Handle)
+            .WithCompanyMember();
 
-    private static async Task<Results<BadRequest<string>, NoContent>> Handle(
+    private static async Task<Results<NotFound<string>, NoContent>> Handle(
             [FromQuery] int count,
             UserManager<AppUser> userManager,
             AppDbContext db,
             CurrentUser currentUser,
             [FromQuery] string? role = null)
     {
-        var companyId = currentUser.CompanyId;
-        if (companyId == null) return TypedResults.BadRequest("User not in a company");
-
         var company = await db.Companies
-            .Where(c => c.Id == companyId)
+            .Where(c => c.Id == currentUser.CompanyId)
             .Include(c => c.Members)
             .FirstOrDefaultAsync();
-        if (company == null) return TypedResults.BadRequest("User not in a company");
+        if (company == null) return TypedResults.NotFound("User not in a company");
 
         var newUsers = new Faker<AppUser>()
             .RuleFor(u => u.FirstName, (f, u) => f.Name.FirstName())
@@ -51,7 +49,7 @@ class AddTestMembers : IEndpoint
                 company.Members.Add(new CompanyMember
                 {
                     UserId = user.Id,
-                    CompanyId = companyId,
+                    CompanyId = currentUser.CompanyId,
                     RoleId = roles.FirstOrDefault(r => r.Name == role)?.Id ?? roles[Random.Shared.Next(0, roles.Count() - 1)].Id
 
                 });

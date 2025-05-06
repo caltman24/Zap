@@ -16,7 +16,7 @@ public class CreateProject : IEndpoint
             .RequireAuthorization(pb =>
             {
                 pb.RequireCurrentUser();
-                pb.RequireCompanyRole(RoleNames.Admin, RoleNames.ProjectManager);
+                pb.RequireCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
                 pb.Build();
             })
             .WithRequestValidation<Request>();

@@ -14,7 +14,7 @@ public class UpdateCompanyInfo : IEndpoint
             .DisableAntiforgery()
             .Accepts<Request>("multipart/form-data")
             .RequireRateLimiting("upload")
-            .RequireAuthorization(pb => { pb.RequireCompanyRole(RoleNames.Admin); });
+            .WithCompanyMember(RoleNames.Admin);
 
     public record Request(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
 
