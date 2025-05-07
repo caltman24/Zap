@@ -1,0 +1,21 @@
+[] - Create new ticket
+[] - assign to ticket
+[] - add ticket to project
+[] - change priority & status
+
+[] - add comments to ticket
+[] - add history to ticket
+[] - add attatchements to ticket
+
+[] - Projects Tests
+        + Assigning PMs
+        + Editing project details / archive
+        + Role validations
+        + Adding tickets
+[] - Tickets Tests
+        + Assigning Tickets
+        + Editing ticket details(name, priority, status, ect...)
+        + Role validations
+        + comments
+        + history
+        + attatchments
