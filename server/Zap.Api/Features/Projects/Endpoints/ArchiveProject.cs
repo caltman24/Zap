@@ -17,7 +17,7 @@ public class ArchiveProject : IEndpoint
         IProjectService service, ICompanyService companyService, CurrentUser currentUser)
     {
         var isPm = await service.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
-        if (!isPm)
+        if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin)
         {
             return TypedResults.Forbid();
         }
