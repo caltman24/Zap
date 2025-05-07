@@ -18,11 +18,11 @@ public class GetUserInfo : IEndpoint
         string AvatarUrl,
         string? CompanyId);
 
-    private static Results<BadRequest<string>, Ok<Response>> Handle(
+    private static Results<NotFound<string>, Ok<Response>> Handle(
         HttpContext context, CurrentUser currentUser)
     {
         var user = currentUser.User;
-        if (user == null) return TypedResults.BadRequest("User not found");
+        if (user == null) return TypedResults.NotFound("User not found");
 
         var response = new Response
         (

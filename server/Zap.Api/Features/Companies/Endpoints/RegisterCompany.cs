@@ -38,7 +38,7 @@ public class RegisterCompany : IEndpoint
 
         if (currentUser.CompanyId != null)
         {
-            return TypedResults.BadRequest("User already exists in a company");
+            return TypedResults.BadRequest("User is already a member in a company");
         }
 
         await companyService.CreateCompanyAsync(new CreateCompanyDto(

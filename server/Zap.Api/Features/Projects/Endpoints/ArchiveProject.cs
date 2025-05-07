@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
@@ -12,29 +11,19 @@ public class ArchiveProject : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{projectId}/archive", Handle)
-            .RequireAuthorization(pb =>
-            {
-                pb.RequireCurrentUser();
-                pb.RequireCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
-                pb.Build();
-            });
+        .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
 
-
-    private static async Task<Results<BadRequest<string>, ForbidHttpResult, NoContent>> Handle(string projectId,
+    private static async Task<Results<NotFound<string>, ForbidHttpResult, NoContent>> Handle(string projectId,
         IProjectService service, ICompanyService companyService, CurrentUser currentUser)
     {
-        if (currentUser.Member == null)
-        {
-            return TypedResults.BadRequest("User not in company");
-        }
-        var isPm = await service.ValidateProjectManagerAsync(projectId, currentUser.Member.Id);
+        var isPm = await service.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
         if (!isPm)
         {
             return TypedResults.Forbid();
         }
 
         var success = await service.ToggleArchiveProjectAsync(projectId);
-        if (!success) TypedResults.BadRequest("Project does not exist");
+        if (!success) TypedResults.NotFound("Project not found");
 
         return TypedResults.NoContent();
     }

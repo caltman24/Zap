@@ -12,7 +12,7 @@ public class GetAssignableProjectManagers : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapGet("/{projectId}/assignable-pms", Handle)
-            .RequireAuthorization(pb => { pb.RequireCompanyMember(RoleNames.Admin); });
+            .WithCompanyMember(RoleNames.Admin);
 
     private static async Task<Ok<List<MemberInfoDto>>> Handle(
             [FromRoute] string projectId,

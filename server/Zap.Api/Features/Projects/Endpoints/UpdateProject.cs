@@ -12,25 +12,17 @@ public class UpdateProject : IEndpoint
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{projectId}", Handle)
         .Accepts<Request>("application/json")
-        .RequireAuthorization(pb =>
-                {
-                    pb.RequireCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
-                });
+        .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
 
     public record Request(string Name, string Description, string Priority, DateTime DueDate);
 
-    private static async Task<Results<NoContent, ForbidHttpResult, BadRequest<string>>> Handle(
+    private static async Task<Results<NoContent, ForbidHttpResult, NotFound<string>>> Handle(
             [FromRoute] string projectId,
             Request updateProjectRequest,
             CurrentUser currentUser,
             IProjectService projectService)
     {
-
-        if (currentUser.Member == null)
-        {
-            return TypedResults.BadRequest("User not in company");
-        }
-        var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member.Id);
+        var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
         if (!isPm)
         {
             return TypedResults.Forbid();
@@ -46,6 +38,6 @@ public class UpdateProject : IEndpoint
 
         if (success) return TypedResults.NoContent();
 
-        return TypedResults.BadRequest("Failed to update company info.");
+        return TypedResults.NotFound("Failed to update company info.");
     }
 }

@@ -13,27 +13,17 @@ public class UpdateProjectManager : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{projectId}/pm", Handle)
-        .RequireAuthorization(pb =>
-                {
-                    pb.RequireCurrentUser();
-                    pb.RequireCompanyMember(RoleNames.Admin);
-                    pb.Build();
-                });
+            .WithCompanyMember(RoleNames.Admin);
 
     public record Request(string memberId);
 
-    public static async Task<Results<BadRequest<string>, NoContent>> Handle(
+    public static async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> Handle(
             Request request,
             CurrentUser currentUser,
             IProjectService projectService,
             ICompanyService companyService,
             [FromRoute] string projectId)
     {
-        if (currentUser.Member == null)
-        {
-            return TypedResults.BadRequest("User not in company");
-        }
-
         var memberRole = await companyService.GetMemberRoleAsync(request.memberId);
         if (memberRole != RoleNames.ProjectManager)
         {
@@ -41,7 +31,7 @@ public class UpdateProjectManager : IEndpoint
         }
         var success = await projectService.UpdateProjectManagerAsync(projectId, request.memberId);
 
-        return success ? TypedResults.NoContent() : TypedResults.BadRequest("Project not found");
+        return success ? TypedResults.NoContent() : TypedResults.NotFound("Project not found");
 
     }
 

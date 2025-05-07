@@ -11,17 +11,17 @@ public class GetProject : IEndpoint
 
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapGet("/{projectId}", Handle)
-            .WithName("GetProject");
-    private static async Task<Results<BadRequest<string>, Ok<ProjectDto>>> Handle(
+           .WithName("GetProject")
+           .WithCompanyMember();
+
+    private static async Task<Results<NotFound<string>, Ok<ProjectDto>>> Handle(
         [FromRoute] string projectId, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
     {
-        if (currentUser.Member == null) return TypedResults.BadRequest("User not in company");
-
         var project = await projectService.GetProjectByIdAsync(projectId);
-        if (project == null) return TypedResults.BadRequest("Project not found");
+        if (project == null) return TypedResults.NotFound("Project not found");
 
         // If the project is not in the same company as the user
-        if (project.CompanyId != currentUser.Member.CompanyId) return TypedResults.BadRequest("Project not found");
+        if (project.CompanyId != currentUser.Member!.CompanyId) return TypedResults.NotFound("Project not found");
 
         return TypedResults.Ok(project);
     }
