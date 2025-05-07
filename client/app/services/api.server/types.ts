@@ -19,6 +19,12 @@ export type UserInfoResponse = {
   avatarUrl: string;
   companyId?: string;
 };
+export type BasicUserInfo = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  role: string;
+};
 
 export type CompanyInfoResponse = {
   name: string;
