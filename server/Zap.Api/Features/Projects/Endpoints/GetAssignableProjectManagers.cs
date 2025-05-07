@@ -14,7 +14,7 @@ public class GetAssignableProjectManagers : IEndpoint
         app.MapGet("/{projectId}/assignable-pms", Handle)
             .WithCompanyMember(RoleNames.Admin);
 
-    private static async Task<Ok<List<MemberInfoDto>>> Handle(
+    private static async Task<Ok<List<ProjectManagerDto>>> Handle(
             [FromRoute] string projectId,
             IProjectService projectService)
     {

@@ -1,15 +1,21 @@
 import { Await, FetcherWithComponents, useNavigate } from "@remix-run/react";
 import { LegacyRef, RefObject, Suspense, useEffect, useRef, useState } from "react";
-import { BasicUserInfo, CompanyMemberPerRole } from "~/services/api.server/types";
+import { BasicUserInfo, CompanyMemberPerRole, ProjectManagerInfo } from "~/services/api.server/types";
 import MemberListSkeleton from "./MemberListSkeleton";
 
 export type MemberListModalProps = {
   modalRef: RefObject<HTMLDialogElement> | undefined,
-  members?: BasicUserInfo[] | null,
+  members?: ProjectManagerInfo[] | null,
   loading: boolean,
   error?: string | null
+  currentPM: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    role: string;
+  } | null
+  actionFetcherSubmit: (formData: FormData) => void
   actionFetcher: FetcherWithComponents<unknown>
-  projectId?: string
   modalTitle: string
   buttonText: string
 }
@@ -18,11 +24,12 @@ export default function MemberListModal({
   members,
   error,
   loading,
+  currentPM,
+  actionFetcherSubmit,
   actionFetcher,
-  projectId,
   modalTitle,
   buttonText }: MemberListModalProps) {
-  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null);
+  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(currentPM ? { id: currentPM.id, name: currentPM.name } : null);
 
   const memberSelectItemClassName = (memberId: string) =>
     selectedMember?.id === memberId
@@ -30,10 +37,7 @@ export default function MemberListModal({
       : ""
 
   function handleOnMemberSelect(member: any) {
-    if (selectedMember?.id === member.id) {
-      setSelectedMember(null)
-      return;
-    }
+    if (selectedMember?.id === member.id) return;
     setSelectedMember(member)
   }
 
@@ -42,18 +46,13 @@ export default function MemberListModal({
     setSelectedMember(null)
   }
 
-  function handleAddMembersToProject() {
+  function handleAction() {
     if (!selectedMember) return;
 
     const formData = new FormData();
     formData.append("memberId", selectedMember.id)
 
-    actionFetcher.submit(formData, {
-      method: "post",
-      action: `/projects/${projectId}/assign-pm`
-    })
-
-    setSelectedMember(null)
+    actionFetcherSubmit(formData)
   }
 
   useEffect(() => {
@@ -68,13 +67,9 @@ export default function MemberListModal({
       <div className="modal-box ">
         <h3 className="font-bold text-lg mb-2">{modalTitle}</h3>
         {selectedMember && (
-          <div key={selectedMember.id} className="flex items-center gap-1 cursor-pointer"
-            onClick={() => setSelectedMember(null)}>
-            <span className="text-error">X</span>
-            <p className="badge badge-neutral cursor-pointer hover:bg-neutral-900">
-              {selectedMember.name}
-            </p>
-          </div>
+          <p className="badge badge-neutral">
+            {selectedMember.name}
+          </p>
         )}
         <div className="mt-4">
           {loading ? <MemberListSkeleton /> : (
@@ -103,8 +98,8 @@ export default function MemberListModal({
         </div>
         <div className="modal-action">
           <button
-            disabled={selectedMember === null}
-            onClick={() => handleAddMembersToProject()}
+            disabled={selectedMember === null || selectedMember.id === currentPM?.id}
+            onClick={() => handleAction()}
             type="submit"
             className={`btn  ${selectedMember === null ? "btn-soft" : "btn-primary"}`}>
             {actionFetcher.state === "submitting" ?

@@ -174,9 +174,11 @@ public sealed class CompanyService : ICompanyService
 
     public async Task<string?> GetMemberRoleAsync(string memberId)
     {
-        var member = await _db.CompanyMembers.FindAsync(memberId);
-
-        return member?.Role.Name;
+        return await _db.CompanyMembers
+            .Where(m => m.Id == memberId)
+            .Include(m => m.Role)
+            .Select(m => m.Role.Name)
+            .FirstOrDefaultAsync();
     }
 
 }

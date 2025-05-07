@@ -4,28 +4,41 @@ import { useEffect, useMemo } from "react";
 import DashboardNavbar from "./DashboardNavbar";
 import { filterMenuRoutesByRoles, menuRoutes } from "~/data/routes";
 import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { getSession } from "~/services/sessions.server";
+import { commitSession, destroySession, getSession } from "~/services/sessions.server";
 import { UserInfoResponse } from "~/services/api.server/types";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
+import apiClient from "~/services/api.server/apiClient";
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const user = session.get("user")
-    console.log(session.get("tokens").accessToken)
+    const accessToken = session.get("tokens").accessToken
+    console.log(accessToken)
 
-    // Check if user is authenticated
-    if (!user) {
-        return redirect("/login");
+    // INFO: Fetch new user info every page load, in case member data changed e.g member role
+    const newUserInfo = await apiClient.getUserInfo(accessToken)
+    if (!newUserInfo) {
+        return redirect("/login", {
+            headers: {
+                "Set-Cookie": await destroySession(session),
+            },
+        });
+    }
+    if (!newUserInfo.companyId) {
+        return redirect("/setup", {
+            headers: {
+                "Set-Cookie": await commitSession(session),
+            }
+        });
     }
 
-    if (!user.companyId) {
-        return redirect("/setup");
-    }
-
+    session.set("user", newUserInfo)
     return JsonResponse({
-        data: user,
-        error: null
+        data: newUserInfo,
+        error: null,
+        headers: {
+            "Set-Cookie": await commitSession(session),
+        },
     });
 }
 

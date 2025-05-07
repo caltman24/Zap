@@ -60,6 +60,7 @@ public static class Endpoints
             .MapEndpoint<ArchiveProject>()
             .MapEndpoint<UpdateProject>()
             .MapEndpoint<GetAssignableProjectManagers>()
+            .MapEndpoint<AssignProjectManager>()
             .MapEndpoint<UpdateProjectManager>();
 
 

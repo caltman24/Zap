@@ -5,11 +5,11 @@ const roleNames: {
   submitter: RoleName;
 } = {
   admin: "admin",
-  projectManager: "projectmanager",
+  projectManager: "project manager",
   developer: "developer",
   submitter: "submitter",
 };
 
-export type RoleName = "admin" | "projectmanager" | "developer" | "submitter";
+export type RoleName = "admin" | "project manager" | "developer" | "submitter";
 
 export default roleNames;

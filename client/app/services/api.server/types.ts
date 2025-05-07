@@ -18,12 +18,20 @@ export type UserInfoResponse = {
   role: string;
   avatarUrl: string;
   companyId?: string;
+  memberId?: string;
 };
 export type BasicUserInfo = {
   id: string;
   name: string;
   avatarUrl: string;
   role: string;
+};
+export type ProjectManagerInfo = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  role: string;
+  assigned: boolean;
 };
 
 export type CompanyInfoResponse = {

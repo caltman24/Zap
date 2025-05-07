@@ -13,11 +13,12 @@ public interface IProjectService
     Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto);
     Task<bool> UpdateProjectManagerAsync(string projectId, string memberId);
     Task<bool> ValidateProjectManagerAsync(string projectId, string memberId);
-    Task<List<MemberInfoDto>> GetAssignablePMs(string projectId);
+    Task<List<ProjectManagerDto>> GetAssignablePMs(string projectId);
 }
 
 public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, CompanyMember Member);
 public record UpdateProjectDto(string Name, string Description, string Priority, DateTime DueDate);
+public record ProjectManagerDto(string Id, string Name, string AvatarUrl, string Role, bool Assigned);
 
 public record ProjectDto(
     string Id,

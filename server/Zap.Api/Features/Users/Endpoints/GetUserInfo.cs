@@ -16,7 +16,8 @@ public class GetUserInfo : IEndpoint
         string LastName,
         string Role,
         string AvatarUrl,
-        string? CompanyId);
+        string? CompanyId,
+        string? MemberId);
 
     private static Results<NotFound<string>, Ok<Response>> Handle(
         HttpContext context, CurrentUser currentUser)
@@ -32,7 +33,8 @@ public class GetUserInfo : IEndpoint
             LastName: user.LastName,
             AvatarUrl: user.AvatarUrl,
             Role: currentUser.Member?.Role?.Name ?? "",
-            CompanyId: currentUser.CompanyId
+            CompanyId: currentUser.CompanyId,
+            MemberId: currentUser.Member?.Id
         );
 
         return TypedResults.Ok(response);

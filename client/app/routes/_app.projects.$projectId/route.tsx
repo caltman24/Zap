@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, } from "react";
 import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import { BasicUserInfo, CompanyMemberPerRole, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
+import { BasicUserInfo, CompanyMemberPerRole, ProjectManagerInfo, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode, getPriorityClass, getStatusClass } from "~/utils/editMode";
 import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
@@ -60,31 +60,27 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 
 export default function ProjectDetailsRoute() {
+  const { projectId } = useParams()
   const { data: project, error } = useLoaderData<JsonResponseResult<ProjectResponse>>();
+  const actionData = useActionData<typeof action>() as ActionResponseParams;
   const userInfo = useOutletContext<UserInfoResponse>();
   const userRole = userInfo?.role?.toLowerCase()
-  const actionData = useActionData<typeof action>() as ActionResponseParams;
+  const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
-  const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+
   const archiveFetcher = useFetcher({ key: "archive-project" });
   const getProjectManagersFetcher = useFetcher({ key: "get-project-managers" })
-  const addMembersFetcher = useFetcher({ key: "add-members" })
-  const removeMemberFetcher = useFetcher({ key: "remove-member" })
-
-  const { projectId } = useParams()
+  const assignProjectManagerFetcher = useFetcher({ key: "assign-pm" })
+  const modalRef = useRef<HTMLDialogElement>(null)
 
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");
 
-  const isAssignedPM = project?.projectManager?.id === userInfo.id
-  const canEdit =
-    userRole === roleNames.admin ||
-    (userRole === roleNames.projectManager && isAssignedPM)
-
-
-  const modalRef = useRef<HTMLDialogElement>(null)
-  const removeMemberModalRef = useRef<HTMLDialogElement>(null)
+  const isAssignedPM = project?.projectManager?.id === userInfo.memberId
+  const isAdmin = userRole === roleNames.admin
+  const canEdit = isAdmin || isAssignedPM
 
   // Reset priority when toggling edit mode
   const handleEditToggle = () => {
@@ -98,12 +94,6 @@ export default function ProjectDetailsRoute() {
     if (modalRef && projectId) {
       modalRef.current?.showModal()
       getProjectManagersFetcher.load(`/projects/${projectId}/assignable-pms`)
-    }
-  }
-
-  const handleOnRemoveMembersList = () => {
-    if (removeMemberModalRef && projectId) {
-      removeMemberModalRef.current?.showModal()
     }
   }
 
@@ -171,18 +161,25 @@ export default function ProjectDetailsRoute() {
               // Display project details
               <>
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-3xl font-bold">{project?.name}</h1>
+                  <div className="flex flex-col">
+                    <h1 className="flex items-center gap-3">
+                      <p className="font-bold text-3xl">{project?.name}</p>
+                      <div className="h-[22px] relative">
+                        {project.isArchived &&
+                          <div className="badge badge-accent absolute font-medium">Archived</div>
+                        }
+                      </div>
+                    </h1>
                     <p className="text-base-content/70 mt-2">{project?.description}</p>
                   </div>
                   <div className="flex gap-2 items-center">
                     {canEdit && (
                       <>
                         <div className="dropdown dropdown-center">
-                          <div tabIndex={0} role="button" className="btn btn-info flex gap-2 p-3 items-center justify-between">
+                          <div tabIndex={0} role="button" className="btn btn-primary flex gap-2 p-3 items-center justify-between">
                             <p>Edit</p>
                             <svg className="w-4 h-7" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
+                              <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
                             </svg>
                           </div>
                           <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
@@ -192,30 +189,40 @@ export default function ProjectDetailsRoute() {
                                 Project Details
                               </a>
                             </li>
-                            <li>
-                              <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
-                                <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                  <span className={`material-symbols-outlined ${project?.isArchived ? "text-warning" : ""}`}>folder</span>
-                                  <p className="w-full">
-                                    {project?.isArchived ? "Unarchive" : "Archive"}
-                                  </p>
-                                </button>
-                              </archiveFetcher.Form>
-                            </li>
-                            <li>
-                              <a onClick={() => handleOnGetPMs()}>
-                                <span className="material-symbols-outlined">person_add</span>
-                                Assign PM
-                              </a>
-                            </li>
+                            {isAdmin && (
+                              <>
+                                <li>
+                                  <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
+                                    <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                      <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
+                                      <p className="w-full">
+                                        {project?.isArchived ? "Unarchive" : "Archive"}
+                                      </p>
+                                    </button>
+                                  </archiveFetcher.Form>
+                                </li>
+                                <li>
+                                  <a onClick={() => handleOnGetPMs()}>
+                                    <span className="material-symbols-outlined">person_add</span>
+                                    Assign PM
+                                  </a>
+                                </li>
+                              </>
+                            )}
                           </ul>
                           <MemberListModal
                             modalRef={modalRef}
                             loading={getProjectManagersFetcher.state === "loading"}
-                            members={(getProjectManagersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
-                            actionFetcher={addMembersFetcher}
-                            projectId={projectId}
-                            modalTitle="Select Project Manager"
+                            members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
+                            actionFetcher={assignProjectManagerFetcher}
+                            currentPM={project.projectManager}
+                            actionFetcherSubmit={(formData) => {
+                              assignProjectManagerFetcher.submit(formData, {
+                                method: "post",
+                                action: `/projects/${projectId}/assign-pm`
+                              })
+                            }}
+                            modalTitle="Select Project Manager to Assign"
                             buttonText="Assign"
                           />
                         </div>
@@ -244,14 +251,14 @@ export default function ProjectDetailsRoute() {
                     </div>
                   </div>
                   <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title">Project Manager</div>
-                    <div className="stat-value text-lg">
+                    <div className="stat-title mb-2">Project Manager</div>
+                    <div className="stat-value text-lg font-bold">
                       {project.projectManager
-                        ? (<div>
+                        ? (<div className="flex gap-2 items-center">
                           <img
                             src={project.projectManager.avatarUrl}
                             alt="Project Manager Avatar"
-                            className="w-10 h-10 rounded-full"
+                            className="w-8 h-8 rounded-full"
                           />
                           <div>{project.projectManager.name}</div>
                         </div>)
@@ -262,40 +269,6 @@ export default function ProjectDetailsRoute() {
               </>
             )}
           </div>
-
-          {/* Team Members Section */}
-          {/* <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6"> */}
-          {/*   <div className="flex justify-between items-center mb-4"> */}
-          {/*     <h2 className="text-2xl font-bold">Assigned Members</h2> */}
-          {/*     {canEdit && ( */}
-          {/*       <div className="flex gap-2"> */}
-          {/*         <button className="btn btn-info success btn-sm" onClick={() => handleOnGetMembersList()}> */}
-          {/*           <span className="material-symbols-outlined">person_add</span> */}
-          {/*           Add */}
-          {/*         </button> */}
-          {/*         <button className="btn btn-error btn-sm" onClick={() => handleOnRemoveMembersList()}> */}
-          {/*           <span className="material-symbols-outlined">person_remove</span> */}
-          {/*           Remove */}
-          {/*         </button> */}
-          {/*         <MemberListModal */}
-          {/*           modalRef={modalRef} */}
-          {/*           loading={getMembersFetcher.state === "loading"} */}
-          {/*           members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data} */}
-          {/*           actionFetcher={addMembersFetcher} */}
-          {/*           projectId={projectId} */}
-          {/*         /> */}
-          {/*         <RemoveMemberListModal */}
-          {/*           modalRef={removeMemberModalRef} */}
-          {/*           projectId={projectId} */}
-          {/*           members={project.members.filter(m => m.id !== userInfo.id)} */}
-          {/*           actionFetcher={removeMemberFetcher} */}
-          {/*         /> */}
-          {/*       </div> */}
-          {/*     )} */}
-          {/*   </div> */}
-          {/**/}
-          {/*   <MembersListTable members={project.members} /> */}
-          {/* </div> */}
 
           {/* Tickets Section */}
           <div className="bg-base-100 rounded-lg shadow-lg p-6" >

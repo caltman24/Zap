@@ -129,7 +129,7 @@ public sealed class ProjectService : IProjectService
         return await _db.Projects.AnyAsync(p => p.Id == projectId && p.ProjectManagerId == memberId);
     }
 
-    public async Task<List<MemberInfoDto>> GetAssignablePMs(string projectId)
+    public async Task<List<ProjectManagerDto>> GetAssignablePMs(string projectId)
     {
         return await _db.Projects
             .Where(p => p.Id == projectId)
@@ -138,13 +138,13 @@ public sealed class ProjectService : IProjectService
                 _db.CompanyMembers
                 .Where(cm =>
                     cm.CompanyId == projInfo.CompanyId &&
-                    cm.Role.Name == RoleNames.ProjectManager &&
-                    cm.Id != projInfo.ProjectManagerId)
-                .Select(cm => new MemberInfoDto(
+                    cm.Role.Name == RoleNames.ProjectManager)
+                .Select(cm => new ProjectManagerDto(
                     cm.Id,
                     $"{cm.User.FirstName} {cm.User.LastName}",
                     cm.User.AvatarUrl,
-                    cm.Role.Name)))
+                    cm.Role.Name,
+                    cm.Id == projInfo.ProjectManagerId)))
             .ToListAsync();
     }
 }

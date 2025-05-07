@@ -78,7 +78,7 @@ public class CompaniesTests : IAsyncDisposable
         var client = _app.CreateClient(userId);
         var res = await client.GetAsync("/company/info");
 
-        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
     }
 
     [Fact]
