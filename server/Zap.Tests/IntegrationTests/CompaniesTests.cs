@@ -259,6 +259,11 @@ public class CompaniesTests : IAsyncDisposable
     }
 
 
+    // TODO: Break out into common function. Create a test company with everything: users of different roles,
+    // projects with different parameters, ect...
+
+    // TODO: Create projects test for testing assigning PMs, editing details. 
+    // some of these tests exist under companiesTests
     internal static async Task<Company> CreateTestCompany(AppDbContext db, string userId, AppUser user,
         List<Project>? projects = null, string? companyId = null, string? role = null)
     {
