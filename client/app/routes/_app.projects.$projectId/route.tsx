@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, } from "react";
 import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import { CompanyMemberPerRole, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
+import { BasicUserInfo, CompanyMemberPerRole, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { useEditMode, getPriorityClass, getStatusClass } from "~/utils/editMode";
 import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
@@ -68,7 +68,7 @@ export default function ProjectDetailsRoute() {
   const isSubmitting = navigation.state === "submitting";
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
   const archiveFetcher = useFetcher({ key: "archive-project" });
-  const getMembersFetcher = useFetcher({ key: "get-members-list" })
+  const getProjectManagersFetcher = useFetcher({ key: "get-project-managers" })
   const addMembersFetcher = useFetcher({ key: "add-members" })
   const removeMemberFetcher = useFetcher({ key: "remove-member" })
 
@@ -94,10 +94,10 @@ export default function ProjectDetailsRoute() {
     toggleEditMode();
   };
 
-  const handleOnGetMembersList = () => {
+  const handleOnGetPMs = () => {
     if (modalRef && projectId) {
       modalRef.current?.showModal()
-      getMembersFetcher.load(`/projects/${projectId}/unassigned-members`)
+      getProjectManagersFetcher.load(`/projects/${projectId}/assignable-pms`)
     }
   }
 
@@ -175,27 +175,51 @@ export default function ProjectDetailsRoute() {
                     <h1 className="text-3xl font-bold">{project?.name}</h1>
                     <p className="text-base-content/70 mt-2">{project?.description}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     {canEdit && (
                       <>
-                        <button onClick={handleEditToggle} className="btn btn-info">
-                          <span className="material-symbols-outlined">edit</span>
-                          Edit
-                        </button>
+                        <div className="dropdown dropdown-center">
+                          <div tabIndex={0} role="button" className="btn btn-info flex gap-2 p-3 items-center justify-between">
+                            <p>Edit</p>
+                            <svg className="w-4 h-7" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
+                            </svg>
+                          </div>
+                          <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
+                            <li>
+                              <a onClick={handleEditToggle} className="flex items-center gap-2">
+                                <span className="material-symbols-outlined">edit</span>
+                                Project Details
+                              </a>
+                            </li>
+                            <li>
+                              <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
+                                <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                  <span className={`material-symbols-outlined ${project?.isArchived ? "text-warning" : ""}`}>folder</span>
+                                  <p className="w-full">
+                                    {project?.isArchived ? "Unarchive" : "Archive"}
+                                  </p>
+                                </button>
+                              </archiveFetcher.Form>
+                            </li>
+                            <li>
+                              <a onClick={() => handleOnGetPMs()}>
+                                <span className="material-symbols-outlined">person_add</span>
+                                Assign PM
+                              </a>
+                            </li>
+                          </ul>
+                          <MemberListModal
+                            modalRef={modalRef}
+                            loading={getProjectManagersFetcher.state === "loading"}
+                            members={(getProjectManagersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
+                            actionFetcher={addMembersFetcher}
+                            projectId={projectId}
+                            modalTitle="Select Project Manager"
+                            buttonText="Assign"
+                          />
+                        </div>
                         {/* Archive/Unarchive Project button */}
-                        <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`}>
-                          {project.isArchived ? (
-                            <button type="submit" className="btn btn-secondary">
-                              <span className="material-symbols-outlined">folder</span>
-                              Unarchive
-                            </button>
-                          ) : (
-                            <button type="submit" className="btn btn-warning text-warning-content">
-                              <span className="material-symbols-outlined">folder</span>
-                              Archive
-                            </button>
-                          )}
-                        </archiveFetcher.Form>
                       </>
                     )}
                     <Link to="/projects" className="btn btn-outline">

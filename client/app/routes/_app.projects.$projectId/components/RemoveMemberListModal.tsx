@@ -1,11 +1,11 @@
 import { FetcherWithComponents } from "@remix-run/react"
 import { RefObject, useState } from "react"
-import { CompanyMemberPerRole } from "~/services/api.server/types"
+import { BasicUserInfo, CompanyMemberPerRole } from "~/services/api.server/types"
 import MemberListSkeleton from "./MemberListSkeleton"
 
 export type RemoveMemberListModalProps = {
   projectId?: string,
-  members?: { id: string, name: string, avatarUrl: string, role: string }[] | null,
+  members?: BasicUserInfo[] | null,
   error?: string | null,
   actionFetcher: FetcherWithComponents<unknown>
   modalRef: RefObject<HTMLDialogElement> | undefined
