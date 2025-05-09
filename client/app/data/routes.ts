@@ -42,16 +42,22 @@ export const menuRoutes: MenuRoutes = [
         roles: [],
       },
       {
+        name: "My Projects",
+        to: "/projects/myprojects",
+        materialIcon: "folder",
+        roles: [],
+      },
+      {
         name: "Archived Projects",
         to: "/projects/archived",
         materialIcon: "folder_open",
-        roles: [],
+        roles: [roleNames.admin, roleNames.projectManager],
       },
       {
         name: "Create Project",
         to: "/projects/new",
         materialIcon: "add_circle",
-        roles: [roleNames.admin],
+        roles: [roleNames.admin, roleNames.projectManager],
       },
     ],
   },
@@ -94,14 +100,14 @@ export const menuRoutes: MenuRoutes = [
 
 export function filterMenuRoutesByRoles(
   menuRoutes: MenuRoutes,
-  roles: string[],
+  roles: string[]
 ): MenuRoutes {
   return menuRoutes.map((menuGroup) => ({
     ...menuGroup,
     links: menuGroup.links.filter(
       (link) =>
         link.roles.some((role) => roles.includes(role)) ||
-        link.roles.length === 0,
+        link.roles.length === 0
     ),
   }));
 }
@@ -110,6 +116,6 @@ export function getRolesByRouteName(routeName: string) {
   return menuRoutes.flatMap((menuGroup) =>
     menuGroup.links
       .filter((link) => link.name === routeName)
-      .flatMap((link) => link.roles),
+      .flatMap((link) => link.roles)
   );
 }

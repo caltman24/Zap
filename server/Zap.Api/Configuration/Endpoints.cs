@@ -1,6 +1,7 @@
 ﻿using Zap.Api.Common;
 using Zap.Api.Features.Authentication.Endpoints;
 using Zap.Api.Features.Companies.Endpoints;
+using Zap.Api.Features.Members.Endpoints;
 using Zap.Api.Features.Projects.Endpoints;
 using Zap.Api.Features.Users.Endpoints;
 
@@ -14,6 +15,7 @@ public static class Endpoints
 
         app.MapCompaniesEndpoints(app.Environment)
             .MapProjectsEndpoints()
+            .MapMembersEndpoints()
             .MapUsersEndpoints();
     }
 
@@ -65,6 +67,16 @@ public static class Endpoints
             .MapEndpoint<GetUnassignedCompanyMembers>()
             .MapEndpoint<RemoveMember>();
 
+
+        return app;
+    }
+
+    private static IEndpointRouteBuilder MapMembersEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/members")
+            .WithTags("CompanyMembers");
+
+        group.MapEndpoint<GetMyProjects>();
 
         return app;
     }

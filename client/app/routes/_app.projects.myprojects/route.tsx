@@ -1,16 +1,17 @@
-import RouteLayout from "~/layouts/RouteLayout";
-import { Link, useLoaderData } from "@remix-run/react";
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { getSession } from "~/services/sessions.server";
-import apiClient from "~/services/api.server/apiClient";
-import tryCatch from "~/utils/tryCatch";
-import { AuthenticationError } from "~/services/api.server/errors";
-import { JsonResponse, JsonResponseResult } from "~/utils/response";
-import { CompanyProjectsResponse } from "~/services/api.server/types";
+import { Link, useLoaderData } from "@remix-run/react";
 import ProjectCard from "~/components/ProjectCard";
+import RouteLayout from "~/layouts/RouteLayout";
+import apiClient from "~/services/api.server/apiClient";
+import { AuthenticationError } from "~/services/api.server/errors";
+import { getSession } from "~/services/sessions.server";
+import { JsonResponse, JsonResponseResult } from "~/utils/response";
+import tryCatch from "~/utils/tryCatch";
+import getMyProjects from "./server.get-myprojects";
+import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
 
 export const handle = {
-    breadcrumb: () => <Link to="/projects/archived">Archived</Link>,
+    breadcrumb: () => <Link to="/myprojects">My Projects</Link>,
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -19,13 +20,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
         data: tokenResponse,
         error: tokenError
     } = await tryCatch(apiClient.auth.getValidToken(session));
+    const userInfo = session.get("user") as UserInfoResponse
 
     if (tokenError) {
         return redirect("/logout");
     }
 
     const { data: res, error } = await tryCatch(
-        apiClient.getCompanyArchivedProjects(tokenResponse.token));
+        getMyProjects(userInfo.memberId!, tokenResponse.token));
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");
@@ -45,12 +47,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
         headers: tokenResponse.headers
     });
 }
-
 export default function ArchivedProjectsRoute() {
     const { data, error } = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
     return (
         <RouteLayout>
-            <h1 className="text-3xl font-bold mb-6">Archived Projects</h1>
+            <h1 className="text-3xl font-bold mb-6">My Projects</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data?.map((project, index) => (

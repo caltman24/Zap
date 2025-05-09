@@ -11,7 +11,7 @@ using Zap.Api.Data.Models;
 
 namespace Zap.Api.Features.Companies.Endpoints;
 
-class AddTestMembers : IEndpoint
+public class AddTestMembers : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPost("/testmembers", Handle)

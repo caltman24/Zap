@@ -13,10 +13,6 @@ import tryCatch from "~/utils/tryCatch";
 
 // TODO: Add Filter for archived projects. Default to false
 
-export const handle = {
-    breadcrumb: () => <Link to="/projects">All Projects</Link>,
-};
-
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
     const {

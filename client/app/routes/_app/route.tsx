@@ -8,6 +8,7 @@ import { commitSession, destroySession, getSession } from "~/services/sessions.s
 import { UserInfoResponse } from "~/services/api.server/types";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import apiClient from "~/services/api.server/apiClient";
+import roleNames from "~/data/roles";
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -50,7 +51,7 @@ export default function AppRoute() {
         <div>
             <div className="flex min-h-screen h-screen max-h-screen bg-base-300">
                 {/* sidebar */}
-                <SideMenu menuRoutes={filterMenuRoutesByRoles(menuRoutes, ["admin"])} />
+                <SideMenu menuRoutes={filterMenuRoutesByRoles(menuRoutes, [(userData?.role?.toLowerCase() || roleNames.submitter)])} />
 
                 {/* contnet */}
                 <div className="w-full">
