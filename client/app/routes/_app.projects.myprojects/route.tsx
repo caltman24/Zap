@@ -5,10 +5,12 @@ import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server";
-import { JsonResponse, JsonResponseResult } from "~/utils/response";
+import { ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import getMyProjects from "./server.get-myprojects";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
+import { validateRole } from "~/utils/validate";
+import permissions from "~/data/permissions";
 
 export const handle = {
     breadcrumb: () => <Link to="/myprojects">My Projects</Link>,
@@ -24,6 +26,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     if (tokenError) {
         return redirect("/logout");
+    }
+
+    if (!validateRole(userInfo.role, permissions.project.myprojects)) {
+        return redirect("/projects")
     }
 
     const { data: res, error } = await tryCatch(
@@ -47,7 +53,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         headers: tokenResponse.headers
     });
 }
-export default function ArchivedProjectsRoute() {
+export default function MyProjectsRoute() {
     const { data, error } = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
     return (
         <RouteLayout>

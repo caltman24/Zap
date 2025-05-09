@@ -45,7 +45,11 @@ export const menuRoutes: MenuRoutes = [
         name: "My Projects",
         to: "/projects/myprojects",
         materialIcon: "folder",
-        roles: [],
+        roles: [
+          roleNames.submitter,
+          roleNames.developer,
+          roleNames.projectManager,
+        ],
       },
       {
         name: "Archived Projects",

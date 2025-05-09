@@ -4,7 +4,13 @@ const permissions: ActionPermissions = {
   project: {
     edit: [roleNames.admin, roleNames.projectManager],
     delete: [roleNames.admin],
-    create: [roleNames.admin],
+    create: [roleNames.admin, roleNames.projectManager],
+    assignPM: [roleNames.admin],
+    myprojects: [
+      roleNames.submitter,
+      roleNames.developer,
+      roleNames.projectManager,
+    ],
   },
   company: {
     edit: [roleNames.admin],
@@ -17,6 +23,8 @@ export type ActionPermissions = {
     edit: RoleName[];
     delete: RoleName[];
     create: RoleName[];
+    assignPM: RoleName[];
+    myprojects: RoleName[];
   };
   company: {
     edit: RoleName[];
