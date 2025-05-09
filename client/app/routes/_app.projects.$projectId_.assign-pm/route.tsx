@@ -1,12 +1,13 @@
-import { ActionFunctionArgs, data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
 import { getSession } from "~/services/sessions.server";
 import { ActionResponse, ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
-import removeMember from "./server.remove-member";
+import { assignPM } from "./server.assign-pm";
 
+// Assign pm to project
 export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
@@ -27,7 +28,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(removeMember(
+    const { data: res, error } = await tryCatch(assignPM(
         projectId,
         memberId as string,
         tokenResponse.token

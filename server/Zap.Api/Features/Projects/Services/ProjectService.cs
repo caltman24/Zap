@@ -30,6 +30,13 @@ public sealed class ProjectService : IProjectService
                 p.Description,
                 p.Priority,
                 p.CompanyId,
+                p.ProjectManager == null
+                ? null
+                : new MemberInfoDto(
+                    p.ProjectManager.Id,
+                    $"{p.ProjectManager.User.FirstName} {p.ProjectManager.User.LastName}",
+                    p.ProjectManager.User.AvatarUrl,
+                    p.ProjectManager.Role.Name),
                 p.IsArchived,
                 p.DueDate,
                 p.AssignedMembers.Select(m => new MemberInfoDto(
@@ -44,11 +51,6 @@ public sealed class ProjectService : IProjectService
 
     public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto project)
     {
-        // since `new List<CompanyMember> { project.Member }` inserts everything as new,
-        // we need the member attatched to the db context
-        _db.CompanyMembers.Attach(project.Member);
-
-
         var addProject = new Project
         {
             Name = project.Name,
@@ -56,7 +58,7 @@ public sealed class ProjectService : IProjectService
             Priority = project.Priority,
             DueDate = project.DueDate,
             CompanyId = project.Member.CompanyId!,
-            AssignedMembers = new List<CompanyMember> { project.Member }
+            AssignedMembers = new List<CompanyMember> { }
         };
 
         var addResult = await _db.Projects.AddAsync(addProject);
@@ -70,6 +72,13 @@ public sealed class ProjectService : IProjectService
             newProject.Description,
             newProject.Priority,
             newProject.CompanyId,
+            newProject.ProjectManager == null
+                ? null
+                : new MemberInfoDto(
+                    newProject.ProjectManager.Id,
+                    $"{newProject.ProjectManager.User.FirstName} {newProject.ProjectManager.User.LastName}",
+                    newProject.ProjectManager.User.AvatarUrl,
+                    newProject.ProjectManager.Role.Name),
             newProject.IsArchived,
             newProject.DueDate,
             newProject.AssignedMembers.Select(m =>
@@ -111,12 +120,37 @@ public sealed class ProjectService : IProjectService
         return true;
     }
 
+    public async Task<bool> UpdateProjectManagerAsync(string projectId, string? memberId)
+    {
+        int rowsChanged = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.ProjectManagerId, memberId));
+
+        return rowsChanged > 0;
+    }
+
     public async Task<bool> ValidateProjectManagerAsync(string projectId, string memberId)
     {
+        return await _db.Projects.AnyAsync(p => p.Id == projectId && p.ProjectManagerId == memberId);
+    }
+
+    public async Task<List<ProjectManagerDto>> GetAssignablePMs(string projectId)
+    {
         return await _db.Projects
-                .Where(p => p.Id == projectId)
-                .SelectMany(p => p.AssignedMembers)
-                .AnyAsync(am => am.Id == memberId && am.Role.Name == RoleNames.ProjectManager);
+            .Where(p => p.Id == projectId)
+            .Select(p => new { p.CompanyId, p.ProjectManagerId })
+            .SelectMany(projInfo =>
+                _db.CompanyMembers
+                .Where(cm =>
+                    cm.CompanyId == projInfo.CompanyId &&
+                    cm.Role.Name == RoleNames.ProjectManager)
+                .Select(cm => new ProjectManagerDto(
+                    cm.Id,
+                    $"{cm.User.FirstName} {cm.User.LastName}",
+                    cm.User.AvatarUrl,
+                    cm.Role.Name,
+                    cm.Id == projInfo.ProjectManagerId)))
+            .ToListAsync();
     }
 
     public async Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId)

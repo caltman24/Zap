@@ -60,7 +60,9 @@ public static class Endpoints
         group.MapEndpoint<GetProject>()
             .MapEndpoint<CreateProject>()
             .MapEndpoint<ArchiveProject>()
-            .MapEndpoint<UpdateProject>();
+            .MapEndpoint<UpdateProject>()
+            .MapEndpoint<AssignProjectManager>()
+            .MapEndpoint<GetAssignableProjectManagers>();
 
         group.MapGroup("/{projectId}/members")
             .MapEndpoint<AddMembers>()

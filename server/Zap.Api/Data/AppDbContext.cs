@@ -43,5 +43,21 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithMany()
             .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CompanyMember>()
+            .HasMany(cm => cm.AssignedProjects)
+            .WithMany(ap => ap.AssignedMembers)
+            .UsingEntity(j => j.ToTable("ProjectMembers"));
+
+        builder.Entity<Project>()
+            .HasMany(ap => ap.AssignedMembers)
+            .WithMany(cm => cm.AssignedProjects)
+            .UsingEntity(j => j.ToTable("ProjectMembers"));
+
+        builder.Entity<Project>()
+            .HasOne(p => p.ProjectManager)
+            .WithMany()
+            .HasForeignKey(p => p.ProjectManagerId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

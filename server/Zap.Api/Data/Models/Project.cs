@@ -16,9 +16,7 @@ public class Project
     public required string CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 
-    [NotMapped]
     public string? ProjectManagerId { get; set; }
-    [NotMapped]
     public CompanyMember? ProjectManager { get; set; }
 
     public ICollection<CompanyMember> AssignedMembers { get; set; } = [];

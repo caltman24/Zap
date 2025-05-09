@@ -16,6 +16,7 @@ import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
 import RemoveMemberListModal from "./components/RemoveMemberListModal";
 import MembersListTable from "~/components/MembersListTable";
+import ProjectManagerListModal from "./components/ProjectManagerListModal";
 
 export const handle = {
   breadcrumb: (match: any) => {
@@ -74,8 +75,12 @@ export default function ProjectDetailsRoute() {
   const getMembersFetcher = useFetcher({ key: "get-members" })
   const addMembersFetcher = useFetcher({ key: "add-members" })
   const removeMemberFetcher = useFetcher({ key: "remove-member" })
-  const modalRef = useRef<HTMLDialogElement>(null)
+  const getProjectManagersFetcher = useFetcher({ key: "get-pms" })
+  const assignProjectManagerFetcher = useFetcher({ key: "assign-pm" })
+
+  const getMembersModalRef = useRef<HTMLDialogElement>(null)
   const removeMemberModalRef = useRef<HTMLDialogElement>(null)
+  const assignProjectManagerModalRef = useRef<HTMLDialogElement>(null)
 
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");
@@ -101,8 +106,8 @@ export default function ProjectDetailsRoute() {
   };
 
   const handleOnGetMembersList = () => {
-    if (modalRef && projectId) {
-      modalRef.current?.showModal()
+    if (getMembersModalRef && projectId) {
+      getMembersModalRef.current?.showModal()
       getMembersFetcher.load(`/projects/${projectId}/unassigned-members`)
     }
   }
@@ -110,6 +115,24 @@ export default function ProjectDetailsRoute() {
   const handleOnRemoveMembersList = () => {
     if (removeMemberModalRef && projectId) {
       removeMemberModalRef.current?.showModal()
+    }
+  }
+
+  const handleOnGetPMs = () => {
+    if (assignProjectManagerModalRef && projectId) {
+      assignProjectManagerModalRef.current?.showModal()
+      getProjectManagersFetcher.load(`/projects/${projectId}/get-pms`)
+    }
+  }
+
+  const handleOnRemovePM = () => {
+    if (projectId && project?.projectManager) {
+      const formData = new FormData();
+      // Send empty form data. When no memberId present, it removes the pm
+      assignProjectManagerFetcher.submit(formData, {
+        method: "post",
+        action: `/projects/${projectId}/assign-pm`
+      })
     }
   }
 
@@ -205,17 +228,52 @@ export default function ProjectDetailsRoute() {
                                 Project Details
                               </a>
                             </li>
-                            <li>
-                              <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
-                                <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                  <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
-                                  <p className="w-full">
-                                    {project?.isArchived ? "Unarchive" : "Archive"}
-                                  </p>
-                                </button>
-                              </archiveFetcher.Form>
-                            </li>
+                            {isAdmin && (
+                              <>
+                                <li>
+                                  <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
+                                    <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                      <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
+                                      <p className="w-full">
+                                        {project?.isArchived ? "Unarchive" : "Archive"}
+                                      </p>
+                                    </button>
+                                  </archiveFetcher.Form>
+                                </li>
+                                <li>
+                                  <a onClick={() => handleOnGetPMs()}>
+                                    <span className="material-symbols-outlined">person_add</span>
+                                    Assign PM
+                                  </a>
+                                </li>
+                                {project.projectManager && (
+                                  <li>
+                                    <a onClick={() => handleOnRemovePM()}>
+                                      <span className="material-symbols-outlined">person_remove</span>
+                                      Remove PM
+                                    </a>
+                                  </li>
+                                )}
+                              </>
+                            )}
                           </ul>
+                          {isAdmin && (
+                            <ProjectManagerListModal
+                              modalRef={assignProjectManagerModalRef}
+                              loading={getProjectManagersFetcher.state === "loading"}
+                              members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
+                              actionFetcher={assignProjectManagerFetcher}
+                              currentPM={project.projectManager}
+                              actionFetcherSubmit={(formData) => {
+                                assignProjectManagerFetcher.submit(formData, {
+                                  method: "post",
+                                  action: `/projects/${projectId}/assign-pm`
+                                })
+                              }}
+                              modalTitle="Select Project Manager to Assign"
+                              buttonText="Assign"
+                            />
+                          )}
                         </div>
                         {/* Archive/Unarchive Project button */}
                       </>
@@ -228,7 +286,22 @@ export default function ProjectDetailsRoute() {
                 </div>
 
                 {/* Project Details */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                  <div className="stat bg-base-200 rounded-lg">
+                    <div className="stat-title mb-2">Project Manager</div>
+                    {project.projectManager ? (
+                      <div className="flex gap-2 items-center">
+                        <div className="avatar">
+                          <div className="w-9 rounded-full">
+                            <img src={project.projectManager.avatarUrl} />
+                          </div>
+                        </div>
+                        <div className={`stat-value text-lg font-bold`}>
+                          {project.projectManager.name}
+                        </div>
+                      </div>
+                    ) : <p className="font-black">N/A</p>}
+                  </div>
                   <div className="stat bg-base-200 rounded-lg">
                     <div className="stat-title">Priority</div>
                     <div className={`stat-value text-lg ${getPriorityClass(project.priority)}`}>
@@ -242,7 +315,7 @@ export default function ProjectDetailsRoute() {
                     </div>
                   </div>
                   <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title mb-2">Team Size</div>
+                    <div className="stat-title">Team Size</div>
                     <div className="stat-value text-lg font-bold">
                       {project.members.length}
                     </div>
@@ -269,7 +342,7 @@ export default function ProjectDetailsRoute() {
                     </button>
                   </div>
                   <MemberListModal
-                    modalRef={modalRef}
+                    modalRef={getMembersModalRef}
                     loading={getMembersFetcher.state === "loading"}
                     members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
                     actionFetcher={addMembersFetcher}
