@@ -153,7 +153,7 @@ public sealed class ProjectService : IProjectService
             .ToListAsync();
     }
 
-    public async Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId)
+    public async Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId, string memberId)
     {
         var project = await _db.Projects
             .Where(p => p.Id == projectId)
@@ -161,17 +161,20 @@ public sealed class ProjectService : IProjectService
             {
                 Company = new
                 {
-                    Members = p.Company.Members.Select(m => new
-                    {
-                        m.Id,
-                        User = new
+                    Members = p.Company.Members
+                        .Where(m => m.Id != memberId)
+                        .Where(m => m.Role.Name == RoleNames.Submitter || m.Role.Name == RoleNames.Developer)
+                        .Select(m => new
                         {
-                            m.User.AvatarUrl,
-                            m.User.FirstName,
-                            m.User.LastName,
-                        },
-                        RoleName = m.Role.Name
-                    }).ToList()
+                            m.Id,
+                            User = new
+                            {
+                                m.User.AvatarUrl,
+                                m.User.FirstName,
+                                m.User.LastName,
+                            },
+                            RoleName = m.Role.Name
+                        }).ToList()
                 },
                 AssignedMembers = p.AssignedMembers.Select(am => new
                 {

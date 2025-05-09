@@ -17,7 +17,7 @@ public interface IProjectService
     Task<List<ProjectManagerDto>> GetAssignablePMs(string projectId);
 
     // Assign Members
-    Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId);
+    Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId, string memberId);
     Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds);
     Task<bool> RemoveMemberFromProjectAsync(string projectId, string memberId);
 }

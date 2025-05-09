@@ -27,7 +27,7 @@ public class GetUnassignedCompanyMembers : IEndpoint
         }
 
         // Filter company members not assigned to projectId
-        var members = await projectService.GetUnassignedMembersAsync(projectId);
+        var members = await projectService.GetUnassignedMembersAsync(projectId, currentUser.Member!.Id);
         if (members == null)
         {
             return TypedResults.BadRequest("Could not find company members.");
