@@ -12,7 +12,7 @@ using Zap.Api.Data;
 namespace Zap.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250501142131_init1")]
+    [Migration("20250509164413_init1")]
     partial class init1
     {
         /// <inheritdoc />
@@ -24,6 +24,21 @@ namespace Zap.Api.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("CompanyMemberProject", b =>
+                {
+                    b.Property<string>("AssignedMembersId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AssignedProjectsId")
+                        .HasColumnType("text");
+
+                    b.HasKey("AssignedMembersId", "AssignedProjectsId");
+
+                    b.HasIndex("AssignedProjectsId");
+
+                    b.ToTable("CompanyMemberProject");
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
@@ -221,6 +236,7 @@ namespace Zap.Api.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("RoleId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
@@ -345,6 +361,21 @@ namespace Zap.Api.Data.Migrations
                     b.ToTable("Tickets");
                 });
 
+            modelBuilder.Entity("CompanyMemberProject", b =>
+                {
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedMembersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zap.Api.Data.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedProjectsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("Zap.Api.Data.Models.AppUser", null)
@@ -391,7 +422,8 @@ namespace Zap.Api.Data.Migrations
                     b.HasOne("Zap.Api.Data.Models.CompanyRole", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Zap.Api.Data.Models.AppUser", "User")
                         .WithOne()

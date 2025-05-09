@@ -5,7 +5,7 @@ import { getSession } from "~/services/sessions.server";
 import { ActionResponse, ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
-import removeMember from "./api.server";
+import removeMember from "./api.remove-member";
 
 export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!

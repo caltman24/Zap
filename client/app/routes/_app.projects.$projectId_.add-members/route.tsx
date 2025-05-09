@@ -5,15 +5,15 @@ import { getSession } from "~/services/sessions.server";
 import { ActionResponse, ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
-import { assignPM } from "./server.assign-pm";
+import assignProjectMembers from "./server.add-members";
 
-// Assign pm to project
+// add members to project
 export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
     const userRole = session.get("user").role
     const formData = await request.formData();
-    const memberId = formData.get("memberId");
+    const memberIds = formData.getAll("memberId");
 
     if (!validateRole(userRole, permissions.project.edit)) {
         return ForbiddenResponse()
@@ -28,9 +28,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(assignPM(
+    const { data: res, error } = await tryCatch(assignProjectMembers(
         projectId,
-        memberId as string,
+        memberIds as string[],
         tokenResponse.token
     ))
 

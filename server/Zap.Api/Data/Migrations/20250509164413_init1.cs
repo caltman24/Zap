@@ -144,7 +144,7 @@ namespace Zap.Api.Data.Migrations
                     Id = table.Column<string>(type: "text", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     CompanyId = table.Column<string>(type: "text", nullable: true),
-                    RoleId = table.Column<string>(type: "text", nullable: true)
+                    RoleId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -188,6 +188,30 @@ namespace Zap.Api.Data.Migrations
                         name: "FK_Projects_Companies_CompanyId",
                         column: x => x.CompanyId,
                         principalTable: "Companies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CompanyMemberProject",
+                columns: table => new
+                {
+                    AssignedMembersId = table.Column<string>(type: "text", nullable: false),
+                    AssignedProjectsId = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompanyMemberProject", x => new { x.AssignedMembersId, x.AssignedProjectsId });
+                    table.ForeignKey(
+                        name: "FK_CompanyMemberProject_CompanyMembers_AssignedMembersId",
+                        column: x => x.AssignedMembersId,
+                        principalTable: "CompanyMembers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CompanyMemberProject_Projects_AssignedProjectsId",
+                        column: x => x.AssignedProjectsId,
+                        principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -255,6 +279,11 @@ namespace Zap.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_CompanyMemberProject_AssignedProjectsId",
+                table: "CompanyMemberProject",
+                column: "AssignedProjectsId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CompanyMembers_CompanyId",
                 table: "CompanyMembers",
                 column: "CompanyId");
@@ -302,6 +331,9 @@ namespace Zap.Api.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "CompanyMemberProject");
 
             migrationBuilder.DropTable(
                 name: "Tickets");

@@ -97,7 +97,8 @@ public sealed class CompanyService : ICompanyService
                 p.Priority,
                 p.DueDate,
                 p.IsArchived,
-                new List<string>()))
+                p.AssignedMembers.Count(),
+                p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList()))
             .ToListAsync();
     }
 
@@ -111,7 +112,8 @@ public sealed class CompanyService : ICompanyService
                 p.Priority,
                 p.DueDate,
                 p.IsArchived,
-                new List<string>()))
+                p.AssignedMembers.Count(),
+                p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList()))
             .ToListAsync();
     }
 
@@ -148,7 +150,7 @@ public sealed class CompanyService : ICompanyService
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
-    public SortedDictionary<string, List<MemberInfoDto>> GetMembersPerRole(ICollection<CompanyMember> companyMembers)
+    public SortedDictionary<string, List<MemberInfoDto>> GetMembersPerRole(IEnumerable<CompanyMember> companyMembers)
     {
         var membersByRole = new SortedDictionary<string, List<MemberInfoDto>>();
 

@@ -22,6 +22,21 @@ namespace Zap.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CompanyMemberProject", b =>
+                {
+                    b.Property<string>("AssignedMembersId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AssignedProjectsId")
+                        .HasColumnType("text");
+
+                    b.HasKey("AssignedMembersId", "AssignedProjectsId");
+
+                    b.HasIndex("AssignedProjectsId");
+
+                    b.ToTable("CompanyMemberProject");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -285,14 +300,9 @@ namespace Zap.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("ProjectManagerId")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
-
-                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Projects");
                 });
@@ -346,6 +356,21 @@ namespace Zap.Api.Data.Migrations
                     b.HasIndex("SubmitterId");
 
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("CompanyMemberProject", b =>
+                {
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedMembersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zap.Api.Data.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedProjectsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -418,13 +443,7 @@ namespace Zap.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Zap.Api.Data.Models.CompanyMember", "ProjectManager")
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId");
-
                     b.Navigation("Company");
-
-                    b.Navigation("ProjectManager");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Ticket", b =>

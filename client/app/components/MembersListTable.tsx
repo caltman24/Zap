@@ -15,7 +15,7 @@ export default function MembersListTable({ members }: MembersListTableProps) {
                 <tbody>
                     {members.map(member => {
                         return (
-                            <tr>
+                            <tr key={crypto.randomUUID()}>
                                 <td>
                                     <div className="flex items-center gap-3">
                                         <div className="avatar">

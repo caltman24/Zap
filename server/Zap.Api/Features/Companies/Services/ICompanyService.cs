@@ -13,6 +13,7 @@ public interface ICompanyService
     Task CreateCompanyAsync(CreateCompanyDto company);
     Task DeleteCompanyByIdAsync(string companyId);
     Task<string?> GetMemberRoleAsync(string memberId);
+    SortedDictionary<string, List<MemberInfoDto>> GetMembersPerRole(IEnumerable<CompanyMember> companyMembers);
 }
 
 public record CreateCompanyDto(string Name, string Description, AppUser User);
@@ -39,5 +40,6 @@ public record CompanyProjectDto(
     string Priority,
     DateTime DueDate,
     bool IsArchived,
+    int MemberCount,
     IEnumerable<string> AvatarUrls);
 

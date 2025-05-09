@@ -5,9 +5,9 @@ import { getSession } from "~/services/sessions.server";
 import { ForbiddenResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
-import { getAssignablePMs } from "./server.getAssignablePMs";
+import getUnassignedProjectMembers from "./server.getUnassignedMembers";
 
-// get project managers that isnt assigned to the project
+// get unassigned members
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
@@ -28,12 +28,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
     // Return promise to show skeleton
     try {
-        const assignablePMsPromise = await getAssignablePMs(
+        const unassignedMembersPromise = await getUnassignedProjectMembers(
             projectId,
             tokenResponse.token);
 
         return data({
-            data: assignablePMsPromise,
+            data: unassignedMembersPromise,
             error: null,
             headers: tokenResponse.headers
         })
@@ -45,4 +45,3 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         })
     }
 }
-

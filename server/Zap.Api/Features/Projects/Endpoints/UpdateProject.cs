@@ -35,7 +35,7 @@ public class UpdateProject : IEndpoint
             IProjectService projectService)
     {
         var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
-        if (!isPm)
+        if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin)
         {
             return TypedResults.Forbid();
         }

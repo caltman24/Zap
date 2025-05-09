@@ -1,3 +1,4 @@
+[] - Add back assigned members to projects(im stupid af)
 [] - Create new ticket
 [] - assign to ticket
 [] - add ticket to project

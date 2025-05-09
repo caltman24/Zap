@@ -71,14 +71,24 @@ export default function ProjectDetailsRoute() {
   const isSubmitting = navigation.state === "submitting";
 
   const archiveFetcher = useFetcher({ key: "archive-project" });
-  const getProjectManagersFetcher = useFetcher({ key: "get-project-managers" })
-  const assignProjectManagerFetcher = useFetcher({ key: "assign-pm" })
+  const getMembersFetcher = useFetcher({ key: "get-members" })
+  const addMembersFetcher = useFetcher({ key: "add-members" })
+  const removeMemberFetcher = useFetcher({ key: "remove-member" })
   const modalRef = useRef<HTMLDialogElement>(null)
+  const removeMemberModalRef = useRef<HTMLDialogElement>(null)
 
   // State for form fields
   const [priority, setPriority] = useState<string>(project?.priority || "");
 
-  const isAssignedPM = project?.projectManager?.id === userInfo.memberId
+  let isAssignedPM = false
+  project?.members.forEach(m => {
+    if (m.id === userInfo.memberId &&
+      m.role.toLowerCase() == roleNames.projectManager &&
+      m.role.toLowerCase() == userInfo.role.toLowerCase()) {
+      isAssignedPM = true
+      return
+    }
+  })
   const isAdmin = userRole === roleNames.admin
   const canEdit = isAdmin || isAssignedPM
 
@@ -90,10 +100,16 @@ export default function ProjectDetailsRoute() {
     toggleEditMode();
   };
 
-  const handleOnGetPMs = () => {
+  const handleOnGetMembersList = () => {
     if (modalRef && projectId) {
       modalRef.current?.showModal()
-      getProjectManagersFetcher.load(`/projects/${projectId}/assignable-pms`)
+      getMembersFetcher.load(`/projects/${projectId}/unassigned-members`)
+    }
+  }
+
+  const handleOnRemoveMembersList = () => {
+    if (removeMemberModalRef && projectId) {
+      removeMemberModalRef.current?.showModal()
     }
   }
 
@@ -189,42 +205,17 @@ export default function ProjectDetailsRoute() {
                                 Project Details
                               </a>
                             </li>
-                            {isAdmin && (
-                              <>
-                                <li>
-                                  <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
-                                    <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                      <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
-                                      <p className="w-full">
-                                        {project?.isArchived ? "Unarchive" : "Archive"}
-                                      </p>
-                                    </button>
-                                  </archiveFetcher.Form>
-                                </li>
-                                <li>
-                                  <a onClick={() => handleOnGetPMs()}>
-                                    <span className="material-symbols-outlined">person_add</span>
-                                    Assign PM
-                                  </a>
-                                </li>
-                              </>
-                            )}
+                            <li>
+                              <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
+                                <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                  <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
+                                  <p className="w-full">
+                                    {project?.isArchived ? "Unarchive" : "Archive"}
+                                  </p>
+                                </button>
+                              </archiveFetcher.Form>
+                            </li>
                           </ul>
-                          <MemberListModal
-                            modalRef={modalRef}
-                            loading={getProjectManagersFetcher.state === "loading"}
-                            members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
-                            actionFetcher={assignProjectManagerFetcher}
-                            currentPM={project.projectManager}
-                            actionFetcherSubmit={(formData) => {
-                              assignProjectManagerFetcher.submit(formData, {
-                                method: "post",
-                                action: `/projects/${projectId}/assign-pm`
-                              })
-                            }}
-                            modalTitle="Select Project Manager to Assign"
-                            buttonText="Assign"
-                          />
                         </div>
                         {/* Archive/Unarchive Project button */}
                       </>
@@ -251,23 +242,64 @@ export default function ProjectDetailsRoute() {
                     </div>
                   </div>
                   <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title mb-2">Project Manager</div>
+                    <div className="stat-title mb-2">Team Size</div>
                     <div className="stat-value text-lg font-bold">
-                      {project.projectManager
-                        ? (<div className="flex gap-2 items-center">
-                          <img
-                            src={project.projectManager.avatarUrl}
-                            alt="Project Manager Avatar"
-                            className="w-8 h-8 rounded-full"
-                          />
-                          <div>{project.projectManager.name}</div>
-                        </div>)
-                        : ("N/A")}
+                      {project.members.length}
                     </div>
                   </div>
                 </div>
               </>
             )}
+          </div>
+          {/* Team Members Section */}
+          <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Assigned Members</h2>
+              {/* Add members */}
+              {canEdit && (
+                <>
+                  <div className="flex gap-2">
+                    <button className="btn btn-accent btn-sm" onClick={() => handleOnGetMembersList()}>
+                      <span className="material-symbols-outlined">person_add</span>
+                      Add
+                    </button>
+                    <button className="btn btn-error btn-sm" onClick={() => handleOnRemoveMembersList()}>
+                      <span className="material-symbols-outlined">person_remove</span>
+                      Remove
+                    </button>
+                  </div>
+                  <MemberListModal
+                    modalRef={modalRef}
+                    loading={getMembersFetcher.state === "loading"}
+                    members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
+                    actionFetcher={addMembersFetcher}
+                    actionFetcherSubmit={(formData) => {
+                      addMembersFetcher.submit(formData, {
+                        method: "post",
+                        action: `/projects/${projectId}/add-members`
+                      })
+                    }}
+                    projectId={projectId}
+                  />
+                  {/* INFO: This modal removes a single member. There may be conditions to removing a member */}
+                  <RemoveMemberListModal
+                    modalRef={removeMemberModalRef}
+                    projectId={projectId}
+                    members={project.members.filter(m => m.id !== userInfo.memberId)}
+                    actionFetcher={removeMemberFetcher}
+                    actionFetcherSubmit={(formData) => {
+                      removeMemberFetcher.submit(formData, {
+                        method: "post",
+                        action: `/projects/${projectId}/remove-member`
+                      })
+                    }}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Members by Role */}
+            <MembersListTable members={project.members} />
           </div>
 
           {/* Tickets Section */}

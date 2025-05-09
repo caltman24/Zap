@@ -8,6 +8,7 @@ export type RemoveMemberListModalProps = {
   members?: BasicUserInfo[] | null,
   error?: string | null,
   actionFetcher: FetcherWithComponents<unknown>
+  actionFetcherSubmit: (formData: FormData) => void;
   modalRef: RefObject<HTMLDialogElement> | undefined
 }
 
@@ -16,6 +17,7 @@ export default function RemoveMemberListModal({
   members,
   error,
   actionFetcher,
+  actionFetcherSubmit,
   modalRef }: RemoveMemberListModalProps) {
   const [selectedMember, setSelectedMember] = useState<{ id: string, name: string } | null>(null)
 
@@ -42,10 +44,7 @@ export default function RemoveMemberListModal({
 
     const formData = new FormData()
     formData.append("memberId", selectedMember.id)
-    actionFetcher.submit(formData, {
-      method: "post",
-      action: `/projects/${projectId}/remove-member`
-    })
+    actionFetcherSubmit(formData)
     setSelectedMember(null)
     modalRef?.current?.close()
   }

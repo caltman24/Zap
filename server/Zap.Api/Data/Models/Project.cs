@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Zap.Api.Data.Models;
 
@@ -15,8 +16,11 @@ public class Project
     public required string CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 
+    [NotMapped]
     public string? ProjectManagerId { get; set; }
+    [NotMapped]
     public CompanyMember? ProjectManager { get; set; }
 
+    public ICollection<CompanyMember> AssignedMembers { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
 }
