@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
+using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Tickets.Services;
 
@@ -14,7 +15,7 @@ public class TicketService : ITicketService
         _db = db;
     }
 
-    public async Task<TicketDto> CreateTicketAsync(CreateTicketDto ticket)
+    public async Task<BasicTicketDto> CreateTicketAsync(CreateTicketDto ticket)
     {
         var result = await _db.Tickets.AddAsync(new Ticket
         {
@@ -26,27 +27,38 @@ public class TicketService : ITicketService
             TypeId = (await _db.TicketTypes.FirstAsync(p => p.Name.ToLower() == ticket.Type.ToLower())).Id,
             SubmitterId = ticket.SubmitterId
         });
+        await _db.SaveChangesAsync();
 
-        var newTicket = result.Entity;
-
-        return new TicketDto(
-            newTicket.Id,
-            newTicket.Name,
-            newTicket.Description,
-            newTicket.Priority.Name,
-            newTicket.Status.Name,
-            newTicket.Type.Name,
-            newTicket.ProjectId,
-            newTicket.SubmitterId,
-            newTicket.AssigneeId
-        );
+        return await _db.Tickets
+            .Where(t => t.Id == result.Entity.Id)
+            .Select(newTicket => new BasicTicketDto(
+                newTicket.Id,
+                newTicket.Name,
+                newTicket.Description,
+                newTicket.Priority.Name,
+                newTicket.Status.Name,
+                newTicket.Type.Name,
+                newTicket.ProjectId,
+                new MemberInfoDto(
+                    newTicket.Submitter.Id,
+                    $"{newTicket.Submitter.User.FirstName} {newTicket.Submitter.User.LastName}",
+                    newTicket.Submitter.User.AvatarUrl,
+                    newTicket.Submitter.Role.Name),
+                newTicket.Assignee == null
+                    ? null
+                    : new MemberInfoDto(
+                    newTicket.Assignee.Id,
+                    $"{newTicket.Assignee.User.FirstName} {newTicket.Assignee.User.LastName}",
+                    newTicket.Assignee.User.AvatarUrl,
+                    newTicket.Assignee.Role.Name)))
+            .FirstAsync();
     }
 
-    public async Task<TicketDto?> GetTicketByIdAsync(string ticketId)
+    public async Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId)
     {
         return await _db.Tickets
             .Where(t => t.Id == ticketId)
-            .Select(t => new TicketDto(
+            .Select(t => new BasicTicketDto(
                 t.Id,
                 t.Name,
                 t.Description,
@@ -54,8 +66,18 @@ public class TicketService : ITicketService
                 t.Status.Name,
                 t.Type.Name,
                 t.ProjectId,
-                t.SubmitterId,
-                t.AssigneeId
+                new MemberInfoDto(
+                    t.Submitter.Id,
+                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                    t.Submitter.User.AvatarUrl,
+                    t.Submitter.Role.Name),
+                t.Assignee == null
+                    ? null
+                    : new MemberInfoDto(
+                    t.Assignee.Id,
+                    $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                    t.Assignee.User.AvatarUrl,
+                    t.Assignee.Role.Name)
             ))
             .FirstOrDefaultAsync();
     }

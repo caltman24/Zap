@@ -22,7 +22,6 @@ public class CreateTicket : IEndpoint
             string Status,
             string Type,
             string ProjectId,
-            string SubmitterId,
             string? AssigneeId
     );
 
@@ -36,16 +35,16 @@ public class CreateTicket : IEndpoint
             RuleFor(r => r.Status).NotNull().NotEmpty().MaximumLength(50);
             RuleFor(r => r.Type).NotNull().NotEmpty().MaximumLength(50);
             RuleFor(r => r.ProjectId).NotNull().NotEmpty().MaximumLength(100);
-            RuleFor(r => r.SubmitterId).NotNull().NotEmpty().MaximumLength(100);
         }
     }
 
-    private static async Task<CreatedAtRoute<TicketDto>> Handle(
+    private static async Task<CreatedAtRoute<BasicTicketDto>> Handle(
             Request request,
             CurrentUser currentUser,
             ITicketService ticketService
             )
     {
+        // TODO: Validate Priority, Status, and Type exist in db. Return validation error if not
         var newTicket = await ticketService.CreateTicketAsync(new CreateTicketDto(
             request.Name,
             request.Description,
@@ -53,7 +52,7 @@ public class CreateTicket : IEndpoint
             request.Status,
             request.Type,
             request.ProjectId,
-            request.SubmitterId,
+            currentUser.Member!.Id,
             request.AssigneeId
             ));
 

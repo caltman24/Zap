@@ -1,12 +1,15 @@
+using Zap.Api.Data.Models;
+using Zap.Api.Features.Companies.Services;
+
 namespace Zap.Api.Features.Tickets.Services;
 
 public interface ITicketService
 {
-    public Task<TicketDto> CreateTicketAsync(CreateTicketDto ticket);
-    public Task<TicketDto?> GetTicketByIdAsync(string ticketId);
+    public Task<BasicTicketDto> CreateTicketAsync(CreateTicketDto ticket);
+    public Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId);
 }
 
-public record TicketDto(
+public record BasicTicketDto(
     string Id,
     string Name,
     string Description,
@@ -14,8 +17,8 @@ public record TicketDto(
     string Status,
     string Type,
     string ProjectId,
-    string SubmitterId,
-    string? AssigneeId
+    MemberInfoDto Submitter,
+    MemberInfoDto? Assignee
 );
 
 public record CreateTicketDto(

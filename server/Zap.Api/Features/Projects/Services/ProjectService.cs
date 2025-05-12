@@ -3,6 +3,7 @@ using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
+using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Projects.Services;
 
@@ -38,6 +39,27 @@ public sealed class ProjectService : IProjectService
                     p.ProjectManager.Role.Name),
                 p.IsArchived,
                 p.DueDate,
+                p.Tickets.Select(t => new BasicTicketDto(
+                    t.Id,
+                    t.Name,
+                    t.Description,
+                    t.Priority.Name,
+                    t.Status.Name,
+                    t.Type.Name,
+                    t.ProjectId,
+                    new MemberInfoDto(
+                        t.Submitter.Id,
+                        $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                        t.Submitter.User.AvatarUrl,
+                        t.Submitter.Role.Name),
+                    t.Assignee == null
+                        ? null
+                        : new MemberInfoDto(
+                        t.Assignee.Id,
+                        $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                        t.Assignee.User.AvatarUrl,
+                        t.Assignee.Role.Name)
+                )),
                 p.AssignedMembers.Select(m => new MemberInfoDto(
                     m.Id,
                     $"{m.User.FirstName} {m.User.LastName}",
@@ -80,6 +102,7 @@ public sealed class ProjectService : IProjectService
                     newProject.ProjectManager.Role.Name),
             newProject.IsArchived,
             newProject.DueDate,
+            new List<BasicTicketDto> { },
             newProject.AssignedMembers.Select(m =>
                 new MemberInfoDto(
                     m.Id,

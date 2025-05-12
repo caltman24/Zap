@@ -1,5 +1,6 @@
 ﻿using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
+using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Projects.Services;
 
@@ -35,4 +36,5 @@ public record ProjectDto(
     MemberInfoDto? ProjectManager,
     bool IsArchived,
     DateTime DueDate,
+    IEnumerable<BasicTicketDto> Tickets,
     IEnumerable<MemberInfoDto> Members);

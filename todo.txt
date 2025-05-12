@@ -1,4 +1,14 @@
 [] - Create new ticket
+        - project select:
+        admins: all projects
+        project manager: assigned projects
+        submitter: assigned projects
+        DEVS CANNOT SUBMIT
+        - Auto select project when creating ticket from project ui
+        - Edit in by themseleves: priority, status, type
+        - 1 submitter: cannot change
+        - 1 assigne
+
 [] - assign to ticket
 [] - add ticket to project
 [] - change priority & status

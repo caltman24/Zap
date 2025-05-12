@@ -16,6 +16,7 @@ public static class Endpoints
 
         app.MapCompaniesEndpoints(app.Environment)
             .MapProjectsEndpoints()
+            .MapTicketsEndpoints()
             .MapMembersEndpoints()
             .MapUsersEndpoints();
     }
@@ -79,7 +80,8 @@ public static class Endpoints
         var group = app.MapGroup("/tickets")
             .WithTags("Tickets");
 
-        group.MapEndpoint<CreateTicket>();
+        group.MapEndpoint<CreateTicket>()
+            .MapEndpoint<GetTicket>();
 
         return app;
     }
