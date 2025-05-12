@@ -5,20 +5,20 @@ import projectLoader from "~/commonRoutes/projectDetails/server.loader"
 import projectAction from "~/commonRoutes/projectDetails/server.action"
 
 export const handle = {
-  breadcrumb: (match: any) => {
-    const projectId = match.params.projectId;
-    const projectName = match.data?.data?.name || "Project Details";
-    return <Link to={`/projects/${projectId}`}>{projectName}</Link>;
-  },
+    breadcrumb: (match: any) => {
+        const projectId = match.params.projectId;
+        const projectName = match.data?.data?.name || "Project Details";
+        return <Link to={`/projects/myprojects/${projectId}`}>{projectName}</Link>;
+    },
 };
 
 export async function loader(loaderParams: LoaderFunctionArgs) {
-  return projectLoader(loaderParams);
+    return projectLoader(loaderParams);
 }
 
-export default function ProjectDetailsRoute() {
-  return <ProjectCommonRoute />
+export default function ArchivedProjectDetailsRoute() {
+    return <ProjectCommonRoute />
 }
 export async function action(actionParams: ActionFunctionArgs) {
-  return projectAction(actionParams);
+    return projectAction(actionParams);
 }

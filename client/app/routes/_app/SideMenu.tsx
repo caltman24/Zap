@@ -1,11 +1,11 @@
-import { Link, useLocation } from "@remix-run/react";
+import { Link, NavLink, useLocation, useMatches, useNavigate, useNavigation } from "@remix-run/react";
 import { useState } from "react";
 import AppLogo from "~/components/AppLogo";
 import { MenuGroup, MenuRoutes } from "~/data/routes";
 
 
 export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuRoutes }) {
-    const location = useLocation();
+    const matches = useMatches();
     const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({
         "Company": true // Default expanded menu
     });
@@ -19,7 +19,7 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
 
     const MenuItem = (item: MenuGroup) => {
         const isExpanded = expandedMenus[item.name] || false;
-        const hasActiveLink = item.links.some(link => location.pathname.startsWith(link.to));
+        const hasActiveLink = item.links.some(link => matches.some(m => m.pathname === link.to));
 
         return (
             <div>
@@ -36,15 +36,20 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                 {isExpanded && (
                     <ul className="flex flex-col gap-1 pl-2 transition-all">
                         {item.links.map((link, index) => {
-                            const isActive = location.pathname === link.to;
                             return (
                                 <li key={index}>
-                                    <Link
+                                    <NavLink
                                         to={link.to}
-                                        className={`hover:bg-base-300 p-2 ml-2 rounded w-full flex gap-2 items-center ${isActive
-                                            ? "bg-base-100 text-primary font-bold"
-                                            : ""
-                                            }`}
+                                        end={!matches.some(m => m.id.endsWith("$projectId"))}
+                                        className={({ isActive }) => {
+                                            if (matches.some(
+                                                m => (m.id.endsWith(".archived.$projectId") ||
+                                                    m.id.endsWith("myprojects.$projectId")) &&
+                                                    link.to === "/projects")) {
+                                                isActive = false
+                                            }
+                                            return `hover:bg-base-300 p-2 ml-2 rounded w-full flex gap-2 items-center ${isActive && "text-primary"}`
+                                        }}
                                     >
                                         {link.materialIcon && (
                                             <span className="material-symbols-outlined">
@@ -52,7 +57,7 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                                             </span>
                                         )}
                                         {link.name}
-                                    </Link>
+                                    </NavLink>
                                 </li>
                             )
                         })}

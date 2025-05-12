@@ -1,15 +1,18 @@
 import { Link } from "@remix-run/react";
 import { CompanyProjectsResponse } from "~/services/api.server/types";
 
+type ProjectCollection = "archived" | "myprojects" | "projects"
+
 interface ProjectCardProps {
   project: CompanyProjectsResponse;
   showArchived?: boolean;
+  collection: ProjectCollection
 }
 
-export default function ProjectCard({ project, showArchived }: ProjectCardProps) {
+export default function ProjectCard({ project, showArchived, collection }: ProjectCardProps) {
   return (
     <Link
-      to={`/projects/${project.id}`}
+      to={collection === "projects" ? `/projects/${project.id}` : `/projects/${collection}/${project.id}`}
       className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300"
     >
       <div className="card-body p-5">
