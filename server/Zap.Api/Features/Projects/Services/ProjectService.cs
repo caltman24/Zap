@@ -22,7 +22,6 @@ public sealed class ProjectService : IProjectService
     public async Task<ProjectDto?> GetProjectByIdAsync(string projectId)
     {
         var project = await _db.Projects
-            .AsNoTracking()
             .Where(p => p.Id == projectId)
             .Select(p => new ProjectDto(
                 p.Id,
@@ -96,28 +95,24 @@ public sealed class ProjectService : IProjectService
 
     public async Task<bool> ToggleArchiveProjectAsync(string projectId)
     {
-        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        if (project == null) return false;
+        var rowsChanged = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .ExecuteUpdateAsync(setter => setter.SetProperty(s => s.IsArchived, s => !s.IsArchived));
 
-        project.IsArchived = !project.IsArchived;
-        await _db.SaveChangesAsync();
-
-        return true;
+        return rowsChanged > 0;
     }
 
     public async Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto)
     {
-        var project = await _db.Projects.FindAsync(projectId);
-        if (project == null) return false;
+        var rowsChanged = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.Name, projectDto.Name)
+                    .SetProperty(p => p.Description, projectDto.Description)
+                    .SetProperty(p => p.Priority, projectDto.Priority)
+                    .SetProperty(p => p.DueDate, projectDto.DueDate));
 
-        project.Name = projectDto.Name;
-        project.Description = projectDto.Description;
-        project.Priority = projectDto.Priority;
-        project.DueDate = projectDto.DueDate;
-
-        await _db.SaveChangesAsync();
-
-        return true;
+        return rowsChanged > 0;
     }
 
     public async Task<bool> UpdateProjectManagerAsync(string projectId, string? memberId)

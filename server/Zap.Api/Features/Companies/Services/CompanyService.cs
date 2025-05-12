@@ -88,18 +88,41 @@ public sealed class CompanyService : ICompanyService
 
     public async Task<List<CompanyProjectDto>> GetCompanyProjectsAsync(string companyId, bool isArchived)
     {
-        return await _db.Projects
+        var result = await _db.Projects
             .Where(p => p.CompanyId == companyId)
             .Where(p => p.IsArchived == isArchived)
-            .Select(p => new CompanyProjectDto(
+            .Select(p => new
+            {
                 p.Id,
                 p.Name,
                 p.Priority,
                 p.DueDate,
                 p.IsArchived,
-                p.AssignedMembers.Count(),
-                p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList()))
+                MemberCount = p.ProjectManagerId != null
+                    ? p.AssignedMembers.Count() + 1
+                    : p.AssignedMembers.Count(),
+                AvatarUrls = p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList(),
+                ProjectManagerAvatar = p.ProjectManager != null ? p.ProjectManager.User.AvatarUrl : null
+            })
             .ToListAsync();
+
+        return result.Select(p =>
+        {
+            if (p.ProjectManagerAvatar != null)
+            {
+                p.AvatarUrls.Add(p.ProjectManagerAvatar);
+            }
+
+            return new CompanyProjectDto(
+                    p.Id,
+                    p.Name,
+                    p.Priority,
+                    p.DueDate,
+                    p.IsArchived,
+                    p.MemberCount,
+                    p.AvatarUrls
+                );
+        }).ToList();
     }
 
     public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId)
@@ -112,7 +135,9 @@ public sealed class CompanyService : ICompanyService
                 p.Priority,
                 p.DueDate,
                 p.IsArchived,
-                p.AssignedMembers.Count(),
+                p.ProjectManagerId != null
+                    ? p.AssignedMembers.Count() + 1
+                    : p.AssignedMembers.Count(),
                 p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList()))
             .ToListAsync();
     }

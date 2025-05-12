@@ -268,7 +268,9 @@ export default function Route() {
                                     <div className="stat bg-base-200 rounded-lg">
                                         <div className="stat-title">Team Size</div>
                                         <div className="stat-value text-lg font-bold">
-                                            {project.members.length}
+                                            {project.projectManager ?
+                                                project.members.length + 1 :
+                                                project.members.length}
                                         </div>
                                     </div>
                                 </div>
