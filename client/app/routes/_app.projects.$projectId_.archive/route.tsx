@@ -11,6 +11,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
     const userRole = session.get("user").role
+    const formData = await request.formData();
+    const intent = formData.get("intent") as "archive" | "unarchive";
 
     if (!validateRole(userRole, permissions.project.edit)) {
         return ForbiddenResponse()
@@ -38,9 +40,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
         })
     }
 
-    return ActionResponse({
-        success: true,
-        error: null,
-        headers: tokenResponse.headers
-    })
+    if (intent === "archive") {
+        return redirect(`/projects/archived/${projectId}`)
+    }
+
+    return redirect(`/projects/${projectId}`)
 }

@@ -36,6 +36,7 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                 {isExpanded && (
                     <ul className="flex flex-col gap-1 pl-2 transition-all">
                         {item.links.map((link, index) => {
+                            console.log(matches)
                             return (
                                 <li key={index}>
                                     <NavLink
@@ -43,8 +44,8 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                                         end={!matches.some(m => m.id.endsWith("$projectId"))}
                                         className={({ isActive }) => {
                                             if (matches.some(
-                                                m => (m.id.endsWith(".archived.$projectId") ||
-                                                    m.id.endsWith("myprojects.$projectId")) &&
+                                                m => (m.id === "routes/_app.projects.archived.$projectId" ||
+                                                    m.id === "routes/_app.projects.myprojects.$projectId") &&
                                                     link.to === "/projects")) {
                                                 isActive = false
                                             }

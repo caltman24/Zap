@@ -1,4 +1,4 @@
-import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation, useFetcher } from "@remix-run/react";
+import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation, useFetcher, Form } from "@remix-run/react";
 import { useRef, useState, } from "react";
 import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import { CompanyMemberPerRole, ProjectManagerInfo, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
@@ -182,14 +182,14 @@ export default function Route() {
                                                         {isAdmin && (
                                                             <>
                                                                 <li>
-                                                                    <archiveFetcher.Form method="post" action={`/projects/${project.id}/archive`} className="block">
-                                                                        <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                    <Form method="post" action={`/projects/${project.id}/archive`} className="block">
+                                                                        <button type="submit" name="intent" value={project?.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
                                                                             <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
                                                                             <p className="w-full">
                                                                                 {project?.isArchived ? "Unarchive" : "Archive"}
                                                                             </p>
                                                                         </button>
-                                                                    </archiveFetcher.Form>
+                                                                    </Form>
                                                                 </li>
                                                                 <li>
                                                                     <a onClick={() => handleOnGetPMs()}>

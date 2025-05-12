@@ -3,6 +3,7 @@ import roleNames from "./roles";
 export type MenuLink = {
   name: string;
   to: string;
+  matchId: string;
   materialIcon?: string;
   roles: string[];
 };
@@ -21,12 +22,14 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "Dashboard",
         to: "/dashboard",
+        matchId: "routes/_app.dashboard",
         materialIcon: "dashboard",
         roles: [],
       },
       {
         name: "Company Details",
         to: "/company",
+        matchId: "routes/_app.company",
         materialIcon: "domain",
         roles: [],
       },
@@ -38,12 +41,14 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "All Projects",
         to: "/projects",
+        matchId: "routes/_app.projects",
         materialIcon: "folder",
         roles: [],
       },
       {
         name: "My Projects",
         to: "/projects/myprojects",
+        matchId: "routes/_app.projects._index",
         materialIcon: "folder",
         roles: [
           roleNames.submitter,
@@ -54,12 +59,14 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "Archived Projects",
         to: "/projects/archived",
+        matchId: "routes/_app.projects.archived._index",
         materialIcon: "folder_open",
         roles: [roleNames.admin, roleNames.projectManager],
       },
       {
         name: "Create Project",
         to: "/projects/new",
+        matchId: "routes/_app.projects.new",
         materialIcon: "add_circle",
         roles: [roleNames.admin, roleNames.projectManager],
       },
@@ -71,30 +78,35 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "Open Tickets",
         to: "/tickets",
+        matchId: "routes/_app.tickets._index",
         materialIcon: "assignment",
         roles: [],
       },
       {
         name: "My Tickets",
         to: "/tickets/assigned",
+        matchId: "routes/_app.tickets.assigned",
         materialIcon: "assignment_ind",
         roles: [],
       },
       {
         name: "Resolved Tickets",
         to: "/tickets/resolved",
+        matchId: "routes/_app.tickets.resolved",
         materialIcon: "assignment_turned_in",
         roles: [],
       },
       {
         name: "Archived Tickets",
         to: "/tickets/archived",
+        matchId: "routes/_app.tickets.resolved",
         materialIcon: "assignment_returned",
         roles: [],
       },
       {
         name: "Submit Ticket",
         to: "/tickets/new",
+        matchId: "routes/_app.tickets.new",
         materialIcon: "assignment_late",
         roles: [],
       },
