@@ -9,6 +9,7 @@
         - 1 submitter: cannot change
         - 1 assigne
 
+[] - On archived ticket, remove the ability to add more members
 [] - assign to ticket
 [] - add ticket to project
 [] - change priority & status
