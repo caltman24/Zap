@@ -1,21 +1,63 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
+using Zap.Api.Common.Authorization;
+using Zap.Api.Common.Constants;
+using Zap.Api.Common.Filters;
+using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Tickets;
 
 public class CreateTicket : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
-        app.MapPost("/", Handle);
+        app.MapPost("/", Handle)
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
+            .WithRequestValidation<Request>();
 
-    private static Ok Handle()
+    public record Request(
+            string Name,
+            string Description,
+            string Priority,
+            string Status,
+            string Type,
+            string ProjectId,
+            string SubmitterId,
+            string? AssigneeId
+    );
+
+    public class RequestValidator : AbstractValidator<Request>
     {
-        // This is where we create tickets
-        // Here, we assign the ticket submitter, and assign a developer
+        public RequestValidator()
+        {
+            RuleFor(r => r.Name).NotNull().NotEmpty().MaximumLength(50);
+            RuleFor(r => r.Description).NotNull().NotEmpty().MaximumLength(1000);
+            RuleFor(r => r.Priority).NotNull().NotEmpty().MaximumLength(50);
+            RuleFor(r => r.Status).NotNull().NotEmpty().MaximumLength(50);
+            RuleFor(r => r.Type).NotNull().NotEmpty().MaximumLength(50);
+            RuleFor(r => r.ProjectId).NotNull().NotEmpty().MaximumLength(100);
+            RuleFor(r => r.SubmitterId).NotNull().NotEmpty().MaximumLength(100);
+        }
+    }
 
-        // Anyone assigned to the project can submit.
-        // BUT ONLY PROJECT MANAGERS and ADMINS can assign a developer
-        return TypedResults.Ok();
+    private static async Task<CreatedAtRoute<TicketDto>> Handle(
+            Request request,
+            CurrentUser currentUser,
+            ITicketService ticketService
+            )
+    {
+        var newTicket = await ticketService.CreateTicketAsync(new CreateTicketDto(
+            request.Name,
+            request.Description,
+            request.Priority,
+            request.Status,
+            request.Type,
+            request.ProjectId,
+            request.SubmitterId,
+            request.AssigneeId
+            ));
+
+        return TypedResults.CreatedAtRoute(newTicket, "GetTicket", new { TicketId = newTicket.Id });
     }
 }
 

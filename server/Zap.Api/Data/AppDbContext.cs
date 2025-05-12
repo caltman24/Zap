@@ -10,12 +10,16 @@ public class AppDbContext : IdentityUserContext<AppUser>
     {
     }
 
-    public DbSet<Company> Companies { get; set; }
-    public DbSet<CompanyMember> CompanyMembers { get; set; }
-    public DbSet<CompanyRole> CompanyRoles { get; set; }
+    public DbSet<Company> Companies { get; set; } = default!;
+    public DbSet<CompanyMember> CompanyMembers { get; set; } = default!;
+    public DbSet<CompanyRole> CompanyRoles { get; set; } = default!;
 
-    public DbSet<Project> Projects { get; set; }
-    public DbSet<Ticket> Tickets { get; set; }
+    public DbSet<Project> Projects { get; set; } = default!;
+    public DbSet<Ticket> Tickets { get; set; } = default!;
+
+    public DbSet<TicketPriority> TicketPriorities { get; set; } = default!;
+    public DbSet<TicketStatus> TicketStatuses { get; set; } = default!;
+    public DbSet<TicketType> TicketTypes { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,6 +30,8 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithOne()
             .HasForeignKey<Company>(c => c.OwnerId);
 
+
+        // Company Member
         builder.Entity<CompanyMember>()
             .HasOne(u => u.User)
             .WithOne()
@@ -49,6 +55,8 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithMany(ap => ap.AssignedMembers)
             .UsingEntity(j => j.ToTable("ProjectMembers"));
 
+
+        // Project
         builder.Entity<Project>()
             .HasMany(ap => ap.AssignedMembers)
             .WithMany(cm => cm.AssignedProjects)
@@ -59,5 +67,31 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithMany()
             .HasForeignKey(p => p.ProjectManagerId)
             .OnDelete(DeleteBehavior.SetNull);
+
+
+        // Ticket
+        builder.Entity<Ticket>()
+            .HasOne(t => t.Project)
+            .WithMany(p => p.Tickets)
+            .HasForeignKey(p => p.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Ticket>()
+            .HasOne(t => t.Priority)
+            .WithMany()
+            .HasForeignKey(t => t.PriorityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Ticket>()
+            .HasOne(t => t.Status)
+            .WithMany()
+            .HasForeignKey(t => t.StatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Ticket>()
+            .HasOne(t => t.Type)
+            .WithMany()
+            .HasForeignKey(t => t.TypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

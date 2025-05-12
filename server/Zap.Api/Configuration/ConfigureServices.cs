@@ -14,6 +14,7 @@ using Zap.Api.Features.Companies.Services;
 using Zap.Api.Features.FileUpload.Configuration;
 using Zap.Api.Features.FileUpload.Services;
 using Zap.Api.Features.Projects.Services;
+using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Configuration;
 
@@ -40,11 +41,13 @@ public static class ConfigureServices
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
             // options.UseRoleSeeding();
+            // options.UseTicketTypeSeeding();
         });
 
 
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<ITicketService, TicketService>();
 
         return services;
     }

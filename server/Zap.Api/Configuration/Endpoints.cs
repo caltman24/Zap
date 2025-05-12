@@ -3,6 +3,7 @@ using Zap.Api.Features.Authentication.Endpoints;
 using Zap.Api.Features.Companies.Endpoints;
 using Zap.Api.Features.Members.Endpoints;
 using Zap.Api.Features.Projects.Endpoints;
+using Zap.Api.Features.Tickets;
 using Zap.Api.Features.Users.Endpoints;
 
 namespace Zap.Api.Configuration;
@@ -69,6 +70,16 @@ public static class Endpoints
             .MapEndpoint<GetUnassignedCompanyMembers>()
             .MapEndpoint<RemoveMember>();
 
+
+        return app;
+    }
+
+    private static IEndpointRouteBuilder MapTicketsEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/tickets")
+            .WithTags("Tickets");
+
+        group.MapEndpoint<CreateTicket>();
 
         return app;
     }
