@@ -1,10 +1,3 @@
-[X] - Add back assigned members to projects(im stupid af)
-[X] - Fix breadcrumbs
-[X] - common action, loader, and route for project details across collections
-[] - Use different api endpoint for querying an archived projects rather than 
-      just querying all projects with the project id
-
-
 [] - Create new ticket
 [] - assign to ticket
 [] - add ticket to project
