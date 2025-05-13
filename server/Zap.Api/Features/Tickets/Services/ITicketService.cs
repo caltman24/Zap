@@ -5,8 +5,11 @@ namespace Zap.Api.Features.Tickets.Services;
 
 public interface ITicketService
 {
-    public Task<BasicTicketDto> CreateTicketAsync(CreateTicketDto ticket);
+    public Task<CreateTicketResult> CreateTicketAsync(CreateTicketDto ticket);
     public Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId);
+    public Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId);
+    public Task<List<BasicTicketDto>> GetOpenTicketsAsync(string companyId);
+    public Task DeleteTicketAsync(string ticketId);
 }
 
 public record BasicTicketDto(
@@ -28,6 +31,7 @@ public record CreateTicketDto(
     string Status,
     string Type,
     string ProjectId,
-    string SubmitterId,
-    string? AssigneeId
+    string SubmitterId
 );
+
+public record CreateTicketResult(string Id);

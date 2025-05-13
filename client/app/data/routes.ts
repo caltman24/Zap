@@ -84,7 +84,7 @@ export const menuRoutes: MenuRoutes = [
       },
       {
         name: "My Tickets",
-        to: "/tickets/assigned",
+        to: "/tickets/mytickets",
         matchId: "routes/_app.tickets.assigned",
         materialIcon: "assignment_ind",
         roles: [],

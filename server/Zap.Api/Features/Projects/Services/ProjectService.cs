@@ -287,4 +287,31 @@ public sealed class ProjectService : IProjectService
 
         return removeResult;
     }
+
+    public async Task<List<BasicProjectDto>> GetAssignedProjects(string memberId, string roleName, string companyId)
+    {
+
+        if (roleName == RoleNames.ProjectManager)
+        {
+            return await _db.Projects
+                .Where(p => p.ProjectManagerId == memberId)
+                .Select(p => new BasicProjectDto(p.Id, p.Name))
+                .ToListAsync();
+        }
+
+        if (roleName == RoleNames.Admin)
+        {
+            return await _db.Projects
+                .Where(p => p.CompanyId == companyId)
+                .Select(p => new BasicProjectDto(p.Id, p.Name))
+                .ToListAsync();
+        }
+
+        return await _db.CompanyMembers
+            .Where(cm => cm.Id == memberId)
+            .SelectMany(cm => cm.AssignedProjects)
+            .Select(p => new BasicProjectDto(p.Id, p.Name))
+            .ToListAsync();
+
+    }
 }

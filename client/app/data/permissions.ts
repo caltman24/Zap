@@ -16,6 +16,9 @@ const permissions: ActionPermissions = {
     edit: [roleNames.admin],
     delete: [roleNames.admin],
   },
+  ticket: {
+    create: [roleNames.admin, roleNames.projectManager, roleNames.submitter],
+  },
 };
 
 export type ActionPermissions = {
@@ -29,6 +32,9 @@ export type ActionPermissions = {
   company: {
     edit: RoleName[];
     delete: RoleName[];
+  };
+  ticket: {
+    create: RoleName[];
   };
 };
 

@@ -21,8 +21,7 @@ public class CreateTicket : IEndpoint
             string Priority,
             string Status,
             string Type,
-            string ProjectId,
-            string? AssigneeId
+            string ProjectId
     );
 
     public class RequestValidator : AbstractValidator<Request>
@@ -38,7 +37,7 @@ public class CreateTicket : IEndpoint
         }
     }
 
-    private static async Task<CreatedAtRoute<BasicTicketDto>> Handle(
+    private static async Task<CreatedAtRoute<CreateTicketResult>> Handle(
             Request request,
             CurrentUser currentUser,
             ITicketService ticketService
@@ -52,8 +51,7 @@ public class CreateTicket : IEndpoint
             request.Status,
             request.Type,
             request.ProjectId,
-            currentUser.Member!.Id,
-            request.AssigneeId
+            currentUser.Member!.Id
             ));
 
         return TypedResults.CreatedAtRoute(newTicket, "GetTicket", new { TicketId = newTicket.Id });

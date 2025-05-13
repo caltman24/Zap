@@ -36,17 +36,19 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                 {isExpanded && (
                     <ul className="flex flex-col gap-1 pl-2 transition-all">
                         {item.links.map((link, index) => {
-                            console.log(matches)
                             return (
                                 <li key={index}>
                                     <NavLink
                                         to={link.to}
-                                        end={!matches.some(m => m.id.endsWith("$projectId"))}
+                                        end={!matches.some(m => m.id.endsWith("Id"))}
                                         className={({ isActive }) => {
                                             if (matches.some(
-                                                m => (m.id === "routes/_app.projects.archived.$projectId" ||
-                                                    m.id === "routes/_app.projects.myprojects.$projectId") &&
-                                                    link.to === "/projects")) {
+                                                m => (
+                                                    m.id.includes("archived") ||
+                                                    m.id.includes("mytickets") ||
+                                                    m.id.includes("myprojects"))
+                                                    && (link.to === "/projects" ||
+                                                        link.to === "/tickets"))) {
                                                 isActive = false
                                             }
                                             return `hover:bg-base-300 p-2 ml-2 rounded w-full flex gap-2 items-center ${isActive && "text-primary"}`

@@ -83,6 +83,12 @@ export type ProjectResponse = {
     avatarUrl: string;
     role: string;
   }[];
+  tickets: BasicTicketInfo[];
+};
+
+export type BasicProjectResponse = {
+  id: string;
+  name: string;
 };
 
 export type CompanyProjectsResponse = {
@@ -93,4 +99,29 @@ export type CompanyProjectsResponse = {
   memberCount: number;
   isArchived: boolean;
   avatarUrls: string[];
+};
+
+export type CreateTicketRequest = {
+  name: string;
+  description: string;
+  priority: string;
+  status: string;
+  type: string;
+  projectId: string;
+};
+
+export type BasicTicketInfo = {
+  id: string;
+  name: string;
+  description: string;
+  priority: string;
+  status: string;
+  type: string;
+  projectId: string;
+  submitter: BasicUserInfo;
+  assignee: BasicUserInfo | null;
+};
+
+export type CreateTicketResult = {
+  id: string;
 };

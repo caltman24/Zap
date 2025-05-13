@@ -21,6 +21,8 @@ public interface IProjectService
     Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId, string memberId);
     Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds);
     Task<bool> RemoveMemberFromProjectAsync(string projectId, string memberId);
+
+    Task<List<BasicProjectDto>> GetAssignedProjects(string memberId, string roleName, string companyId);
 }
 
 public record CreateProjectDto(string Name, string Description, string Priority, DateTime DueDate, CompanyMember Member);
@@ -38,3 +40,8 @@ public record ProjectDto(
     DateTime DueDate,
     IEnumerable<BasicTicketDto> Tickets,
     IEnumerable<MemberInfoDto> Members);
+
+public record BasicProjectDto(
+    string Id,
+    string Name
+);

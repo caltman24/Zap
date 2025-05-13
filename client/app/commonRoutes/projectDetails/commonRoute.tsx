@@ -10,6 +10,7 @@ import MembersListTable from "~/components/MembersListTable";
 import ProjectManagerListModal from "~/routes/_app.projects.$projectId/components/ProjectManagerListModal";
 import MemberListModal from "~/routes/_app.projects.$projectId/components/MemberListModal";
 import RemoveMemberListModal from "~/routes/_app.projects.$projectId/components/RemoveMemberListModal";
+import TicketTable from "~/components/TicketTable";
 
 export default function Route() {
     const { projectId } = useParams()
@@ -332,55 +333,14 @@ export default function Route() {
                     <div className="bg-base-100 rounded-lg shadow-lg p-6" >
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Tickets</h2>
-                            <div className="flex gap-2">
-                                <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm">
-                                    <span className="material-symbols-outlined">add_circle</span>
-                                    New Ticket
-                                </Link>
-                                <Link to={`/projects/${project.id}/tickets`} className="btn btn-outline btn-sm">
-                                    <span className="material-symbols-outlined">visibility</span>
-                                    View All
-                                </Link>
-                            </div>
+                            <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm">
+                                <span className="material-symbols-outlined">add_circle</span>
+                                New Ticket
+                            </Link>
                         </div>
 
                         {/* Tickets Table */}
-                        <div className="overflow-x-auto">
-                            <table className="table table-zebra w-full">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Status</th>
-                                        <th>Priority</th>
-                                        <th>Assignee</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {/* {tickets.map((ticket) => ( */}
-                                    {/*   <tr key={ticket.id}> */}
-                                    {/*     <td>{ticket.title}</td> */}
-                                    {/*     <td> */}
-                                    {/*       <div className={`badge ${getStatusClass(ticket.status)}`}> */}
-                                    {/*         {ticket.status} */}
-                                    {/*       </div> */}
-                                    {/*     </td> */}
-                                    {/*     <td> */}
-                                    {/*       <div className={`badge ${getPriorityClass(ticket.priority)}`}> */}
-                                    {/*         {ticket.priority} */}
-                                    {/*       </div> */}
-                                    {/*     </td> */}
-                                    {/*     <td>{ticket.assignee}</td> */}
-                                    {/*     <td> */}
-                                    {/*       <Link to={`/tickets/${ticket.id}`} className="btn btn-xs btn-ghost"> */}
-                                    {/*         <span className="material-symbols-outlined">visibility</span> */}
-                                    {/*       </Link> */}
-                                    {/*     </td> */}
-                                    {/*   </tr> */}
-                                    {/* ))} */}
-                                </tbody>
-                            </table>
-                        </div>
+                        <TicketTable tickets={project?.tickets} />
                     </div>
                 </>
             }

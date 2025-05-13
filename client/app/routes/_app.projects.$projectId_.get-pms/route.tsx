@@ -1,4 +1,3 @@
-
 import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";

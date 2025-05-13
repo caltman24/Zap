@@ -6,23 +6,20 @@ using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Tickets;
 
-public class GetTicket : IEndpoint
+public class GetMyTickets : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/{ticketId}", Handle)
-            .WithName("GetTicket")
+        app.MapGet("/mytickets", Handle)
+            .WithName("GetMyTicket")
             .WithCompanyMember();
 
-    private static async Task<Results<NotFound, Ok<BasicTicketDto>>> Handle(
-            [FromRoute] string ticketId,
+    private static async Task<Ok<List<BasicTicketDto>>> Handle(
             ITicketService ticketService,
             CurrentUser currentUser
             )
     {
-        var ticket = await ticketService.GetTicketByIdAsync(ticketId);
+        var tickets = await ticketService.GetAssignedTicketsAsync(currentUser.Member!.Id);
 
-        if (ticket == null) return TypedResults.NotFound();
-
-        return TypedResults.Ok(ticket);
+        return TypedResults.Ok(tickets);
     }
 }

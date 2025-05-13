@@ -81,7 +81,11 @@ public static class Endpoints
             .WithTags("Tickets");
 
         group.MapEndpoint<CreateTicket>()
-            .MapEndpoint<GetTicket>();
+            .MapEndpoint<CreateTicketProjectList>()
+            .MapEndpoint<GetTicket>()
+            .MapEndpoint<GetMyTickets>()
+            .MapEndpoint<GetOpenTickets>()
+            .MapEndpoint<DeleteTicket>();
 
         return app;
     }

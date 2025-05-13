@@ -15,7 +15,7 @@ public class TicketService : ITicketService
         _db = db;
     }
 
-    public async Task<BasicTicketDto> CreateTicketAsync(CreateTicketDto ticket)
+    public async Task<CreateTicketResult> CreateTicketAsync(CreateTicketDto ticket)
     {
         var result = await _db.Tickets.AddAsync(new Ticket
         {
@@ -31,27 +31,70 @@ public class TicketService : ITicketService
 
         return await _db.Tickets
             .Where(t => t.Id == result.Entity.Id)
-            .Select(newTicket => new BasicTicketDto(
-                newTicket.Id,
-                newTicket.Name,
-                newTicket.Description,
-                newTicket.Priority.Name,
-                newTicket.Status.Name,
-                newTicket.Type.Name,
-                newTicket.ProjectId,
+            .Select(newTicket => new CreateTicketResult(newTicket.Id))
+            .FirstAsync();
+    }
+
+    public async Task DeleteTicketAsync(string ticketId)
+    {
+        await _db.Tickets.Where(t => t.Id == ticketId).ExecuteDeleteAsync();
+    }
+
+    public async Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId)
+    {
+        return await _db.Tickets
+            .Where(t => t.AssigneeId == memberId || t.SubmitterId == memberId)
+            .Select(t => new BasicTicketDto(
+                t.Id,
+                t.Name,
+                t.Description,
+                t.Priority.Name,
+                t.Status.Name,
+                t.Type.Name,
+                t.ProjectId,
                 new MemberInfoDto(
-                    newTicket.Submitter.Id,
-                    $"{newTicket.Submitter.User.FirstName} {newTicket.Submitter.User.LastName}",
-                    newTicket.Submitter.User.AvatarUrl,
-                    newTicket.Submitter.Role.Name),
-                newTicket.Assignee == null
+                    t.Submitter.Id,
+                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                    t.Submitter.User.AvatarUrl,
+                    t.Submitter.Role.Name),
+                t.Assignee == null
                     ? null
                     : new MemberInfoDto(
-                    newTicket.Assignee.Id,
-                    $"{newTicket.Assignee.User.FirstName} {newTicket.Assignee.User.LastName}",
-                    newTicket.Assignee.User.AvatarUrl,
-                    newTicket.Assignee.Role.Name)))
-            .FirstAsync();
+                    t.Assignee.Id,
+                    $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                    t.Assignee.User.AvatarUrl,
+                    t.Assignee.Role.Name)
+            ))
+            .ToListAsync();
+    }
+
+    public async Task<List<BasicTicketDto>> GetOpenTicketsAsync(string companyId)
+    {
+        // FIXME: This should filter out resolved & archived tickets
+        return await _db.Tickets
+            .Where(t => t.Project.CompanyId == companyId)
+            .Select(t => new BasicTicketDto(
+                t.Id,
+                t.Name,
+                t.Description,
+                t.Priority.Name,
+                t.Status.Name,
+                t.Type.Name,
+                t.ProjectId,
+                new MemberInfoDto(
+                    t.Submitter.Id,
+                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                    t.Submitter.User.AvatarUrl,
+                    t.Submitter.Role.Name),
+                t.Assignee == null
+                    ? null
+                    : new MemberInfoDto(
+                    t.Assignee.Id,
+                    $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                    t.Assignee.User.AvatarUrl,
+                    t.Assignee.Role.Name)
+            ))
+            .ToListAsync();
     }
 
     public async Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId)
