@@ -20,7 +20,7 @@ export async function loader(loaderParams: LoaderFunctionArgs) {
 export default function ArchivedProjectDetailsRoute() {
     const loaderData = useLoaderData<typeof loader>();
     const userInfo = useOutletContext<UserInfoResponse>();
-    return <ProjectCommonRoute loaderData={loaderData} userInfo={userInfo} />
+    return <ProjectCommonRoute loaderData={loaderData} userInfo={userInfo} collection="archived" />
 }
 export async function action(actionParams: ActionFunctionArgs) {
     return projectAction(actionParams);

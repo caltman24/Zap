@@ -16,9 +16,10 @@ import BackButton from "~/components/BackButton";
 export type ProjectRouteParams = {
     loaderData: JsonResponseResult<ProjectResponse>,
     userInfo: UserInfoResponse
+    collection?: "myprojects" | "archived"
 }
 
-export default function Route({ loaderData, userInfo }: ProjectRouteParams) {
+export default function Route({ loaderData, userInfo, collection }: ProjectRouteParams) {
     const { projectId } = useParams()
     const { data: project, error } = loaderData;
     const actionData = useActionData() as ActionResponseParams;
@@ -98,7 +99,8 @@ export default function Route({ loaderData, userInfo }: ProjectRouteParams) {
             {error || !project ?
                 <p className="text-error mt-4">{error}</p> :
                 <>
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+                    <BackButton to={collection ? `/projects/${collection}` : "/projects"} />
+                    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6 mt-3">
                         {isEditing ? (
                             <EditModeForm
                                 error={formError}
@@ -158,84 +160,89 @@ export default function Route({ loaderData, userInfo }: ProjectRouteParams) {
                             <>
                                 <div className="flex justify-between items-start">
                                     <div className="flex flex-col">
+                                        {project.isArchived &&
+                                            <div className="badge badge-warning font-medium mb-2">Archived</div>
+                                        }
                                         <h1 className="flex items-center gap-3">
-                                            <p className="font-bold text-3xl">{project?.name}</p>
-                                            <div className="h-[22px] relative">
-                                                {project.isArchived &&
-                                                    <div className="badge badge-accent absolute font-medium">Archived</div>
-                                                }
-                                            </div>
+                                            <span className="flex items-center gap-3">
+                                                <p className="font-bold text-3xl">{project?.name}</p>
+                                                {canEdit && (
+                                                    <>
+                                                        <div className="dropdown dropdown-center">
+                                                            <div tabIndex={0} role="button" className="btn btn-sm shadow-sm btn-soft flex gap-1 p-0 items-center border-0">
+                                                                <div className="bg-base-200 grid place-items-center w-full h-full p-0.5 rounded-tl-sm rounded-bl-sm">
+                                                                    <span className="!text-lg material-symbols-outlined w-full">edit</span>
+                                                                </div>
+                                                                <svg className="w-5 pr-0.5" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
+                                                                </svg>
+                                                            </div>
+                                                            <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
+                                                                <li>
+                                                                    <a onClick={handleEditToggle} className="flex items-center gap-2">
+                                                                        <span className="material-symbols-outlined">edit</span>
+                                                                        Project Details
+                                                                    </a>
+                                                                </li>
+                                                                {isAdmin && (
+                                                                    <>
+                                                                        <li>
+                                                                            <Form method="post" action={`/projects/${project.id}/archive`} className="block">
+                                                                                <button type="submit" name="intent" value={project?.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                                    <span className={`material-symbols-outlined ${project?.isArchived ? "text-warning" : ""}`}>folder</span>
+                                                                                    <p className="w-full">
+                                                                                        {project?.isArchived ? "Unarchive" : "Archive"}
+                                                                                    </p>
+                                                                                </button>
+                                                                            </Form>
+                                                                        </li>
+                                                                        {!project.isArchived && (
+                                                                            <>
+                                                                                <li>
+                                                                                    <a onClick={() => handleOnGetPMs()}>
+                                                                                        <span className="material-symbols-outlined">person_add</span>
+                                                                                        Assign PM
+                                                                                    </a>
+                                                                                </li>
+                                                                                {project.projectManager && (
+                                                                                    <li>
+                                                                                        <a onClick={() => handleOnRemovePM()}>
+                                                                                            <span className="material-symbols-outlined">person_remove</span>
+                                                                                            Remove PM
+                                                                                        </a>
+                                                                                    </li>
+                                                                                )}
+                                                                            </>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </ul>
+                                                            {isAdmin && (
+                                                                <ProjectManagerListModal
+                                                                    modalRef={assignProjectManagerModalRef}
+                                                                    loading={getProjectManagersFetcher.state === "loading"}
+                                                                    members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
+                                                                    actionFetcher={assignProjectManagerFetcher}
+                                                                    currentPM={project.projectManager}
+                                                                    actionFetcherSubmit={(formData) => {
+                                                                        assignProjectManagerFetcher.submit(formData, {
+                                                                            method: "post",
+                                                                            action: `/projects/${projectId}/assign-pm`
+                                                                        })
+                                                                    }}
+                                                                    modalTitle="Select Project Manager to Assign"
+                                                                    buttonText="Assign"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                        {/* Archive/Unarchive Project button */}
+                                                    </>
+                                                )}
+                                            </span>
                                         </h1>
                                         <p className="text-base-content/70 mt-2">{project?.description}</p>
                                     </div>
                                     <div className="flex gap-2 items-center">
-                                        {canEdit && (
-                                            <>
-                                                <div className="dropdown dropdown-center">
-                                                    <div tabIndex={0} role="button" className="btn btn-primary flex gap-2 p-3 items-center justify-between">
-                                                        <p>Edit</p>
-                                                        <svg className="w-4 h-7" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
-                                                        </svg>
-                                                    </div>
-                                                    <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
-                                                        <li>
-                                                            <a onClick={handleEditToggle} className="flex items-center gap-2">
-                                                                <span className="material-symbols-outlined">edit</span>
-                                                                Project Details
-                                                            </a>
-                                                        </li>
-                                                        {isAdmin && (
-                                                            <>
-                                                                <li>
-                                                                    <Form method="post" action={`/projects/${project.id}/archive`} className="block">
-                                                                        <button type="submit" name="intent" value={project?.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                            <span className={`material-symbols-outlined ${project?.isArchived ? "text-accent" : ""}`}>folder</span>
-                                                                            <p className="w-full">
-                                                                                {project?.isArchived ? "Unarchive" : "Archive"}
-                                                                            </p>
-                                                                        </button>
-                                                                    </Form>
-                                                                </li>
-                                                                <li>
-                                                                    <a onClick={() => handleOnGetPMs()}>
-                                                                        <span className="material-symbols-outlined">person_add</span>
-                                                                        Assign PM
-                                                                    </a>
-                                                                </li>
-                                                                {project.projectManager && (
-                                                                    <li>
-                                                                        <a onClick={() => handleOnRemovePM()}>
-                                                                            <span className="material-symbols-outlined">person_remove</span>
-                                                                            Remove PM
-                                                                        </a>
-                                                                    </li>
-                                                                )}
-                                                            </>
-                                                        )}
-                                                    </ul>
-                                                    {isAdmin && (
-                                                        <ProjectManagerListModal
-                                                            modalRef={assignProjectManagerModalRef}
-                                                            loading={getProjectManagersFetcher.state === "loading"}
-                                                            members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
-                                                            actionFetcher={assignProjectManagerFetcher}
-                                                            currentPM={project.projectManager}
-                                                            actionFetcherSubmit={(formData) => {
-                                                                assignProjectManagerFetcher.submit(formData, {
-                                                                    method: "post",
-                                                                    action: `/projects/${projectId}/assign-pm`
-                                                                })
-                                                            }}
-                                                            modalTitle="Select Project Manager to Assign"
-                                                            buttonText="Assign"
-                                                        />
-                                                    )}
-                                                </div>
-                                                {/* Archive/Unarchive Project button */}
-                                            </>
-                                        )}
-                                        <BackButton />
                                     </div>
                                 </div>
 
@@ -285,15 +292,15 @@ export default function Route({ loaderData, userInfo }: ProjectRouteParams) {
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Assigned Members</h2>
                             {/* Add members */}
-                            {canEdit && (
+                            {(canEdit && !project.isArchived) && (
                                 <>
                                     <div className="flex gap-2">
-                                        <button className="btn btn-accent btn-sm" onClick={() => handleOnGetMembersList()}>
-                                            <span className="material-symbols-outlined">person_add</span>
+                                        <button className="btn btn-soft btn-sm" onClick={() => handleOnGetMembersList()}>
+                                            <span className="material-symbols-outlined text-success">person_add</span>
                                             Add
                                         </button>
-                                        <button className="btn btn-error btn-sm" onClick={() => handleOnRemoveMembersList()}>
-                                            <span className="material-symbols-outlined">person_remove</span>
+                                        <button className="btn btn-soft btn-sm" onClick={() => handleOnRemoveMembersList()}>
+                                            <span className="material-symbols-outlined text-error">person_remove</span>
                                             Remove
                                         </button>
                                     </div>
@@ -335,10 +342,14 @@ export default function Route({ loaderData, userInfo }: ProjectRouteParams) {
                     <div className="bg-base-100 rounded-lg shadow-lg p-6" >
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Tickets</h2>
-                            <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm">
-                                <span className="material-symbols-outlined">add_circle</span>
-                                New Ticket
-                            </Link>
+                            {
+                                !project.isArchived && (
+                                    <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm">
+                                        <span className="material-symbols-outlined text-success">add_circle</span>
+                                        New Ticket
+                                    </Link>
+                                )
+                            }
                         </div>
 
                         {/* Tickets Table */}

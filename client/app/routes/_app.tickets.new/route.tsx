@@ -63,131 +63,128 @@ export default function NewTicketRoute() {
         ? selectedProjectId
         : "";
     return (
-        <RouteLayout className="w-full bg-base-300 min-h-full p-6">
-            <div className="card w-full bg-base-100 rounded-lg shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold">Create New Ticket</h1>
-                    <BackButton />
-                </div>
+        <RouteLayout>
+            {validProjectId && <div className="mb-3"><BackButton /></div>}
 
-                <Form method="post">
-                    <fieldset disabled={false} className="fieldset">
-                        <div className="mb-4">
+            <h1 className="text-3xl font-bold mb-2">New Ticket</h1>
+
+            <Form method="post" className="max-w-[40rem]">
+                <fieldset disabled={false} className="fieldset">
+                    <div className="mb-4">
+                        <label className="label mb-1">
+                            Project
+                        </label>
+                        <div className="relative w-full">
+                            <select
+                                name="projectId"
+                                className={`select select-bordered w-full font-medium`}
+                                required
+                                defaultValue={validProjectId ?? ""}
+                            >
+                                <option value="" disabled >-- select project --</option>
+                                {projectList.data?.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <div className=" mb-4">
+                        <label className="label mb-1">
+                            Ticket Name
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            className="input input-bordered w-full"
+                            placeholder="Enter ticket name"
+                            required
+                            maxLength={50}
+                        />
+                    </div>
+
+                    <div className=" mb-4">
+                        <label className="label mb-1">
+                            Description
+                        </label>
+                        <textarea
+                            name="description"
+                            className="textarea textarea-bordered w-full"
+                            placeholder="Ticket description"
+                            rows={4}
+                            required
+                            maxLength={1000}
+                        ></textarea>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <div className=" mb-4">
                             <label className="label mb-1">
-                                Project
+                                Priority
                             </label>
-                            <div className="relative w-full">
+                            <div className="relative w-[10rem]">
                                 <select
-                                    name="projectId"
-                                    className={`select select-bordered w-full font-medium`}
+                                    name="priority"
+                                    className={`select select-bordered w-full`}
                                     required
-                                    defaultValue={validProjectId ?? ""}
+                                    defaultValue=""
                                 >
-                                    <option value="" disabled >-- select project --</option>
-                                    {projectList.data?.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
+                                    <option value="" disabled >-- select priority --</option>
+                                    <option value="Low" className="text-info">Low</option>
+                                    <option value="Medium" className="text-warning">Medium</option>
+                                    <option value="High" className="text-error">High</option>
+                                    <option value="Urgent" className="text-error font-bold">Urgent</option>
                                 </select>
                             </div>
                         </div>
                         <div className=" mb-4">
                             <label className="label mb-1">
-                                Ticket Name
+                                Status
                             </label>
-                            <input
-                                type="text"
-                                name="name"
-                                className="input input-bordered w-full"
-                                placeholder="Enter ticket name"
-                                required
-                                maxLength={50}
-                            />
+                            <div className="relative w-[13rem]">
+                                <select
+                                    name="status"
+                                    className={`select select-bordered w-full`}
+                                    required
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled >-- select status --</option>
+                                    <option value="New" className="text-cyan-500">New</option>
+                                    <option value="In Development" className="text-blue-500">In Development</option>
+                                    <option value="Testing" className="text-warning">Testing</option>
+                                    <option value="Resolved" className="text-green-500 ">Resolved</option>
+                                </select>
+                            </div>
                         </div>
-
                         <div className=" mb-4">
                             <label className="label mb-1">
-                                Description
+                                Type
                             </label>
-                            <textarea
-                                name="description"
-                                className="textarea textarea-bordered w-full"
-                                placeholder="Ticket description"
-                                rows={4}
-                                required
-                                maxLength={1000}
-                            ></textarea>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className=" mb-4">
-                                <label className="label mb-1">
-                                    Priority
-                                </label>
-                                <div className="relative w-[10rem]">
-                                    <select
-                                        name="priority"
-                                        className={`select select-bordered w-full`}
-                                        required
-                                        defaultValue=""
-                                    >
-                                        <option value="" disabled >-- select priority --</option>
-                                        <option value="Low" className="text-info">Low</option>
-                                        <option value="Medium" className="text-warning">Medium</option>
-                                        <option value="High" className="text-error">High</option>
-                                        <option value="Urgent" className="text-error font-bold">Urgent</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className=" mb-4">
-                                <label className="label mb-1">
-                                    Status
-                                </label>
-                                <div className="relative w-[13rem]">
-                                    <select
-                                        name="status"
-                                        className={`select select-bordered w-full`}
-                                        required
-                                        defaultValue=""
-                                    >
-                                        <option value="" disabled >-- select status --</option>
-                                        <option value="New" className="text-cyan-500">New</option>
-                                        <option value="In Development" className="text-blue-500">In Development</option>
-                                        <option value="Testing" className="text-warning">Testing</option>
-                                        <option value="Resolved" className="text-green-500 ">Resolved</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className=" mb-4">
-                                <label className="label mb-1">
-                                    Type
-                                </label>
-                                <div className="relative w-[13rem]">
-                                    <select
-                                        name="type"
-                                        className={`select select-bordered w-full`}
-                                        required
-                                        defaultValue=""
-                                    >
-                                        <option value="" disabled >-- select type --</option>
-                                        <option value="Defect" className="text-error">Defect</option>
-                                        <option value="Feature" className="text-green-500">Feature</option>
-                                        <option value="General Task" className="text-cyan-500">General Task</option>
-                                        <option value="Work Task" className="text-indigo-500 ">Work Task</option>
-                                        <option value="Change Request" className="text-amber-500 ">Change Request</option>
-                                        <option value="Enhancement" className="text-blue-500 ">Enhancment</option>
-                                    </select>
-                                </div>
+                            <div className="relative w-[13rem]">
+                                <select
+                                    name="type"
+                                    className={`select select-bordered w-full`}
+                                    required
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled >-- select type --</option>
+                                    <option value="Defect" className="text-error">Defect</option>
+                                    <option value="Feature" className="text-green-500">Feature</option>
+                                    <option value="General Task" className="text-cyan-500">General Task</option>
+                                    <option value="Work Task" className="text-indigo-500 ">Work Task</option>
+                                    <option value="Change Request" className="text-amber-500 ">Change Request</option>
+                                    <option value="Enhancement" className="text-blue-500 ">Enhancment</option>
+                                </select>
                             </div>
                         </div>
-                        <div className="flex justify-end">
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                            >Create Ticket</button>
-                        </div>
-                    </fieldset>
-                </Form>
-            </div>
+                    </div>
+                    <div className="flex justify-start mt-2">
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                        >Create Ticket</button>
+                    </div>
+                </fieldset>
+            </Form>
         </RouteLayout>
     );
 }

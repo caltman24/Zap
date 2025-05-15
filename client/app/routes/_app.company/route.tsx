@@ -195,10 +195,10 @@ export default function CompanyRoute() {
                             {canEdit && !isEditing && (
                                 <div className="flex gap-4 mb-4 justify-end absolute right-6 top-6 z-10">
                                     <button onClick={() => { toggleEditMode(); }} className="btn btn-soft btn-sm">
-                                        <span className="material-symbols-outlined">edit</span> Edit Company
+                                        <span className="material-symbols-outlined text-primary">edit</span> Edit Company
                                     </button>
                                     <Link to="/company/invites" className="btn btn-soft btn-sm">
-                                        <span className="material-symbols-outlined">settings</span>Manage Roles
+                                        <span className="material-symbols-outlined text-accent">settings</span>Manage Roles
                                     </Link>
                                 </div>
                             )}

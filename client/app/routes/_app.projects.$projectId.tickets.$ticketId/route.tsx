@@ -47,27 +47,20 @@ export default function TicketDetailsRoute() {
         <RouteLayout>
             {ticket ? (
                 <>
-                    <div className="flex justify-between items-center mb-6">
-
-                        <h1 className="text-3xl font-bold">{ticket.name}</h1>
-                        <div className="flex gap-2">
-                            {/* FIXME: Add confirmation modal before delete */}
-                            {/* TODO: This needs to redirect ONLY if the ticket is deleted from the ticket page */}
+                    <div className="flex justify-between items-center mb-2">
+                        <BackButton />
+                    </div>
+                    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+                        <div className="flex justify-between items-center">
+                            <h1 className="text-3xl font-bold mb-2">{ticket.name}</h1>
                             <Form method="post" action={`/tickets/${ticketId}/delete`} >
                                 <input type="hidden" value={ticket.projectId} name="projectId"></input>
                                 <button type="submit" className="btn btn-error btn-sm">Delete</button>
                             </Form>
-                            <BackButton />
                         </div>
-                    </div>
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
 
-                        <div className="mb-4">
-                            <h2 className="text-xl font-bold mb-2">Description</h2>
-                            <p className="whitespace-pre-wrap">{ticket.description}</p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
 
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                             <div className="stat bg-base-200 rounded-lg">
                                 <div className="stat-title mb-2">Submitter</div>
                                 {ticket.submitter && (
@@ -116,9 +109,9 @@ export default function TicketDetailsRoute() {
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-6">
 
-                            <h2 className="text-xl font-bold mb-2">Developer</h2>
+                        <div className="mt-6">
+                            <h2 className="text-lg font-bold mb-2">Developer</h2>
                             {ticket.assignee ? (
                                 <div className="flex gap-2 items-center">
                                     <div className="avatar">
@@ -131,6 +124,11 @@ export default function TicketDetailsRoute() {
                             ) : (
                                 <p className="font-medium text-gray-400">Unassigned</p>
                             )}
+                        </div>
+
+                        <div className="flex flex-col mt-4">
+                            <p className="text-lg font-medium">Description:</p>
+                            <p className="text-base-content/70">{ticket.description}</p>
                         </div>
                     </div>
                     <div className="bg-base-100 rounded-lg shadow-lg p-6">

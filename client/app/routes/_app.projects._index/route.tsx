@@ -61,8 +61,8 @@ export default function ProjectsRoute() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">All Projects</h1>
                 {createProjectRoles.includes(userInfo.role.toLowerCase()) && (
-                    <Link to="/projects/new" className="btn btn-primary">
-                        <span className="material-symbols-outlined mr-1">add_circle</span>
+                    <Link to="/projects/new" className="btn btn-soft">
+                        <span className="material-symbols-outlined text-success">add_circle</span>
                         New Project
                     </Link>
                 )}

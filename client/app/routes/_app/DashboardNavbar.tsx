@@ -24,11 +24,13 @@ export default function DashboardNavbar({ avatarUrl }: { avatarUrl: string }) {
                 </div>
                 <div className="flex gap-2 items-center">
                     <div className="dropdown dropdown-end">
-                        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                            <div className="w-full rounded-full">
-                                <img
-                                    alt="Tailwind CSS Navbar component"
-                                    src={avatarUrl} />
+                        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar shadow-sm">
+                            <div className="w-full rounded-full ring ring-primary ring-offset-base-100">
+                                <div className="">
+                                    <img
+                                        alt="Tailwind CSS Navbar component"
+                                        src={avatarUrl} />
+                                </div>
                             </div>
                         </div>
                         <ul

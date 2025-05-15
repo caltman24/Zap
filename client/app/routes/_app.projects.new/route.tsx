@@ -105,92 +105,85 @@ export default function NewProjectRoute() {
     };
 
     return (
-        <RouteLayout className="w-full bg-base-300 min-h-full p-6">
-            <div className="card w-full bg-base-100 rounded-lg shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold">Create New Project</h1>
-                    <BackButton />
-                </div>
+        <RouteLayout>
+            <h1 className="text-3xl font-bold">New Project</h1>
 
-                {error && <div className="alert alert-error mb-4">{error}</div>}
+            {error && <div className="alert alert-error mb-4">{error}</div>}
+            <Form method="post" className="max-w-[40rem] mt-2">
+                <fieldset disabled={isSubmitting} className="fieldset">
+                    <div className="form-control mb-4">
+                        <label className="label mb-1">
+                            <span className="label-text">Project Name</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            className="input input-bordered w-full"
+                            required
+                            maxLength={50}
+                        />
+                    </div>
 
-                <Form method="post">
-                    <fieldset disabled={isSubmitting}>
+                    <div className="form-control mb-4">
+                        <label className="label mb-1">
+                            <span className="label-text">Description</span>
+                        </label>
+                        <textarea
+                            name="description"
+                            className="textarea textarea-bordered w-full"
+                            rows={4}
+                            required
+                            maxLength={1000}
+                        ></textarea>
+                    </div>
+
+
+                    <div className="flex gap-4">
                         <div className="form-control mb-4">
-                            <label className="label">
-                                <span className="label-text">Project Name</span>
+                            <label className="label mb-1">
+                                <span className="label-text">Priority</span>
+                            </label>
+                            <div className="relative w-[10rem]">
+                                <select
+                                    name="priority"
+                                    className={`select select-bordered w-full ${getPriorityClass(priority)}`}
+                                    required
+                                    value={priority}
+                                    onChange={(e) => setPriority(e.target.value)}
+                                >
+                                    <option value="">Select priority</option>
+                                    <option value="Low" className="text-info">Low</option>
+                                    <option value="Medium" className="text-warning">Medium</option>
+                                    <option value="High" className="text-error">High</option>
+                                    <option value="Urgent" className="text-error font-bold">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-control mb-6">
+                            <label className="label mb-1">
+                                <span className="label-text">Due Date</span>
                             </label>
                             <input
-                                type="text"
-                                name="name"
+                                type="date"
+                                name="dueDate"
                                 className="input input-bordered w-full"
-                                placeholder="Enter project name"
                                 required
-                                maxLength={50}
+                                min={new Date().toISOString().split('T')[0]}
                             />
                         </div>
+                    </div>
+                    <div className="flex justify-start mt-4">
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? "Creating..." : "Create Project"}
+                        </button>
+                    </div>
+                </fieldset>
+            </Form>
 
-                        <div className="form-control mb-4">
-                            <label className="label">
-                                <span className="label-text">Description</span>
-                            </label>
-                            <textarea
-                                name="description"
-                                className="textarea textarea-bordered w-full"
-                                placeholder="Project description"
-                                rows={4}
-                                required
-                                maxLength={1000}
-                            ></textarea>
-                        </div>
-
-
-                        <div className="flex gap-4">
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Priority</span>
-                                </label>
-                                <div className="relative w-[10rem]">
-                                    <select
-                                        name="priority"
-                                        className={`select select-bordered w-full ${getPriorityClass(priority)}`}
-                                        required
-                                        value={priority}
-                                        onChange={(e) => setPriority(e.target.value)}
-                                    >
-                                        <option value="">Select priority</option>
-                                        <option value="Low" className="text-info">Low</option>
-                                        <option value="Medium" className="text-warning">Medium</option>
-                                        <option value="High" className="text-error">High</option>
-                                        <option value="Urgent" className="text-error font-bold">Urgent</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="form-control mb-6">
-                                <label className="label">
-                                    <span className="label-text">Due Date</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    name="dueDate"
-                                    className="input input-bordered w-full"
-                                    required
-                                    min={new Date().toISOString().split('T')[0]}
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end">
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? "Creating..." : "Create Project"}
-                            </button>
-                        </div>
-                    </fieldset>
-                </Form>
-            </div>
         </RouteLayout>
     );
 }
