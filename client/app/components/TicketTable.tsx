@@ -67,7 +67,7 @@ export default function TicketTable({ tickets }: TicketTableProps) {
                                         <Form method="post" action={`/tickets/${ticket.id}/delete`} navigate={false} >
                                             <button type="submit" className="btn btn-error btn-xs">D</button>
                                         </Form>
-                                        <Link to={`/tickets/mytickets/${ticket.id}`} className="btn btn-xs btn-ghost">
+                                        <Link to={`/projects/${ticket.projectId}/tickets/${ticket.id}`} className="btn btn-xs btn-ghost">
                                             <span className="material-symbols-outlined">visibility</span>
                                         </Link>
                                     </div>

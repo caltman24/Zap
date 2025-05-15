@@ -8,6 +8,7 @@
         - Edit in by themseleves: priority, status, type
         - 1 submitter: cannot change
         - 1 assigne
+[] - Ticket details uri will always be /{project}/tickets/{ticketId}.
 
 [] - On archived ticket, remove the ability to add more members
 [] - assign to ticket

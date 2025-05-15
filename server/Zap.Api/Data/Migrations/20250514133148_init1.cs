@@ -55,6 +55,42 @@ namespace Zap.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TicketPriorities",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TicketPriorities", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TicketStatuses",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TicketStatuses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TicketTypes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TicketTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
@@ -179,7 +215,8 @@ namespace Zap.Api.Data.Migrations
                     Priority = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsArchived = table.Column<bool>(type: "boolean", nullable: false),
                     DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CompanyId = table.Column<string>(type: "text", nullable: false)
+                    CompanyId = table.Column<string>(type: "text", nullable: false),
+                    ProjectManagerId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -190,10 +227,16 @@ namespace Zap.Api.Data.Migrations
                         principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Projects_CompanyMembers_ProjectManagerId",
+                        column: x => x.ProjectManagerId,
+                        principalTable: "CompanyMembers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CompanyMemberProject",
+                name: "ProjectMembers",
                 columns: table => new
                 {
                     AssignedMembersId = table.Column<string>(type: "text", nullable: false),
@@ -201,15 +244,15 @@ namespace Zap.Api.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CompanyMemberProject", x => new { x.AssignedMembersId, x.AssignedProjectsId });
+                    table.PrimaryKey("PK_ProjectMembers", x => new { x.AssignedMembersId, x.AssignedProjectsId });
                     table.ForeignKey(
-                        name: "FK_CompanyMemberProject_CompanyMembers_AssignedMembersId",
+                        name: "FK_ProjectMembers_CompanyMembers_AssignedMembersId",
                         column: x => x.AssignedMembersId,
                         principalTable: "CompanyMembers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CompanyMemberProject_Projects_AssignedProjectsId",
+                        name: "FK_ProjectMembers_Projects_AssignedProjectsId",
                         column: x => x.AssignedProjectsId,
                         principalTable: "Projects",
                         principalColumn: "Id",
@@ -223,12 +266,12 @@ namespace Zap.Api.Data.Migrations
                     Id = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    Priority = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ProjectId = table.Column<string>(type: "text", nullable: false),
+                    PriorityId = table.Column<string>(type: "text", nullable: false),
+                    StatusId = table.Column<string>(type: "text", nullable: false),
+                    TypeId = table.Column<string>(type: "text", nullable: false),
                     SubmitterId = table.Column<string>(type: "text", nullable: false),
-                    AssigneeId = table.Column<string>(type: "text", nullable: true),
-                    ProjectId = table.Column<string>(type: "text", nullable: true)
+                    AssigneeId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -248,7 +291,26 @@ namespace Zap.Api.Data.Migrations
                         name: "FK_Tickets_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Tickets_TicketPriorities_PriorityId",
+                        column: x => x.PriorityId,
+                        principalTable: "TicketPriorities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Tickets_TicketStatuses_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "TicketStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Tickets_TicketTypes_TypeId",
+                        column: x => x.TypeId,
+                        principalTable: "TicketTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -279,11 +341,6 @@ namespace Zap.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CompanyMemberProject_AssignedProjectsId",
-                table: "CompanyMemberProject",
-                column: "AssignedProjectsId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CompanyMembers_CompanyId",
                 table: "CompanyMembers",
                 column: "CompanyId");
@@ -300,9 +357,19 @@ namespace Zap.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProjectMembers_AssignedProjectsId",
+                table: "ProjectMembers",
+                column: "AssignedProjectsId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_CompanyId",
                 table: "Projects",
                 column: "CompanyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_ProjectManagerId",
+                table: "Projects",
+                column: "ProjectManagerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tickets_AssigneeId",
@@ -310,14 +377,29 @@ namespace Zap.Api.Data.Migrations
                 column: "AssigneeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tickets_PriorityId",
+                table: "Tickets",
+                column: "PriorityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tickets_ProjectId",
                 table: "Tickets",
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tickets_StatusId",
+                table: "Tickets",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tickets_SubmitterId",
                 table: "Tickets",
                 column: "SubmitterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tickets_TypeId",
+                table: "Tickets",
+                column: "TypeId");
         }
 
         /// <inheritdoc />
@@ -333,22 +415,31 @@ namespace Zap.Api.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "CompanyMemberProject");
+                name: "ProjectMembers");
 
             migrationBuilder.DropTable(
                 name: "Tickets");
 
             migrationBuilder.DropTable(
-                name: "CompanyMembers");
-
-            migrationBuilder.DropTable(
                 name: "Projects");
 
             migrationBuilder.DropTable(
-                name: "CompanyRoles");
+                name: "TicketPriorities");
+
+            migrationBuilder.DropTable(
+                name: "TicketStatuses");
+
+            migrationBuilder.DropTable(
+                name: "TicketTypes");
+
+            migrationBuilder.DropTable(
+                name: "CompanyMembers");
 
             migrationBuilder.DropTable(
                 name: "Companies");
+
+            migrationBuilder.DropTable(
+                name: "CompanyRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

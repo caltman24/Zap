@@ -335,6 +335,7 @@ namespace Zap.Api.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ProjectId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("StatusId")
@@ -521,7 +522,8 @@ namespace Zap.Api.Data.Migrations
                     b.HasOne("Zap.Api.Data.Models.Project", "Project")
                         .WithMany("Tickets")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Zap.Api.Data.Models.TicketStatus", "Status")
                         .WithMany()

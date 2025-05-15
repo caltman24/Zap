@@ -8,6 +8,6 @@ export async function getTicketById(ticketId: string, accessToken: string) {
   return await requestJson<BasicTicketInfo>(
     `/tickets/${ticketId}`,
     { method: "GET" },
-    accessToken
+    accessToken,
   );
 }

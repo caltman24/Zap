@@ -40,8 +40,7 @@ public static class ConfigureServices
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
-            // options.UseRoleSeeding();
-            // options.UseTicketTypeSeeding();
+            // options.UseRequiredSeeding();
         });
 
 

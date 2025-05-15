@@ -12,7 +12,7 @@ using Zap.Api.Data;
 namespace Zap.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250509164413_init1")]
+    [Migration("20250514133148_init1")]
     partial class init1
     {
         /// <inheritdoc />
@@ -37,7 +37,7 @@ namespace Zap.Api.Data.Migrations
 
                     b.HasIndex("AssignedProjectsId");
 
-                    b.ToTable("CompanyMemberProject");
+                    b.ToTable("ProjectMembers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -303,9 +303,14 @@ namespace Zap.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("ProjectManagerId")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Projects");
                 });
@@ -328,37 +333,86 @@ namespace Zap.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("Priority")
+                    b.Property<string>("PriorityId")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("ProjectId")
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("ProjectId")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("StatusId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("SubmitterId")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Type")
+                    b.Property<string>("TypeId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssigneeId");
+
+                    b.HasIndex("PriorityId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("SubmitterId");
+
+                    b.HasIndex("TypeId");
+
+                    b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("Zap.Api.Data.Models.TicketPriority", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssigneeId");
+                    b.ToTable("TicketPriorities");
+                });
 
-                    b.HasIndex("ProjectId");
+            modelBuilder.Entity("Zap.Api.Data.Models.TicketStatus", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
-                    b.HasIndex("SubmitterId");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
-                    b.ToTable("Tickets");
+                    b.HasKey("Id");
+
+                    b.ToTable("TicketStatuses");
+                });
+
+            modelBuilder.Entity("Zap.Api.Data.Models.TicketType", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TicketTypes");
                 });
 
             modelBuilder.Entity("CompanyMemberProject", b =>
@@ -446,7 +500,14 @@ namespace Zap.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Zap.Api.Data.Models.CompanyMember", "ProjectManager")
+                        .WithMany()
+                        .HasForeignKey("ProjectManagerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Company");
+
+                    b.Navigation("ProjectManager");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Ticket", b =>
@@ -455,9 +516,23 @@ namespace Zap.Api.Data.Migrations
                         .WithMany()
                         .HasForeignKey("AssigneeId");
 
-                    b.HasOne("Zap.Api.Data.Models.Project", null)
+                    b.HasOne("Zap.Api.Data.Models.TicketPriority", "Priority")
+                        .WithMany()
+                        .HasForeignKey("PriorityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Zap.Api.Data.Models.Project", "Project")
                         .WithMany("Tickets")
-                        .HasForeignKey("ProjectId");
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zap.Api.Data.Models.TicketStatus", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Zap.Api.Data.Models.CompanyMember", "Submitter")
                         .WithMany()
@@ -465,9 +540,23 @@ namespace Zap.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Zap.Api.Data.Models.TicketType", "Type")
+                        .WithMany()
+                        .HasForeignKey("TypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Assignee");
 
+                    b.Navigation("Priority");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Status");
+
                     b.Navigation("Submitter");
+
+                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("Zap.Api.Data.Models.Company", b =>
