@@ -11,6 +11,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const ticketId = params.ticketId!
     const session = await getSession(request);
     const userRole = session.get("user").role
+    const formData = await request.formData();
+    const projectId = formData.get("projectId") as string;
 
     if (!validateRole(userRole, permissions.project.edit)) {
         return ForbiddenResponse()
@@ -38,10 +40,5 @@ export async function action({ request, params }: ActionFunctionArgs) {
         })
     }
 
-    //TODO: This needs to redirect ONLY if the ticket is deleted from the ticket page
-    return ActionResponse({
-        success: true,
-        error: null,
-        headers: tokenResponse.headers
-    })
+    return redirect(`/projects/${projectId}`);
 }

@@ -1,24 +1,24 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Link } from "@remix-run/react";
-import ProjectCommonRoute from "~/commonRoutes/projectDetails/commonRoute"
+import { LoaderFunctionArgs } from "@remix-run/node";
+import { Link, Outlet, useLoaderData, useOutletContext } from "@remix-run/react";
 import projectLoader from "~/commonRoutes/projectDetails/server.loader"
-import projectAction from "~/commonRoutes/projectDetails/server.action"
+import { UserInfoResponse } from "~/services/api.server/types";
 
 export const handle = {
-  breadcrumb: (match: any) => {
-    const projectId = match.params.projectId;
-    const projectName = match.data?.data?.name || "Project Details";
-    return <Link to={`/projects/${projectId}`}>{projectName}</Link>;
-  },
+    breadcrumb: (match: any) => {
+        const projectId = match.params.projectId;
+        const projectName = match.data?.data?.name || "Project Details";
+        return <Link to={`/projects/${projectId}`}>{projectName}</Link>;
+    },
 };
 
 export async function loader(loaderParams: LoaderFunctionArgs) {
-  return projectLoader(loaderParams);
+    return projectLoader(loaderParams);
 }
 
-export default function ProjectDetailsRoute() {
-  return <ProjectCommonRoute />
-}
-export async function action(actionParams: ActionFunctionArgs) {
-  return projectAction(actionParams);
+export default function ProjectDetailsRoot() {
+    const loaderData = useLoaderData<typeof loader>();
+    // User info is already provided by the _app root route outlet context
+    const userInfo = useOutletContext<UserInfoResponse>();
+    // Provide the project data and user info to sub routes
+    return <Outlet context={{ loaderData, userInfo }} />
 }

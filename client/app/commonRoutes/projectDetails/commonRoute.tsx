@@ -7,16 +7,21 @@ import { ActionResponseParams, JsonResponseResult } from "~/utils/response";
 import RouteLayout from "~/layouts/RouteLayout";
 import roleNames from "~/data/roles";
 import MembersListTable from "~/components/MembersListTable";
-import ProjectManagerListModal from "~/routes/_app.projects.$projectId/components/ProjectManagerListModal";
-import MemberListModal from "~/routes/_app.projects.$projectId/components/MemberListModal";
-import RemoveMemberListModal from "~/routes/_app.projects.$projectId/components/RemoveMemberListModal";
 import TicketTable from "~/components/TicketTable";
+import ProjectManagerListModal from "./components/ProjectManagerListModal";
+import MemberListModal from "./components/MemberListModal";
+import RemoveMemberListModal from "./components/RemoveMemberListModal";
+import BackButton from "~/components/BackButton";
 
-export default function Route() {
+export type ProjectRouteParams = {
+    loaderData: JsonResponseResult<ProjectResponse>,
+    userInfo: UserInfoResponse
+}
+
+export default function Route({ loaderData, userInfo }: ProjectRouteParams) {
     const { projectId } = useParams()
-    const { data: project, error } = useLoaderData<JsonResponseResult<ProjectResponse>>();
+    const { data: project, error } = loaderData;
     const actionData = useActionData() as ActionResponseParams;
-    const userInfo = useOutletContext<UserInfoResponse>();
     const userRole = userInfo?.role?.toLowerCase()
     const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
 
@@ -230,10 +235,7 @@ export default function Route() {
                                                 {/* Archive/Unarchive Project button */}
                                             </>
                                         )}
-                                        <Link to="/projects" className="btn btn-outline">
-                                            <span className="material-symbols-outlined">arrow_back</span>
-                                            Back
-                                        </Link>
+                                        <BackButton />
                                     </div>
                                 </div>
 

@@ -7,7 +7,9 @@ import { MenuGroup, MenuRoutes } from "~/data/routes";
 export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuRoutes }) {
     const matches = useMatches();
     const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({
-        "Company": true // Default expanded menu
+        "Company": true,
+        "Projects": true,
+        "Tickets": true// Default expanded menu
     });
 
     const toggleMenu = (menuName: string) => {
@@ -46,8 +48,8 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                                                 m => (
                                                     m.id.includes("archived") ||
                                                     m.id.includes("mytickets") ||
-                                                    m.id.includes("myprojects"))
-                                                    && (link.to === "/projects" ||
+                                                    m.id.includes("myprojects")) &&
+                                                    (link.to === "/projects" ||
                                                         link.to === "/tickets"))) {
                                                 isActive = false
                                             }

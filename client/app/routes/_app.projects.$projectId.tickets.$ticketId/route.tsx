@@ -1,10 +1,11 @@
 
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useLoaderData, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
+import { Form, Link, useLoaderData, useNavigate, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient"; import { AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server"; import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { getTicketById } from "./server.get-ticket";
+import BackButton from "~/components/BackButton";
 export const handle = {
     breadcrumb: (match: any) => {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
@@ -53,12 +54,10 @@ export default function TicketDetailsRoute() {
                             {/* FIXME: Add confirmation modal before delete */}
                             {/* TODO: This needs to redirect ONLY if the ticket is deleted from the ticket page */}
                             <Form method="post" action={`/tickets/${ticketId}/delete`} >
+                                <input type="hidden" value={ticket.projectId} name="projectId"></input>
                                 <button type="submit" className="btn btn-error btn-sm">Delete</button>
                             </Form>
-                            <Link to="/tickets/mytickets" className="btn btn-outline btn-sm">
-                                <span className="material-symbols-outlined">arrow_back</span>
-                                Back
-                            </Link>
+                            <BackButton />
                         </div>
                     </div>
                     <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">

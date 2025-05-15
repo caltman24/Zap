@@ -11,6 +11,7 @@ import { getNewTicketProjectList } from "./server.get-projects-list";
 import { BasicProjectResponse, CreateTicketRequest } from "~/services/api.server/types";
 import { createNewTicket } from "./server.create-ticket";
 import { AuthenticationError } from "~/services/api.server/errors";
+import BackButton from "~/components/BackButton";
 
 export const handle = {
     breadcrumb: () => <Link to="/tickets/new">New</Link>,
@@ -66,10 +67,7 @@ export default function NewTicketRoute() {
             <div className="card w-full bg-base-100 rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold">Create New Ticket</h1>
-                    <Link to="/projects" className="btn btn-outline btn-sm">
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        Back
-                    </Link>
+                    <BackButton />
                 </div>
 
                 <Form method="post">
@@ -239,5 +237,5 @@ export async function action({ request }: ActionFunctionArgs) {
         });
     }
 
-    return redirect(`/tickets/mytickets/${data.id}`);
+    return redirect(`/projects/${projectId}/tickets/${data.id}`);
 }

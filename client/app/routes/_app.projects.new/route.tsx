@@ -8,6 +8,7 @@ import { CreateProjectRequest } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 import RouteLayout from "~/layouts/RouteLayout";
+import BackButton from "~/components/BackButton";
 
 export const handle = {
     breadcrumb: () => <Link to="/projects/new">New</Link>,
@@ -108,10 +109,7 @@ export default function NewProjectRoute() {
             <div className="card w-full bg-base-100 rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold">Create New Project</h1>
-                    <Link to="/projects" className="btn btn-outline btn-sm">
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        Back
-                    </Link>
+                    <BackButton />
                 </div>
 
                 {error && <div className="alert alert-error mb-4">{error}</div>}
