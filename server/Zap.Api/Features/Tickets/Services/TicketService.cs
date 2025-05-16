@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
@@ -123,5 +124,92 @@ public class TicketService : ITicketService
                     t.Assignee.Role.Name)
             ))
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<bool> UpdateAsigneeAsync(string ticketId, string memberId)
+    {
+        var rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.AssigneeId, memberId));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> UpdatePriorityAsync(string ticketId, string priority)
+    {
+        var rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .ExecuteUpdateAsync(setter =>
+                    setter.SetProperty(
+                        t => t.PriorityId,
+                        _db.TicketPriorities.First(s => s.Name == priority).Id));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> UpdateStatusAsync(string ticketId, string status)
+    {
+        var rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .ExecuteUpdateAsync(setter =>
+                    setter.SetProperty(
+                        t => t.StatusId,
+                        _db.TicketStatuses.First(s => s.Name == status).Id));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> UpdateTicketAsync(string ticketId, UpdateTicketDto ticket)
+    {
+        var rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .ExecuteUpdateAsync(setter => setter
+                    // INFO: We Should always have the correct tickect types names. Should validate before update. maybe
+                    // pass the ids from validation to prevent multiple db calls.
+                    // Calling First() should never fail
+                    .SetProperty(t => t.StatusId, _db.TicketStatuses.First(s => s.Name == ticket.Status).Id)
+                    .SetProperty(t => t.TypeId, _db.TicketTypes.First(s => s.Name == ticket.Type).Id)
+                    .SetProperty(t => t.PriorityId, _db.TicketPriorities.First(s => s.Name == ticket.Priority).Id)
+                    .SetProperty(t => t.Name, ticket.Name)
+                    .SetProperty(t => t.Description, ticket.Description));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> UpdateTypeAsync(string ticketId, string type)
+    {
+        var rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .ExecuteUpdateAsync(setter =>
+                    setter.SetProperty(
+                        t => t.TypeId,
+                        _db.TicketTypes.First(t => t.Name == type).Id));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> ValidateProjectManagerAsync(string ticketId, string memberId)
+    {
+        var pmId = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .Select(t => t.Project.ProjectManagerId)
+            .FirstOrDefaultAsync();
+
+        return pmId == memberId;
+    }
+
+    public async Task<bool> ValidateAssignedMemberAsync(string ticketId, string memberId)
+    {
+        var ids = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .Select(t =>
+                new
+                {
+                    t.AssigneeId,
+                    t.SubmitterId
+                })
+            .FirstOrDefaultAsync();
+
+        return memberId == ids?.AssigneeId || memberId == ids?.SubmitterId;
     }
 }

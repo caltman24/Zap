@@ -170,10 +170,10 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                                     <>
                                                         <div className="dropdown dropdown-center">
                                                             <div tabIndex={0} role="button" className="btn btn-sm shadow-sm btn-soft flex gap-1 p-0 items-center border-0">
-                                                                <div className="bg-base-200 grid place-items-center w-full h-full p-0.5 rounded-tl-sm rounded-bl-sm">
+                                                                <div className="bg-base-200 grid place-items-center w-full h-full py-0.5 px-2 rounded-tl-sm rounded-bl-sm">
                                                                     <span className="!text-lg material-symbols-outlined w-full">edit</span>
                                                                 </div>
-                                                                <svg className="w-5 pr-0.5" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <svg className="w-5 pr-1" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                     <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
                                                                 </svg>
                                                             </div>
