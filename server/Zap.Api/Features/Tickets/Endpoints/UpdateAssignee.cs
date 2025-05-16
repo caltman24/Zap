@@ -14,18 +14,23 @@ public class UpdateAssignee : IEndpoint
             .WithName("UpdateDeveloper")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
 
-    private static async Task<Results<NotFound, Ok<BasicTicketDto>>> Handle(
+    public record Request(string MemberId);
+
+    private static async Task<Results<NotFound, NoContent>> Handle(
             [FromRoute] string ticketId,
+            Request request,
             ITicketService ticketService,
             CurrentUser currentUser
             )
     {
+        var valid = currentUser.Role == RoleNames.Admin ||
+            await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id);
         // validate projectManager
-        var ticket = await ticketService.GetTicketByIdAsync(ticketId);
+        var success = await ticketService.UpdateAsigneeAsync(ticketId, request.MemberId);
 
-        if (ticket == null) return TypedResults.NotFound();
+        if (!success) return TypedResults.NotFound();
 
-        return TypedResults.Ok(ticket);
+        return TypedResults.NoContent();
     }
 }
 

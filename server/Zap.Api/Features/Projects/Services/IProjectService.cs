@@ -14,6 +14,9 @@ public interface IProjectService
     Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto);
 
     Task<bool> UpdateProjectManagerAsync(string projectId, string? memberId);
+    ///<summary>
+    /// Validate if the member is the actual project manager
+    ///</summary>
     Task<bool> ValidateProjectManagerAsync(string projectId, string memberId);
     Task<List<ProjectManagerDto>> GetAssignablePMs(string projectId);
 
