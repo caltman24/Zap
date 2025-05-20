@@ -212,4 +212,16 @@ public class TicketService : ITicketService
 
         return memberId == ids?.AssigneeId || memberId == ids?.SubmitterId;
     }
+
+    public async Task<bool> ValidateAssigneeAsync(string ticketId, string memberId)
+    {
+        var memberRole = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .SelectMany(t => t.Project.AssignedMembers)
+            .Where(am => am.Id == memberId)
+            .Select(am => am.Role.Name)
+            .FirstOrDefaultAsync();
+
+        return memberRole == RoleNames.Developer;
+    }
 }

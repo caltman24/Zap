@@ -18,16 +18,24 @@ public class UpdateAssignee : IEndpoint
 
     public record Request(string MemberId);
 
-    private static async Task<Results<NotFound, NoContent>> Handle(
+    private static async Task<Results<NotFound, BadRequest<string>, ForbidHttpResult, NoContent>> Handle(
             [FromRoute] string ticketId,
             Request request,
             ITicketService ticketService,
             CurrentUser currentUser
             )
     {
-        var valid = currentUser.Role == RoleNames.Admin ||
-            await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id);
-        // validate projectManager
+        // Make sure the user is the assigned PM of the ticket's project
+        if (currentUser.Role == RoleNames.ProjectManager)
+        {
+            var validPm = await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id);
+            if (!validPm) TypedResults.Forbid();
+        }
+
+        // Make sure the requesting assigne id is an assigned member of the ticket's project
+        var validAssignee = await ticketService.ValidateAssigneeAsync(ticketId, request.MemberId);
+        if (!validAssignee) return TypedResults.BadRequest("Member of AssigneeId is not an assigned developer of the ticket's project");
+
         var success = await ticketService.UpdateAsigneeAsync(ticketId, request.MemberId);
 
         if (!success) return TypedResults.NotFound();

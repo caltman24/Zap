@@ -17,6 +17,7 @@ public class CreateTicketDeveloperList : IEndpoint
             IProjectService projectService
             )
     {
+        // TODO: Replace with get developer list logic
         var projects = await projectService.GetAssignedProjects(
                 currentUser.Member!.Id,
                 currentUser.Role,

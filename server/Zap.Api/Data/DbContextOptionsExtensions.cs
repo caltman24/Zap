@@ -35,10 +35,10 @@ public static class DbContextOptionsExtensions
         ]);
         ctx.Set<TicketPriority>().AddRange(
         [
-            new TicketPriority(){ Name = Priorites.Low },
-            new TicketPriority(){ Name = Priorites.Medium },
-            new TicketPriority(){ Name = Priorites.High },
-            new TicketPriority(){ Name = Priorites.Urgent },
+            new TicketPriority(){ Name = Priorities.Low },
+            new TicketPriority(){ Name = Priorities.Medium },
+            new TicketPriority(){ Name = Priorities.High },
+            new TicketPriority(){ Name = Priorities.Urgent },
         ]);
         ctx.Set<TicketStatus>().AddRange(
         [
@@ -62,10 +62,10 @@ public static class DbContextOptionsExtensions
         ]);
         await ctx.Set<TicketPriority>().AddRangeAsync(
         [
-            new TicketPriority(){ Name = Priorites.Low },
-            new TicketPriority(){ Name = Priorites.Medium },
-            new TicketPriority(){ Name = Priorites.High },
-            new TicketPriority(){ Name = Priorites.Urgent },
+            new TicketPriority(){ Name = Priorities.Low },
+            new TicketPriority(){ Name = Priorities.Medium },
+            new TicketPriority(){ Name = Priorities.High },
+            new TicketPriority(){ Name = Priorities.Urgent },
         ]);
         await ctx.Set<TicketStatus>().AddRangeAsync(
         [

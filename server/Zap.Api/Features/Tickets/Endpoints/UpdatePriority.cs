@@ -1,9 +1,11 @@
-
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Common.Extensions;
+using Zap.Api.Common.Filters;
 using Zap.Api.Features.Tickets.Filters;
 using Zap.Api.Features.Tickets.Services;
 
@@ -15,9 +17,18 @@ public class UpdatePriority : IEndpoint
         app.MapPut("/{ticketId}/priority", Handle)
             .WithName("UpdateTicketPriority")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
-            .WithTicketCompanyValidation();
+            .WithTicketCompanyValidation()
+            .WithRequestValidation<Request>();
 
     public record Request(string Priority);
+
+    public class RequestValidator : AbstractValidator<Request>
+    {
+        public RequestValidator()
+        {
+            RuleFor(x => x.Priority).ValidateTicketPriority();
+        }
+    }
 
     private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
             [FromRoute] string ticketId,

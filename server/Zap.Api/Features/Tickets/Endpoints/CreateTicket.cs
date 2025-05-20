@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Common.Extensions;
 using Zap.Api.Common.Filters;
 using Zap.Api.Features.Projects.Services;
 using Zap.Api.Features.Tickets.Services;
@@ -31,9 +32,9 @@ public class CreateTicket : IEndpoint
         {
             RuleFor(r => r.Name).NotNull().NotEmpty().MaximumLength(50);
             RuleFor(r => r.Description).NotNull().NotEmpty().MaximumLength(1000);
-            RuleFor(r => r.Priority).NotNull().NotEmpty().MaximumLength(50);
-            RuleFor(r => r.Status).NotNull().NotEmpty().MaximumLength(50);
-            RuleFor(r => r.Type).NotNull().NotEmpty().MaximumLength(50);
+            RuleFor(r => r.Priority).ValidateTicketPriority();
+            RuleFor(r => r.Status).ValidateTicketStatus();
+            RuleFor(r => r.Type).ValidateTicketType();
             RuleFor(r => r.ProjectId).NotNull().NotEmpty().MaximumLength(100);
         }
     }
@@ -56,7 +57,6 @@ public class CreateTicket : IEndpoint
         var isAssignedProjectMember = await projectService.ValidateAssignedMemberAsync(request.ProjectId, currentUser.Member!.Id);
         if (!isAssignedProjectMember) return TypedResults.Forbid();
 
-        // TODO: Validate Priority, Status, and Type exist in db. Return validation error if not
         var newTicket = await ticketService.CreateTicketAsync(new CreateTicketDto(
             request.Name,
             request.Description,

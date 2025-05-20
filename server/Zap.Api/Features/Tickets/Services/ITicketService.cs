@@ -20,6 +20,7 @@ public interface ITicketService
     /// Validate if the member is an actual assigned member of the ticket
     ///</summary>
     public Task<bool> ValidateAssignedMemberAsync(string ticketId, string memberId);
+    public Task<bool> ValidateAssigneeAsync(string ticketId, string memberId);
 
     public Task<bool> UpdateAsigneeAsync(string ticketId, string memberId);
     public Task<bool> UpdatePriorityAsync(string ticketId, string priority);
