@@ -14,7 +14,7 @@ internal static class ProjectFiltersExtensions
     /// <see cref="TypedResults.Forbid"/> if the user is not authorized,
     /// or the result of <paramref name="next"/> if neither condition is met.
     /// </returns>
-    internal static RouteHandlerBuilder WithProjectTicketValidation(this RouteHandlerBuilder builder) =>
+    internal static RouteHandlerBuilder WithProjectCompanyValidation(this RouteHandlerBuilder builder) =>
         builder.AddEndpointFilter<ProjectCompanyValidationFilter>();
 
     private class ProjectCompanyValidationFilter(AppDbContext db, CurrentUser currentUser)

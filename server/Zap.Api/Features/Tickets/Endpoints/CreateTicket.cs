@@ -4,6 +4,7 @@ using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
 using Zap.Api.Common.Filters;
+using Zap.Api.Features.Projects.Services;
 using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Tickets;
@@ -37,16 +38,23 @@ public class CreateTicket : IEndpoint
         }
     }
 
-    private static async Task<CreatedAtRoute<CreateTicketResult>> Handle(
+    private static async Task<Results<ForbidHttpResult, CreatedAtRoute<CreateTicketResult>>> Handle(
             Request request,
             CurrentUser currentUser,
-            ITicketService ticketService
+            ITicketService ticketService,
+            IProjectService projectService
             )
     {
-        // Make sure the requesting user is apart of the project / company
-        // The endpoint filter works on existing tickets
-        // So here, we cun run validation at endpoint execution
-        // Admin -> Same company, PM / Submitter => Assigned to project
+        // INFO: Can only create a ticket if user is admin of the requesting project's company
+        // OR if the user is an assigned member to the requesting project
+        if (currentUser.Role == RoleNames.Admin)
+        {
+            var sameCompany = await projectService.ValidateCompanyAsync(request.ProjectId, currentUser.Member!.Id);
+            if (sameCompany) return TypedResults.Forbid();
+        }
+
+        var isAssignedProjectMember = await projectService.ValidateAssignedMemberAsync(request.ProjectId, currentUser.Member!.Id);
+        if (!isAssignedProjectMember) return TypedResults.Forbid();
 
         // TODO: Validate Priority, Status, and Type exist in db. Return validation error if not
         var newTicket = await ticketService.CreateTicketAsync(new CreateTicketDto(

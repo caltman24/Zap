@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Features.Tickets.Filters;
 using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Tickets;
@@ -13,7 +14,8 @@ public class UpdatePriority : IEndpoint
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{ticketId}/priority", Handle)
             .WithName("UpdateTicketPriority")
-            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter);
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
+            .WithTicketCompanyValidation();
 
     public record Request(string Priority);
 

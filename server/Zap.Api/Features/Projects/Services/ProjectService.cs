@@ -314,4 +314,23 @@ public sealed class ProjectService : IProjectService
             .ToListAsync();
 
     }
+
+    public async Task<bool> ValidateCompanyAsync(string projectId, string companyId)
+    {
+        return await _db.Projects
+            .Where(p => p.Id == projectId)
+            .Select(p => p.CompanyId)
+            .FirstOrDefaultAsync() == companyId;
+
+    }
+
+    public async Task<bool> ValidateAssignedMemberAsync(string projectId, string memberId)
+    {
+        return await _db.Projects
+            .Where(p => p.Id == projectId)
+            .SelectMany(p => p.AssignedMembers)
+            .Where(am => am.Id == memberId)
+            .Select(am => am.Id)
+            .FirstOrDefaultAsync() == memberId;
+    }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Features.Tickets.Filters;
 using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Tickets;
@@ -12,7 +13,8 @@ public class UpdateAssignee : IEndpoint
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{ticketId}/developer", Handle)
             .WithName("UpdateDeveloper")
-            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
+            .WithTicketCompanyValidation();
 
     public record Request(string MemberId);
 

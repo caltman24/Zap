@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Features.Projects.Filters;
 using Zap.Api.Features.Projects.Services;
 
 namespace Zap.Api.Features.Projects.Endpoints;
@@ -13,7 +14,8 @@ public class UpdateProject : IEndpoint
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{projectId}", Handle)
         .Accepts<Request>("application/json")
-        .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
+        .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
+        .WithProjectCompanyValidation();
 
     public record Request(string Name, string Description, string Priority, DateTime DueDate);
 

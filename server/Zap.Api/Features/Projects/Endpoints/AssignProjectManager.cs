@@ -4,6 +4,7 @@ using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
 using Zap.Api.Features.Companies.Services;
+using Zap.Api.Features.Projects.Filters;
 using Zap.Api.Features.Projects.Services;
 
 namespace Zap.Api.Features.Projects.Endpoints;
@@ -12,7 +13,8 @@ public class AssignProjectManager : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{projectId}/pm", Handle)
-            .WithCompanyMember(RoleNames.Admin);
+            .WithCompanyMember(RoleNames.Admin)
+            .WithProjectCompanyValidation();
 
     public record Request(string? memberId);
 

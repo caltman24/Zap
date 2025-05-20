@@ -4,6 +4,7 @@ using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
 using Zap.Api.Features.Companies.Services;
+using Zap.Api.Features.Projects.Filters;
 using Zap.Api.Features.Projects.Services;
 
 namespace Zap.Api.Features.Projects.Endpoints;
@@ -12,7 +13,8 @@ public class GetAssignableProjectManagers : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapGet("/{projectId}/assignable-pms", Handle)
-            .WithCompanyMember(RoleNames.Admin);
+            .WithCompanyMember(RoleNames.Admin)
+            .WithProjectCompanyValidation();
 
     private static async Task<Ok<List<ProjectManagerDto>>> Handle(
             [FromRoute] string projectId,

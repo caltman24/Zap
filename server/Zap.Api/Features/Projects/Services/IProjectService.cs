@@ -20,6 +20,9 @@ public interface IProjectService
     Task<bool> ValidateProjectManagerAsync(string projectId, string memberId);
     Task<List<ProjectManagerDto>> GetAssignablePMs(string projectId);
 
+    Task<bool> ValidateCompanyAsync(string projectId, string companyId);
+    Task<bool> ValidateAssignedMemberAsync(string projectId, string memberId);
+
     // Assign Members
     Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId, string memberId);
     Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds);
