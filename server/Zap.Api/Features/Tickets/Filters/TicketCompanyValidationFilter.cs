@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Data;

@@ -43,6 +43,11 @@ public class CreateTicket : IEndpoint
             ITicketService ticketService
             )
     {
+        // Make sure the requesting user is apart of the project / company
+        // The endpoint filter works on existing tickets
+        // So here, we cun run validation at endpoint execution
+        // Admin -> Same company, PM / Submitter => Assigned to project
+
         // TODO: Validate Priority, Status, and Type exist in db. Return validation error if not
         var newTicket = await ticketService.CreateTicketAsync(new CreateTicketDto(
             request.Name,

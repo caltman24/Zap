@@ -14,6 +14,8 @@ public class DeleteTicket : IEndpoint
         app.MapDelete("/{ticketId}", Handle)
             .WithName("DeleteTicket")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
+            // This endpoint filter checks the ticketId parm, to validate if the requesting user is in the same company
+            // as the ticket. Only works on endpoints with exisiting tickets
             .WithTicketCompanyValidation();
 
     private static async Task<NoContent> Handle(
