@@ -37,18 +37,6 @@ public class UpdateStatus : IEndpoint
             CurrentUser currentUser
             )
     {
-        var validMember = currentUser.Role switch
-        {
-            RoleNames.Admin => true,
-            RoleNames.ProjectManager =>
-                await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id),
-            RoleNames.Submitter =>
-                await ticketService.ValidateAssignedMemberAsync(ticketId, currentUser.Member!.Id),
-            _ => false
-        };
-
-        if (!validMember) return TypedResults.Forbid();
-
         var success = await ticketService.UpdateStatusAsync(ticketId, request.Status);
         if (!success) return TypedResults.Problem();
 

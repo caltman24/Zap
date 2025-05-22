@@ -21,12 +21,15 @@ public interface ITicketService
     ///</summary>
     public Task<bool> ValidateAssignedMemberAsync(string ticketId, string memberId);
     public Task<bool> ValidateAssigneeAsync(string ticketId, string memberId);
+    public Task<bool> ValidateCompanyAsync(string ticketId, string? companyId);
 
-    public Task<bool> UpdateAsigneeAsync(string ticketId, string memberId);
+    public Task<bool> UpdateAsigneeAsync(string ticketId, string? memberId);
     public Task<bool> UpdatePriorityAsync(string ticketId, string priority);
     public Task<bool> UpdateStatusAsync(string ticketId, string status);
     public Task<bool> UpdateTypeAsync(string ticketId, string type);
     public Task<bool> UpdateTicketAsync(string ticketId, UpdateTicketDto ticket);
+
+    public Task<List<MemberInfoDto>> GetProjectDevelopersAsync(string ticketId);
 }
 
 public record BasicTicketDto(

@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Authorization;
+using Zap.Api.Common.Constants;
 using Zap.Api.Data;
+using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Api.Features.Tickets.Filters;
 
@@ -17,7 +19,7 @@ internal static class TicketFiltersExtensions
     internal static RouteHandlerBuilder WithTicketCompanyValidation(this RouteHandlerBuilder builder) =>
         builder.AddEndpointFilter<TicketCompanyValidationFilter>();
 
-    private class TicketCompanyValidationFilter(AppDbContext db, CurrentUser currentUser)
+    private class TicketCompanyValidationFilter(AppDbContext db, CurrentUser currentUser, ITicketService ticketService)
         : IEndpointFilter
     {
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
@@ -31,11 +33,23 @@ internal static class TicketFiltersExtensions
 
             if (ticketCompanyId == null) return TypedResults.NotFound();
 
+
             if (ticketCompanyId != currentUser.Member!.CompanyId)
             {
                 return TypedResults.Forbid();
             }
 
+
+            var validMember = currentUser.Member!.Role.Name switch
+            {
+                RoleNames.Admin => true,
+                RoleNames.ProjectManager =>
+                    await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id),
+                _ =>
+                    await ticketService.ValidateAssignedMemberAsync(ticketId, currentUser.Member!.Id)
+            };
+
+            if (!validMember) return TypedResults.Forbid();
 
             return await next(context);
         }

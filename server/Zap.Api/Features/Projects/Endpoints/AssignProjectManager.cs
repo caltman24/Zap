@@ -19,11 +19,11 @@ public class AssignProjectManager : IEndpoint
     public record Request(string? memberId);
 
     public static async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> Handle(
+            [FromRoute] string projectId,
             Request request,
             CurrentUser currentUser,
             IProjectService projectService,
-            ICompanyService companyService,
-            [FromRoute] string projectId)
+            ICompanyService companyService)
     {
         // HACK:: When no memberId is present, remove the project manager. too lazy to make another endpoint
         if (request.memberId == null)

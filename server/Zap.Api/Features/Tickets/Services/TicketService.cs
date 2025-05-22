@@ -126,7 +126,7 @@ public class TicketService : ITicketService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<bool> UpdateAsigneeAsync(string ticketId, string memberId)
+    public async Task<bool> UpdateAsigneeAsync(string ticketId, string? memberId)
     {
         var rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
@@ -223,5 +223,30 @@ public class TicketService : ITicketService
             .FirstOrDefaultAsync();
 
         return memberRole == RoleNames.Developer;
+    }
+
+    public async Task<bool> ValidateCompanyAsync(string ticketId, string? companyId)
+    {
+        var ticketCompanyId = await _db.Tickets
+                .Where(t => t.Id == ticketId)
+                .Select(t => t.Project.CompanyId)
+                .FirstOrDefaultAsync();
+
+        return (ticketCompanyId != null && ticketCompanyId == companyId);
+    }
+
+    public async Task<List<MemberInfoDto>> GetProjectDevelopersAsync(string ticketId)
+    {
+        return await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .SelectMany(t => t.Project.AssignedMembers)
+            .Where(am => am.Role.Name == RoleNames.Developer)
+            .Select(am => new MemberInfoDto(
+                        am.Id,
+                        $"{am.User.FirstName} {am.User.LastName}",
+                        am.User.AvatarUrl,
+                        am.Role.Name
+                        ))
+            .ToListAsync();
     }
 }

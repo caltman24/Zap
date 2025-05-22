@@ -31,23 +31,13 @@ export default function ProjectManagerListModal({
   buttonText }: MemberListModalProps) {
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null);
 
-  useEffect(() => {
-    if (currentPM) {
-      setSelectedMember({
-        id: currentPM.id,
-        name: currentPM.name
-      })
-    }
-  }, [currentPM])
-
-
   const memberSelectItemClassName = (memberId: string) =>
     selectedMember?.id === memberId
       ? "bg-base-200"
       : ""
 
   function handleOnMemberSelect(member: any) {
-    if (selectedMember?.id === member.id) return;
+    if (currentPM?.id === member.id || selectedMember?.id === member.id) return;
     setSelectedMember(member)
   }
 
@@ -91,13 +81,16 @@ export default function ProjectManagerListModal({
                   {members?.map(m => {
                     return (
                       <li key={`${m.id}-${m.name}`}
-                        className={`list-row flex items-center cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(m.id)}`}
+                        className={`list-row flex flex-col cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(m.id)}`}
                         onClick={() => handleOnMemberSelect(m)}>
-                        <div className="flex gap-4 items-center">
-                          <div className="avatar rounded-full w-10 h-10">
-                            <img src={m.avatarUrl} className="w-full h-auto rounded-full" />
+                        {m.id === currentPM?.id && <p className="text-info/40 text-xs">Already Assigned</p>}
+                        <div className="flex gap-1 items-center">
+                          <div className="flex gap-4 items-center">
+                            <div className="avatar rounded-full w-10 h-10">
+                              <img src={m.avatarUrl} className="w-full h-auto rounded-full" />
+                            </div>
+                            <p className="">{m.name}</p>
                           </div>
-                          <p className="">{m.name}</p>
                         </div>
                       </li>
                     )

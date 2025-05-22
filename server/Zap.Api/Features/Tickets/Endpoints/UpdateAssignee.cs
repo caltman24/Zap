@@ -16,7 +16,7 @@ public class UpdateAssignee : IEndpoint
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketCompanyValidation();
 
-    public record Request(string MemberId);
+    public record Request(string? MemberId);
 
     private static async Task<Results<NotFound, BadRequest<string>, ForbidHttpResult, NoContent>> Handle(
             [FromRoute] string ticketId,
@@ -25,17 +25,14 @@ public class UpdateAssignee : IEndpoint
             CurrentUser currentUser
             )
     {
-        // Make sure the user is the assigned PM of the ticket's project
-        if (currentUser.Role == RoleNames.ProjectManager)
+        if (request.MemberId != null)
         {
-            var validPm = await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id);
-            if (!validPm) TypedResults.Forbid();
+            // Make sure the requesting assigne id is an assigned member of the ticket's project
+            var validAssignee = await ticketService.ValidateAssigneeAsync(ticketId, request.MemberId);
+            if (!validAssignee) return TypedResults.BadRequest("Member of AssigneeId is not an assigned developer of the ticket's project");
         }
 
-        // Make sure the requesting assigne id is an assigned member of the ticket's project
-        var validAssignee = await ticketService.ValidateAssigneeAsync(ticketId, request.MemberId);
-        if (!validAssignee) return TypedResults.BadRequest("Member of AssigneeId is not an assigned developer of the ticket's project");
-
+        // We can allow a null memberId, this removes the assignee
         var success = await ticketService.UpdateAsigneeAsync(ticketId, request.MemberId);
 
         if (!success) return TypedResults.NotFound();

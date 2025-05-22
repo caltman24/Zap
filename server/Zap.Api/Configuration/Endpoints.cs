@@ -85,7 +85,14 @@ public static class Endpoints
             .MapEndpoint<GetTicket>()
             .MapEndpoint<GetMyTickets>()
             .MapEndpoint<GetOpenTickets>()
-            .MapEndpoint<DeleteTicket>();
+            .MapEndpoint<GetDeveloperList>()
+            .MapEndpoint<DeleteTicket>()
+            .MapEndpoint<UpdateAssignee>()
+            .MapEndpoint<UpdatePriority>()
+            .MapEndpoint<UpdateStatus>()
+            .MapEndpoint<UpdateType>()
+            .MapEndpoint<UpdateTicket>();
+
 
         return app;
     }
