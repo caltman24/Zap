@@ -48,11 +48,11 @@ public class UpdateTicket : IEndpoint
             )
     {
         var success = await ticketService.UpdateTicketAsync(ticketId, new UpdateTicketDto(
-                    "",
-                    "",
-                    "",
-                    "",
-                    ""));
+                    request.Name,
+                    request.Description,
+                    request.Priority,
+                    request.Status,
+                    request.Type));
         if (!success) return TypedResults.Problem();
 
         return TypedResults.NoContent();

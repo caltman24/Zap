@@ -20,7 +20,7 @@ public class GetUnassignedCompanyMembers : IEndpoint
         BadRequest<string>,
         ForbidHttpResult,
         Ok<SortedDictionary<string, List<MemberInfoDto>>>>>
-        Handle(IProjectService projectService, CurrentUser currentUser, [FromRoute] string projectId)
+        Handle([FromRoute] string projectId, IProjectService projectService, CurrentUser currentUser)
     {
         var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
         if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin)

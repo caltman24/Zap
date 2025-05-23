@@ -13,6 +13,7 @@ import tryCatch from "~/utils/tryCatch";
 import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
 import roleNames from "~/data/roles";
+import MembersListTable from "~/components/MembersListTable";
 
 export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
@@ -129,24 +130,12 @@ export default function CompanyRoute() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const companyInfo = data as CompanyInfoResponse | null;
+    console.log(companyInfo?.members)
     const memberList = Object.entries(companyInfo?.members ?? {}).map(([role, members]) => {
         return (
-            <div key={role} className="my-4">
+            <div key={role} className="my-4 bg-base-300 p-4 rounded-sm">
                 <h3 className="text-lg font-medium">{role}</h3>
-                <ul className="flex flex-wrap gap-6 mt-4">
-                    {members.map((member, index) => (
-                        <li key={index}>
-                            <div className="flex gap-2 items-center">
-                                <div className="avatar">
-                                    <div className="w-11 rounded-full">
-                                        <img src={member.avatarUrl} />
-                                    </div>
-                                </div>
-                                <p className="text-lg">{member.name}</p>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                <MembersListTable members={members as any} />
             </div>
         );
     })
@@ -296,8 +285,9 @@ export default function CompanyRoute() {
                                 </div>
 
                                 <div className="mt-8">
-                                    <h2 className="text-xl font-bold mb-4">Members</h2>
-                                    {memberList && memberList}
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {memberList && memberList}
+                                    </div>
                                 </div>
                             </>
                             )}

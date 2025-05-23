@@ -2,7 +2,7 @@ import { FetcherWithComponents } from "@remix-run/react"
 import { RefObject, useEffect, useState } from "react"
 import { BasicUserInfo, CompanyMemberPerRole } from "~/services/api.server/types"
 
-export type RemoveMemberListModalProps = {
+export type DeveloperListModalProps = {
     members?: BasicUserInfo[] | null,
     currentMember?: BasicUserInfo
     error?: string | null,
@@ -11,13 +11,13 @@ export type RemoveMemberListModalProps = {
     modalRef: RefObject<HTMLDialogElement> | undefined
 }
 
-export default function RemoveMemberListModal({
+export default function DeveloperListModal({
     members,
     currentMember,
     error,
     actionFetcher,
     actionFetcherSubmit,
-    modalRef }: RemoveMemberListModalProps) {
+    modalRef }: DeveloperListModalProps) {
     const [selectedMember, setSelectedMember] = useState<{ id: string, name: string } | null>(null)
 
     const memberSelectItemClassName = (memberId: string) =>
@@ -73,7 +73,7 @@ export default function RemoveMemberListModal({
                 <div className="mt-4">
                     <>
                         {members?.length === 0
-                            ? <p>No more members to remove</p>
+                            ? <p>No developers assigned to project</p>
                             : (<ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto">
                                 {members?.map(m => {
                                     return (

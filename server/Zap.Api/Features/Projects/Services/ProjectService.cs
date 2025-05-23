@@ -267,14 +267,27 @@ public sealed class ProjectService : IProjectService
         var project = await _db.Projects
             .Where(p => p.Id == projectId)
             .Include(p => p.AssignedMembers)
+            .Include(p => p.Tickets)
             .FirstOrDefaultAsync();
 
         if (project == null) return removeResult;
 
         try
         {
-            var member = await _db.CompanyMembers.FirstOrDefaultAsync(m => m.Id == memberId);
+            var member = await _db.CompanyMembers
+                .Where(m => m.Id == memberId)
+                .Include(m => m.Role)
+                .FirstOrDefaultAsync();
             if (member == null) return removeResult;
+
+            // If the member getting removed is a developer, unassigned them from the project tickets
+            if (member.Role.Name == RoleNames.Developer)
+            {
+                await _db.Tickets
+                    .Where(t => t.ProjectId == project.Id)
+                    .Where(t => t.AssigneeId == member.Id)
+                    .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.AssigneeId, t => null));
+            }
 
             removeResult = project.AssignedMembers.Remove(member);
             await _db.SaveChangesAsync();
