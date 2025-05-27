@@ -7,6 +7,7 @@ public class Ticket
     public string Id { get; set; } = Guid.NewGuid().ToString();
     [StringLength(50)] public required string Name { get; set; }
     [StringLength(1000)] public required string Description { get; set; }
+    public bool IsArchived { get; set; } = false;
 
     public required string ProjectId { get; set; }
     public Project Project { get; set; } = null!;
