@@ -1,24 +1,43 @@
-[] - Create new ticket
-        - project select:
-        admins: all projects
-        project manager: assigned projects
-        submitter: assigned projects
-        DEVS CANNOT SUBMIT
-        - Auto select project when creating ticket from project ui
-        - Edit in by themseleves: priority, status, type
-        - 1 submitter: cannot change
-        - 1 assigne
+// QUESTIONS ?? //
+[] - Project: What happens assigned member/pm is removed from company?
+[] - Ticket: What happens assigned member / submitter is removed from company?
+[] - Ticket: What happens assigned member / submitter is removed from parent project?
+[] - Dashboard: Does it change based off role?
+[] - Dashboard: Is the dashboard only for admins? (probably not)
 
-[] - Ticket assigned member validation
-[] - Priority, Status, and Type validation middleware or filter
-[] - assign to ticket
-[] - add ticket to project
-[] - change priority & status
+
+// TODO //
+[] - Client: archive ticket
+[] - Client: all tickets view for project tickets
+[] - Client: sort/filter tickets table
+[] - Client: filter tickets table to show resolved tickets
+
+[] - Server: Figure out ticket-member delete behaviors on db
+
+[] - Client: role validation
+[] - Client: Project Priority easy change (similar to ticket)
+[] - Client: Project remove member modal info/confirmation
+[] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
+[] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
+[] - Client: Finish Resolved Tickets route
+[] - Client: Finish My tickets route
+[] - Client: Review and polish routes/breadcrumbs for better UX and navigation
+
 
 [] - add comments to ticket
 [] - add history to ticket
 [] - add attatchements to ticket
 
+[] - User settings page
+[] - Admin: Manage user roles
+[] - Admin: Manage company members
+[] - Invite codes / emails
+[] - Join company via invite
+[] - Dynamic Dashboard
+[] - Realtime notifications
+
+
+// TESTS //
 [] - Projects Tests
         + Assigning PMs
         + Editing project details / archive
@@ -31,3 +50,16 @@
         + comments
         + history
         + attatchments
+
+
+// COMPLETE //
+[X] - Create new ticket
+[X] - Ticket assigned member validation
+[X] - Priority, Status, and Type validation middleware or filter
+[X] - assign to ticket
+[X] - add ticket to project
+[X] - change priority & status
+[X] - archive ticket
+[X] - Server: role validation / member companyId & resource companyId validation
+[X] - On remove developer from project: remove from assigned tickets
+
