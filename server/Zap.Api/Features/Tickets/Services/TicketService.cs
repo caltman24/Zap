@@ -249,4 +249,13 @@ public class TicketService : ITicketService
                         ))
             .ToListAsync();
     }
+
+    public async Task<bool> ToggleArchiveTicket(string ticketId)
+    {
+        int rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId)
+            .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, t => !t.IsArchived));
+
+        return rowsChanged > 0;
+    }
 }

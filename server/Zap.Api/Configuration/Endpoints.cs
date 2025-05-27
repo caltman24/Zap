@@ -91,7 +91,8 @@ public static class Endpoints
             .MapEndpoint<UpdatePriority>()
             .MapEndpoint<UpdateStatus>()
             .MapEndpoint<UpdateType>()
-            .MapEndpoint<UpdateTicket>();
+            .MapEndpoint<UpdateTicket>()
+            .MapEndpoint<ArchiveTicket>();
 
 
         return app;

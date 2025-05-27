@@ -12,7 +12,7 @@ public interface ITicketService
     public Task DeleteTicketAsync(string ticketId);
 
     ///<summary>
-    /// Validate if the member is the actual project manager of the ticket project
+    /// Validate if the member is the actual project manager of the ticket's parenting project
     ///</summary>
     public Task<bool> ValidateProjectManagerAsync(string ticketId, string memberId);
 
@@ -28,6 +28,7 @@ public interface ITicketService
     public Task<bool> UpdateStatusAsync(string ticketId, string status);
     public Task<bool> UpdateTypeAsync(string ticketId, string type);
     public Task<bool> UpdateTicketAsync(string ticketId, UpdateTicketDto ticket);
+    public Task<bool> ToggleArchiveTicket(string ticketId);
 
     public Task<List<MemberInfoDto>> GetProjectDevelopersAsync(string ticketId);
 }
