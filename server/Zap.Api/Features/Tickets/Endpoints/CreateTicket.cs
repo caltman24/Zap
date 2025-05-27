@@ -46,16 +46,16 @@ public class CreateTicket : IEndpoint
             IProjectService projectService
             )
     {
+        var userRole = currentUser.Member!.Role.Name;
+
         // INFO: Can only create a ticket if user is admin of the requesting project's company
         // OR if the user is an assigned member to the requesting project
-        if (currentUser.Role == RoleNames.Admin)
+        if (userRole == RoleNames.ProjectManager)
         {
-            var sameCompany = await projectService.ValidateCompanyAsync(request.ProjectId, currentUser.Member!.Id);
-            if (sameCompany) return TypedResults.Forbid();
+            var isAssignedProjectMember = await projectService.ValidateAssignedMemberAsync(request.ProjectId, currentUser.Member!.Id);
+            if (!isAssignedProjectMember) return TypedResults.Forbid();
         }
 
-        var isAssignedProjectMember = await projectService.ValidateAssignedMemberAsync(request.ProjectId, currentUser.Member!.Id);
-        if (!isAssignedProjectMember) return TypedResults.Forbid();
 
         var newTicket = await ticketService.CreateTicketAsync(new CreateTicketDto(
             request.Name,

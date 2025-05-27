@@ -186,16 +186,6 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                                                 </li>
                                                                 {isAdmin && (
                                                                     <>
-                                                                        <li>
-                                                                            <Form method="post" action={`/projects/${project.id}/archive`} className="block">
-                                                                                <button type="submit" name="intent" value={project?.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                                    <span className={`material-symbols-outlined ${project?.isArchived ? "text-warning" : ""}`}>folder</span>
-                                                                                    <p className="w-full">
-                                                                                        {project?.isArchived ? "Unarchive" : "Archive"}
-                                                                                    </p>
-                                                                                </button>
-                                                                            </Form>
-                                                                        </li>
                                                                         {!project.isArchived && (
                                                                             <>
                                                                                 <li>
@@ -214,6 +204,16 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                                                                 )}
                                                                             </>
                                                                         )}
+                                                                        <li>
+                                                                            <Form method="post" action={`/projects/${project.id}/archive`} className="block hover:bg-warning/10 hover:text-warning">
+                                                                                <button type="submit" name="intent" value={project?.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                                    <span className={`material-symbols-outlined`}>folder</span>
+                                                                                    <p className="w-full">
+                                                                                        {project?.isArchived ? "Unarchive" : "Archive"}
+                                                                                    </p>
+                                                                                </button>
+                                                                            </Form>
+                                                                        </li>
                                                                     </>
                                                                 )}
                                                             </ul>

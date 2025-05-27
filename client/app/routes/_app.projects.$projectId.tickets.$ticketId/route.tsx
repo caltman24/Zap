@@ -114,16 +114,6 @@ export default function TicketDetailsRoute() {
                                     </li>
                                     {true && (
                                         <>
-                                            <li>
-                                                <Form method="post" className="block">
-                                                    <button type="submit" name="intent" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                        <span className={`material-symbols-outlined `}>folder</span>
-                                                        <p className="w-full">
-                                                            Archive Ticket
-                                                        </p>
-                                                    </button>
-                                                </Form>
-                                            </li>
                                             {true && (
                                                 <>
                                                     <li>
@@ -140,6 +130,25 @@ export default function TicketDetailsRoute() {
                                                             </a>
                                                         </li>
                                                     )}
+                                                    <li>
+                                                        <Form method="post" className="block hover:bg-warning/10 hover:text-warning">
+                                                            <button type="submit" name="intent" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                <span className={`material-symbols-outlined `}>folder</span>
+                                                                <p className="w-full">
+                                                                    Archive
+                                                                </p>
+                                                            </button>
+                                                        </Form>
+                                                    </li>
+                                                    <li>
+                                                        <Form method="post" action={`/tickets/${ticketId}/delete`} className="block hover:text-error hover:bg-error/10">
+                                                            <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                <input type="text" name="projectId" value={ticket.projectId} className="hidden" hidden />
+                                                                <span className={`material-symbols-outlined`}>delete</span>
+                                                                <p className="w-full">Delete</p>
+                                                            </button>
+                                                        </Form>
+                                                    </li>
                                                 </>
                                             )}
                                         </>
@@ -164,10 +173,6 @@ export default function TicketDetailsRoute() {
                         </>
                     )}
                 </div>
-                <Form method="post" action={`/tickets/${ticketId}/delete`} >
-                    <input type="hidden" value={ticket.projectId} name="projectId"></input>
-                    <button type="submit" className="btn btn-error btn-sm">Delete</button>
-                </Form>
             </div>
 
 
