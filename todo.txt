@@ -2,12 +2,16 @@
 [] - Project: What happens assigned member/pm is removed from company?
 [] - Ticket: What happens assigned member / submitter is removed from company?
 [] - Ticket: What happens assigned member / submitter is removed from parent project?
+[] - Project: When a project is archived, do the tickets get archived too?
 [] - Dashboard: Does it change based off role?
 [] - Dashboard: Is the dashboard only for admins? (probably not)
 
 
 // TODO //
-[] - Client: archive ticket
+[] - add comments to ticket
+[] - add history to ticket
+[] - add attatchements to ticket
+
 [] - Client: all tickets view for project tickets
 [] - Client: sort/filter tickets table
 [] - Client: filter tickets table to show resolved tickets
@@ -18,15 +22,11 @@
 [] - Client: Project Priority easy change (similar to ticket)
 [] - Client: Project remove member modal info/confirmation
 [] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
-[] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
 [] - Client: Finish Resolved Tickets route
 [] - Client: Finish My tickets route
 [] - Client: Review and polish routes/breadcrumbs for better UX and navigation
 
 
-[] - add comments to ticket
-[] - add history to ticket
-[] - add attatchements to ticket
 
 [] - User settings page
 [] - Admin: Manage user roles
@@ -62,4 +62,5 @@
 [X] - archive ticket
 [X] - Server: role validation / member companyId & resource companyId validation
 [X] - On remove developer from project: remove from assigned tickets
+[X] - Client: archive ticket
 

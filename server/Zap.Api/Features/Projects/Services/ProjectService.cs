@@ -47,6 +47,7 @@ public sealed class ProjectService : IProjectService
                     t.Status.Name,
                     t.Type.Name,
                     t.ProjectId,
+                    t.IsArchived,
                     new MemberInfoDto(
                         t.Submitter.Id,
                         $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",

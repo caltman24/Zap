@@ -120,6 +120,7 @@ export type BasicTicketInfo = {
   projectId: string;
   submitter: BasicUserInfo;
   assignee: BasicUserInfo | null;
+  isArchived: boolean;
 };
 
 export type CreateTicketResult = {

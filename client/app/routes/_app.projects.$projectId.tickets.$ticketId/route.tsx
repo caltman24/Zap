@@ -14,6 +14,8 @@ import { EditModeForm } from "~/components/EditModeForm";
 import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
 import updateTicket from "./server.update-ticket";
+import ChatBox from "./ChatBox";
+import TicketTimeline from "./TicketTimeline";
 export const handle = {
     breadcrumb: (match: any) => {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
@@ -60,6 +62,7 @@ export default function TicketDetailsRoute() {
     const getDevelopersFetcher = useFetcher({ key: "get-devs" })
     const assignDeveloperFetcher = useFetcher({ key: "update-dev" })
 
+
     const developersModalRef = useRef<HTMLDialogElement>(null)
 
     const handleOnGetDevelopers = () => {
@@ -81,8 +84,6 @@ export default function TicketDetailsRoute() {
 
     // TODO: Update permissions
 
-    // TODO: Move delete button under edit dropdown
-    //
     // TODO: Add confirm modal on delete
 
     if (error) {
@@ -92,86 +93,92 @@ export default function TicketDetailsRoute() {
     const TicketDetails = (
         <>
             <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                    <h1 className="text-3xl font-bold mb-2">{ticket.name}</h1>
-                    {true && (
-                        <>
-                            <div className="dropdown dropdown-center">
-                                <div tabIndex={0} role="button" className="btn btn-sm shadow-sm btn-soft flex gap-1 p-0 items-center border-0">
-                                    <div className="bg-base-200 grid place-items-center w-full h-full py-0.5 px-2 rounded-tl-sm rounded-bl-sm">
-                                        <span className="!text-lg material-symbols-outlined w-full">edit</span>
+                <div>
+                    {ticket.isArchived &&
+                        <div className="badge badge-warning font-medium mb-2">Archived</div>
+                    }
+                    <div className="flex gap-2 items-center">
+                        <h1 className="text-3xl font-bold mb-2">{ticket.name}</h1>
+                        {true && (
+                            <>
+                                <div className="dropdown dropdown-center">
+                                    <div tabIndex={0} role="button" className="btn btn-sm shadow-sm btn-soft flex gap-1 p-0 items-center border-0">
+                                        <div className="bg-base-200 grid place-items-center w-full h-full py-0.5 px-2 rounded-tl-sm rounded-bl-sm">
+                                            <span className="!text-lg material-symbols-outlined w-full">edit</span>
+                                        </div>
+                                        <svg className="w-5 pr-1" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
+                                        </svg>
                                     </div>
-                                    <svg className="w-5 pr-1" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
-                                    </svg>
-                                </div>
-                                <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
-                                    <li>
-                                        <a onClick={handleEditToggle} className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined">edit</span>
-                                            Ticket Details
-                                        </a>
-                                    </li>
-                                    {true && (
-                                        <>
-                                            {true && (
-                                                <>
-                                                    <li>
-                                                        <a onClick={() => handleOnGetDevelopers()}>
-                                                            <span className="material-symbols-outlined">person_add</span>
-                                                            Assign Developer
-                                                        </a>
-                                                    </li>
-                                                    {ticket.assignee && (
+                                    <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
+                                        <li>
+                                            <a onClick={handleEditToggle} className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined">edit</span>
+                                                Ticket Details
+                                            </a>
+                                        </li>
+                                        {true && (
+                                            <>
+                                                {true && (
+                                                    <>
                                                         <li>
-                                                            <a onClick={() => handleOnUnassignDeveloper()}>
-                                                                <span className="material-symbols-outlined">person_remove</span>
-                                                                Unassign Developer
+                                                            <a onClick={() => handleOnGetDevelopers()}>
+                                                                <span className="material-symbols-outlined">person_add</span>
+                                                                Assign Developer
                                                             </a>
                                                         </li>
-                                                    )}
-                                                    <li>
-                                                        <Form method="post" className="block hover:bg-warning/10 hover:text-warning">
-                                                            <button type="submit" name="intent" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                <span className={`material-symbols-outlined `}>folder</span>
-                                                                <p className="w-full">
-                                                                    Archive
-                                                                </p>
-                                                            </button>
-                                                        </Form>
-                                                    </li>
-                                                    <li>
-                                                        <Form method="post" action={`/tickets/${ticketId}/delete`} className="block hover:text-error hover:bg-error/10">
-                                                            <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                <input type="text" name="projectId" value={ticket.projectId} className="hidden" hidden />
-                                                                <span className={`material-symbols-outlined`}>delete</span>
-                                                                <p className="w-full">Delete</p>
-                                                            </button>
-                                                        </Form>
-                                                    </li>
-                                                </>
-                                            )}
-                                        </>
+                                                        {ticket.assignee && (
+                                                            <li>
+                                                                <a onClick={() => handleOnUnassignDeveloper()}>
+                                                                    <span className="material-symbols-outlined">person_remove</span>
+                                                                    Unassign Developer
+                                                                </a>
+                                                            </li>
+                                                        )}
+                                                        <li>
+                                                            <Form method="post" className="block hover:bg-warning/10 hover:text-warning" action={`/tickets/${ticketId}/archive`}>
+                                                                <input type="text" name="projectId" value={ticket.projectId} className="hidden" hidden aria-hidden />
+                                                                <button type="submit" name="intent" value={ticket.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                    <span className={`material-symbols-outlined `}>folder</span>
+                                                                    <p className="w-full">
+                                                                        {ticket.isArchived ? "Unarchive" : "Archive"}
+                                                                    </p>
+                                                                </button>
+                                                            </Form>
+                                                        </li>
+                                                        <li>
+                                                            <Form method="post" action={`/tickets/${ticketId}/delete`} className="block hover:text-error hover:bg-error/10">
+                                                                <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                    <input type="text" name="projectId" value={ticket.projectId} className="hidden" hidden aria-hidden />
+                                                                    <span className={`material-symbols-outlined`}>delete</span>
+                                                                    <p className="w-full">Delete</p>
+                                                                </button>
+                                                            </Form>
+                                                        </li>
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                    </ul>
+                                    {true && (
+                                        <DeveloperListModal
+                                            modalRef={developersModalRef}
+                                            members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
+                                            currentMember={ticket.assignee}
+                                            actionFetcher={assignDeveloperFetcher}
+                                            actionFetcherSubmit={(formData) => {
+                                                assignDeveloperFetcher.submit(formData, {
+                                                    method: "post",
+                                                    action: `/tickets/${ticketId}/update-dev`
+                                                })
+                                            }}
+                                        />
                                     )}
-                                </ul>
-                                {true && (
-                                    <DeveloperListModal
-                                        modalRef={developersModalRef}
-                                        members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
-                                        currentMember={ticket.assignee}
-                                        actionFetcher={assignDeveloperFetcher}
-                                        actionFetcherSubmit={(formData) => {
-                                            assignDeveloperFetcher.submit(formData, {
-                                                method: "post",
-                                                action: `/tickets/${ticketId}/update-dev`
-                                            })
-                                        }}
-                                    />
-                                )}
-                            </div>
-                            {/* Archive/Unarchive Project button */}
-                        </>
-                    )}
+                                </div>
+                                {/* Archive/Unarchive Project button */}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -303,7 +310,7 @@ export default function TicketDetailsRoute() {
 
             <div className="flex flex-col mt-4">
                 <p className="text-lg font-medium">Description:</p>
-                <p className="text-base-content/70">{ticket.description}</p>
+                <p className="">{ticket.description}</p>
             </div>
         </>
     )
@@ -312,11 +319,11 @@ export default function TicketDetailsRoute() {
     return (
         <RouteLayout>
             {ticket ? (
-                <>
+                <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-center mb-2">
                         <BackButton />
                     </div>
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6 mb-6">
+                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
                         {isEditing ? (
                             <EditModeForm
                                 error={formError}
@@ -394,11 +401,31 @@ export default function TicketDetailsRoute() {
                             </EditModeForm>
                         ) : (<>{TicketDetails}</>)}
                     </div>
+
                     <div className="bg-base-100 rounded-lg shadow-lg p-6">
                         <h2 className="text-xl font-bold mb-4">Comments</h2>
-                        <p className="text-base-content/60">Comments feature coming soon</p>
+                        <div className="max-w-6xl">
+                            <ChatBox className="p-4 flex flex-col max-h-[600px] overflow-y-scroll" />
+                            <Form className="mt-4" navigate={false} action={`/tickets/${ticketId}/add-comment`}>
+                                <div className="flex gap-2">
+                                    <button type="submit" className="btn btn-primary">Send</button>
+                                    <textarea placeholder="Message" className="textarea w-full resize-none field-sizing-content min-h-auto" />
+                                </div>
+                            </Form>
+                        </div>
                     </div>
-                </>
+
+                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                        <h2 className="text-xl font-bold mb-4">Attachments</h2>
+                    </div>
+
+                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                        <h2 className="text-xl font-bold mb-4">History</h2>
+                        <div className="max-w-lg">
+                            <TicketTimeline />
+                        </div>
+                    </div>
+                </div>
             ) : (
                 <div className="flex justify-center items-center h-full">
                     <p>Loading ticket details...</p>

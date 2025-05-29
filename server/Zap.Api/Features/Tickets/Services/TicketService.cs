@@ -53,6 +53,7 @@ public class TicketService : ITicketService
                 t.Status.Name,
                 t.Type.Name,
                 t.ProjectId,
+                t.IsArchived,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -82,6 +83,7 @@ public class TicketService : ITicketService
                 t.Status.Name,
                 t.Type.Name,
                 t.ProjectId,
+                t.IsArchived,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -110,6 +112,7 @@ public class TicketService : ITicketService
                 t.Status.Name,
                 t.Type.Name,
                 t.ProjectId,
+                t.IsArchived,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
