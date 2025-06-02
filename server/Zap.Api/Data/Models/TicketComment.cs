@@ -12,8 +12,8 @@ public class TicketComment
     public required string SenderId { get; set; }
     public CompanyMember Sender { get; set; } = default!;
 
-    public string Message { get; set; } = default!;
-    public DateTime CreatedAt { get; set; } = default!;
+    [MaxLength(150)] public string Message { get; set; } = default!;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
 }

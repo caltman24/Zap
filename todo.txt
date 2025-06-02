@@ -8,7 +8,8 @@
 
 
 // TODO //
-[] - add comments to ticket
+[X] - add comments to ticket
+[] - edit owned comments
 [] - add history to ticket
 [] - add attatchements to ticket
 

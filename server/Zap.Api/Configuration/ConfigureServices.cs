@@ -48,6 +48,9 @@ public static class ConfigureServices
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<ITicketService, TicketService>();
 
+
+        services.AddScoped<ITicketCommentsService, TicketCommentsService>();
+
         return services;
     }
 

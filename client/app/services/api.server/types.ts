@@ -126,3 +126,12 @@ export type BasicTicketInfo = {
 export type CreateTicketResult = {
   id: string;
 };
+
+export type TicketComment = {
+  id: string;
+  ticketId: string;
+  sender: BasicUserInfo;
+  message: string;
+  createdAt: string;
+  updatedAt: string | null;
+};

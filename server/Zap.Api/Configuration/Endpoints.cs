@@ -94,6 +94,9 @@ public static class Endpoints
             .MapEndpoint<UpdateTicket>()
             .MapEndpoint<ArchiveTicket>();
 
+        group.MapEndpoint<CreateComment>()
+            .MapEndpoint<GetComments>();
+
 
         return app;
     }

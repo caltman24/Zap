@@ -108,7 +108,7 @@ public class AppDbContext : IdentityUserContext<AppUser>
         builder.Entity<TicketComment>()
             .HasOne(c => c.Ticket)
             .WithMany()
-            .HasForeignKey(c => c.SenderId);
+            .HasForeignKey(c => c.TicketId);
 
         // Ticket Attachments
         builder.Entity<TicketAttachment>()

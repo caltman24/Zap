@@ -1,6 +1,6 @@
 
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigate, useNavigation, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
+import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigate, useNavigation, useOutletContext, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient"; import { AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server"; import { ActionResponse, ActionResponseParams, ActionResponseResult, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
@@ -8,7 +8,7 @@ import { getTicketById } from "./server.get-ticket";
 import BackButton from "~/components/BackButton";
 import { useEffect, useRef } from "react";
 import DeveloperListModal from "./DeveloperListModal";
-import { BasicUserInfo } from "~/services/api.server/types";
+import { BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
 import { useEditMode } from "~/utils/editMode";
 import { EditModeForm } from "~/components/EditModeForm";
 import { validateRole } from "~/utils/validate";
@@ -52,6 +52,7 @@ export default function TicketDetailsRoute() {
     const { ticketId } = useParams();
     const actionData = useActionData() as ActionResponseParams
     const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+    const { _, userInfo } = useOutletContext<any>();
 
     const navigation = useNavigation()
 
@@ -61,6 +62,18 @@ export default function TicketDetailsRoute() {
 
     const getDevelopersFetcher = useFetcher({ key: "get-devs" })
     const assignDeveloperFetcher = useFetcher({ key: "update-dev" })
+
+    const commentsFormRef = useRef<HTMLFormElement>(null);
+
+    const getCommentsFetcher = useFetcher({ key: "get-comments" })
+    useEffect(() => {
+        getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
+    }, [])
+    useEffect(() => {
+        if (getCommentsFetcher.state === "idle" && getCommentsFetcher.data) {
+            commentsFormRef.current?.reset();
+        }
+    }, [getCommentsFetcher.state, getCommentsFetcher.data])
 
 
     const developersModalRef = useRef<HTMLDialogElement>(null)
@@ -137,8 +150,8 @@ export default function TicketDetailsRoute() {
                                                         )}
                                                         <li>
                                                             <Form method="post" className="block hover:bg-warning/10 hover:text-warning" action={`/tickets/${ticketId}/archive`}>
-                                                                <input type="text" name="projectId" value={ticket.projectId} className="hidden" hidden aria-hidden />
-                                                                <button type="submit" name="intent" value={ticket.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
+                                                                <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
+                                                                <button type="submit" name="intent" defaultValue={ticket.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
                                                                     <span className={`material-symbols-outlined `}>folder</span>
                                                                     <p className="w-full">
                                                                         {ticket.isArchived ? "Unarchive" : "Archive"}
@@ -149,7 +162,7 @@ export default function TicketDetailsRoute() {
                                                         <li>
                                                             <Form method="post" action={`/tickets/${ticketId}/delete`} className="block hover:text-error hover:bg-error/10">
                                                                 <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                    <input type="text" name="projectId" value={ticket.projectId} className="hidden" hidden aria-hidden />
+                                                                    <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
                                                                     <span className={`material-symbols-outlined`}>delete</span>
                                                                     <p className="w-full">Delete</p>
                                                                 </button>
@@ -405,11 +418,24 @@ export default function TicketDetailsRoute() {
                     <div className="bg-base-100 rounded-lg shadow-lg p-6">
                         <h2 className="text-xl font-bold mb-4">Comments</h2>
                         <div className="max-w-6xl">
-                            <ChatBox className="p-4 flex flex-col max-h-[600px] overflow-y-scroll" />
-                            <Form className="mt-4" navigate={false} action={`/tickets/${ticketId}/add-comment`}>
+                            <ChatBox
+                                className="p-4 flex flex-col w-full max-h-[600px] overflow-y-scroll"
+                                comments={(getCommentsFetcher.data as any)?.data}
+                                loading={getCommentsFetcher.state === "loading"}
+                                userId={userInfo.memberId} />
+                            <Form
+                                className="mt-4"
+                                method="post"
+                                navigate={false}
+                                fetcherKey="create-comment"
+                                ref={commentsFormRef}
+                                action={`/tickets/${ticketId}/create-comment`}>
                                 <div className="flex gap-2">
                                     <button type="submit" className="btn btn-primary">Send</button>
-                                    <textarea placeholder="Message" className="textarea w-full resize-none field-sizing-content min-h-auto" />
+                                    <textarea
+                                        placeholder="Message"
+                                        name="message"
+                                        className="textarea w-full resize-none field-sizing-content min-h-auto" />
                                 </div>
                             </Form>
                         </div>
