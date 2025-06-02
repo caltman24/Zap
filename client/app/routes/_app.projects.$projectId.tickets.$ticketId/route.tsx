@@ -419,10 +419,11 @@ export default function TicketDetailsRoute() {
                         <h2 className="text-xl font-bold mb-4">Comments</h2>
                         <div className="max-w-6xl">
                             <ChatBox
-                                className="p-4 flex flex-col w-full max-h-[600px] overflow-y-scroll"
+                                className="p-4 flex flex-col w-full max-h-[600px] overflow-y-auto"
                                 comments={(getCommentsFetcher.data as any)?.data}
                                 loading={getCommentsFetcher.state === "loading"}
                                 userId={userInfo.memberId} />
+
                             <Form
                                 className="mt-4"
                                 method="post"

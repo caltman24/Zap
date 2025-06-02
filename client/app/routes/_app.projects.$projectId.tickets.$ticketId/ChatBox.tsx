@@ -48,7 +48,7 @@ export default function ChatBox({ className, comments, userId, loading }: ChatBo
                             {c.sender.name}
                             <time className="text-xs opacity-50">{formatedCreatedAt}</time>
                         </div>
-                        <div className="chat-bubble">{c.message}</div>
+                        <div className="chat-bubble whitespace-pre-line">{c.message}</div>
                         {c.updatedAt && (
                             <div className="chat-footer opacity-50">Edited at: [value]</div>
                         )}
