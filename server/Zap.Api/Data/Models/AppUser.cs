@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace Zap.Api.Data.Models;
@@ -14,4 +15,7 @@ public class AppUser : IdentityUser
     {
         AvatarUrl = $"https://ui-avatars.com/api/?name={FirstName}+{LastName}";
     }
+
+    [NotMapped]
+    public string FullName => $"{FirstName} {LastName}";
 }

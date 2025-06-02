@@ -27,6 +27,10 @@ public class Ticket
     public string? AssigneeId { get; set; }
     public CompanyMember? Assignee { get; set; }
 
+    public ICollection<TicketComment> Comments { get; set; } = [];
+    public ICollection<TicketAttachment> Attachments { get; set; } = [];
+    public ICollection<TicketHistory> History { get; set; } = [];
+
     // attachments: pdfs, word docs(excel ect..), images
     // comments
     // history
