@@ -9,6 +9,7 @@
 
 // TODO //
 [X] - add comments to ticket
+[] - Implement permission based features on ticket details page
 [] - edit owned comments
 [] - add history to ticket
 [] - add attatchements to ticket
