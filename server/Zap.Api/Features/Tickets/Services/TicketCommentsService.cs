@@ -18,6 +18,15 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         await db.SaveChangesAsync();
     }
 
+    public async Task<bool> DeleteCommentAsync(string commentId)
+    {
+        var rowsDeleted = await db.TicketComments
+            .Where(c => c.Id == commentId)
+            .ExecuteDeleteAsync();
+
+        return rowsDeleted > 0;
+    }
+
     public async Task<List<CommentDto>> GetCommentsAsync(string ticketId)
     {
         return await db.TicketComments

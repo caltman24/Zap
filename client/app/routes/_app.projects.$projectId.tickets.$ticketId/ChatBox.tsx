@@ -7,9 +7,10 @@ type ChatBoxProps = {
     comments?: TicketComment[]
     userId: string
     loading: boolean
+    onDeleteComment: (commentId: string) => void
 }
 
-export default function ChatBox({ className, comments, userId, loading }: ChatBoxProps) {
+export default function ChatBox({ className, comments, userId, loading, onDeleteComment }: ChatBoxProps) {
     const scrollableChatContainerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -35,7 +36,7 @@ export default function ChatBox({ className, comments, userId, loading }: ChatBo
                 }
 
                 return (
-                    <div className={`chat ${css}`} key={c.id}>
+                    <div className={`chat ${css} group`} key={c.id}>
                         <div className="chat-image avatar">
                             <div className="w-10 rounded-full">
                                 <img
@@ -48,7 +49,12 @@ export default function ChatBox({ className, comments, userId, loading }: ChatBo
                             {c.sender.name}
                             <time className="text-xs opacity-50">{formatedCreatedAt}</time>
                         </div>
-                        <div className="chat-bubble whitespace-pre-line">{c.message}</div>
+                        <div className="flex gap-2">
+                            {c.sender.id === userId && (
+                                <span onClick={() => onDeleteComment(c.id)} className="material-symbols-outlined text-gray-600 hover:text-error opacity-0 group-hover:opacity-100 transform duration-100 ease-in hover:cursor-pointer">delete</span>
+                            )}
+                            <div className="chat-bubble whitespace-pre-line">{c.message}</div>
+                        </div>
                         {c.updatedAt && (
                             <div className="chat-footer opacity-50">Edited at: [value]</div>
                         )}

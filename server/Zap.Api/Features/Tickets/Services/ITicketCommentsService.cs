@@ -11,6 +11,7 @@ public interface ITicketCommentsService
         );
 
     Task<List<CommentDto>> GetCommentsAsync(string ticketId);
+    Task<bool> DeleteCommentAsync(string commentId);
 }
 
 public record CommentDto(
