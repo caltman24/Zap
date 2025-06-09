@@ -10,11 +10,11 @@
 // TODO //
 [X] - add comments to ticket
 [] - Implement permission based features on ticket details page
-[] - edit owned comments
+[X] - edit owned comments
 [] - add history to ticket
 [] - add attatchements to ticket
 
-[] - Server & Client: Archive tickets when project is archived
+[X] - Server & Client: Archive tickets when project is archived
 
 [] - Client: all tickets view for project tickets
 [] - Client: sort/filter tickets table
