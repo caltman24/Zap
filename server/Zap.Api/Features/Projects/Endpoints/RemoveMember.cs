@@ -13,7 +13,8 @@ public class RemoveMember : IEndpoint
     public static void Map(IEndpointRouteBuilder app)
         => app.MapDelete("/{memberId}", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithProjectCompanyValidation();
+            .WithProjectCompanyValidation()
+            .WithProjectArchiveValidation();
 
     public static async Task<Results<NotFound, ForbidHttpResult, NoContent>> Handle(
             [FromRoute] string projectId,

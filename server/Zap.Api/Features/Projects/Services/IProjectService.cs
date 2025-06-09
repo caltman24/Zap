@@ -12,6 +12,7 @@ public interface IProjectService
     // returns false if already archived
     Task<bool> ToggleArchiveProjectAsync(string projectId);
     Task<bool> UpdateProjectByIdAsync(string projectId, UpdateProjectDto projectDto);
+    Task<bool> UpdateArchivedProjectAsync(string projectId, string name, string description);
 
     Task<bool> UpdateProjectManagerAsync(string projectId, string? memberId);
     ///<summary>

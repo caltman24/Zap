@@ -18,6 +18,7 @@ public class UpdateType : IEndpoint
             .WithName("UpdateTicketType")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
             .WithTicketCompanyValidation()
+            .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
 
     public record Request(string Type);

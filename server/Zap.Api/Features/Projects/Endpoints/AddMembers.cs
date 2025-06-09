@@ -17,7 +17,8 @@ public class AddMembers : IEndpoint
         .Accepts<Request>("application/json")
         .WithRequestValidation<Request>()
         .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-        .WithProjectCompanyValidation();
+        .WithProjectCompanyValidation()
+        .WithProjectArchiveValidation();
 
     public record Request(IEnumerable<string> memberIds);
     public class RequestValidator : AbstractValidator<Request>

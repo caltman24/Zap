@@ -48,6 +48,7 @@ public sealed class ProjectService : IProjectService
                     t.Type.Name,
                     t.ProjectId,
                     t.IsArchived,
+                    p.IsArchived,
                     new MemberInfoDto(
                         t.Submitter.Id,
                         $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -119,6 +120,24 @@ public sealed class ProjectService : IProjectService
 
     public async Task<bool> ToggleArchiveProjectAsync(string projectId)
     {
+        // First, get the current archive status of the project
+        var project = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .Select(p => new { p.IsArchived })
+            .FirstOrDefaultAsync();
+
+        if (project == null) return false;
+
+        // If we're archiving the project (it's currently not archived), also archive all its tickets
+        if (!project.IsArchived)
+        {
+            // Archive all tickets under this project
+            await _db.Tickets
+                .Where(t => t.ProjectId == projectId)
+                .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, true));
+        }
+
+        // Toggle the project archive status
         var rowsChanged = await _db.Projects
             .Where(p => p.Id == projectId)
             .ExecuteUpdateAsync(setter => setter.SetProperty(s => s.IsArchived, s => !s.IsArchived));
@@ -135,6 +154,17 @@ public sealed class ProjectService : IProjectService
                     .SetProperty(p => p.Description, projectDto.Description)
                     .SetProperty(p => p.Priority, projectDto.Priority)
                     .SetProperty(p => p.DueDate, projectDto.DueDate));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> UpdateArchivedProjectAsync(string projectId, string name, string description)
+    {
+        var rowsChanged = await _db.Projects
+            .Where(p => p.Id == projectId && p.IsArchived)
+            .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.Name, name)
+                    .SetProperty(p => p.Description, description));
 
         return rowsChanged > 0;
     }
@@ -308,7 +338,7 @@ public sealed class ProjectService : IProjectService
         if (roleName == RoleNames.ProjectManager)
         {
             return await _db.Projects
-                .Where(p => p.ProjectManagerId == memberId)
+                .Where(p => p.ProjectManagerId == memberId && !p.IsArchived)
                 .Select(p => new BasicProjectDto(p.Id, p.Name))
                 .ToListAsync();
         }
@@ -316,7 +346,7 @@ public sealed class ProjectService : IProjectService
         if (roleName == RoleNames.Admin)
         {
             return await _db.Projects
-                .Where(p => p.CompanyId == companyId)
+                .Where(p => p.CompanyId == companyId && !p.IsArchived)
                 .Select(p => new BasicProjectDto(p.Id, p.Name))
                 .ToListAsync();
         }
@@ -324,6 +354,7 @@ public sealed class ProjectService : IProjectService
         return await _db.CompanyMembers
             .Where(cm => cm.Id == memberId)
             .SelectMany(cm => cm.AssignedProjects)
+            .Where(p => !p.IsArchived)
             .Select(p => new BasicProjectDto(p.Id, p.Name))
             .ToListAsync();
 

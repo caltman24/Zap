@@ -12,7 +12,8 @@ public class DeleteComment : IEndpoint
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapDelete("/{ticketId}/comments/{commentId}", Handle)
             .WithCompanyMember()
-            .WithTicketCompanyValidation();
+            .WithTicketCompanyValidation()
+            .WithTicketArchiveValidation();
 
     private static async Task<Results<NoContent, NotFound>> Handle(
             [FromRoute] string ticketId,

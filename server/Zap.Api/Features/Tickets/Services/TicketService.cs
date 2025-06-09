@@ -54,6 +54,7 @@ public class TicketService : ITicketService
                 t.Type.Name,
                 t.ProjectId,
                 t.IsArchived,
+                t.Project.IsArchived,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -84,6 +85,7 @@ public class TicketService : ITicketService
                 t.Type.Name,
                 t.ProjectId,
                 t.IsArchived,
+                t.Project.IsArchived,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -113,6 +115,7 @@ public class TicketService : ITicketService
                 t.Type.Name,
                 t.ProjectId,
                 t.IsArchived,
+                t.Project.IsArchived,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -258,6 +261,17 @@ public class TicketService : ITicketService
         int rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
             .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, t => !t.IsArchived));
+
+        return rowsChanged > 0;
+    }
+
+    public async Task<bool> UpdateArchivedTicketAsync(string ticketId, string name, string description)
+    {
+        var rowsChanged = await _db.Tickets
+            .Where(t => t.Id == ticketId && t.IsArchived)
+            .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(t => t.Name, name)
+                    .SetProperty(t => t.Description, description));
 
         return rowsChanged > 0;
     }

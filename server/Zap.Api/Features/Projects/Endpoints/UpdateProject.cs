@@ -1,9 +1,11 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Data;
 using Zap.Api.Features.Projects.Filters;
 using Zap.Api.Features.Projects.Services;
 
@@ -30,11 +32,12 @@ public class UpdateProject : IEndpoint
         }
     }
 
-    private static async Task<Results<NoContent, ForbidHttpResult, NotFound<string>>> Handle(
+    private static async Task<Results<NoContent, ForbidHttpResult, NotFound<string>, BadRequest<string>>> Handle(
             [FromRoute] string projectId,
             Request updateProjectRequest,
             CurrentUser currentUser,
-            IProjectService projectService)
+            IProjectService projectService,
+            AppDbContext db)
     {
         var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
         if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin)
@@ -42,7 +45,39 @@ public class UpdateProject : IEndpoint
             return TypedResults.Forbid();
         }
 
-        var success = await projectService.UpdateProjectByIdAsync(
+        // Check if project is archived
+        var project = await db.Projects
+            .Where(p => p.Id == projectId)
+            .Select(p => new { p.IsArchived, p.Name, p.Description, p.Priority, p.DueDate })
+            .FirstOrDefaultAsync();
+
+        if (project == null)
+        {
+            return TypedResults.NotFound("Project not found");
+        }
+
+        // If project is archived, only allow name and description updates
+        if (project.IsArchived)
+        {
+            // Check if only name and description are being changed
+            if (updateProjectRequest.Priority != project.Priority ||
+                updateProjectRequest.DueDate != project.DueDate)
+            {
+                return TypedResults.BadRequest("Archived projects can only have their name and description updated.");
+            }
+
+            // Only update name and description for archived projects
+            var success = await projectService.UpdateArchivedProjectAsync(
+                projectId,
+                updateProjectRequest.Name,
+                updateProjectRequest.Description);
+
+            if (success) return TypedResults.NoContent();
+            return TypedResults.NotFound("Failed to update project.");
+        }
+
+        // For non-archived projects, allow full updates
+        var fullUpdateSuccess = await projectService.UpdateProjectByIdAsync(
                 projectId,
                 new UpdateProjectDto(
                     updateProjectRequest.Name,
@@ -50,8 +85,8 @@ public class UpdateProject : IEndpoint
                     updateProjectRequest.Priority,
                     updateProjectRequest.DueDate));
 
-        if (success) return TypedResults.NoContent();
+        if (fullUpdateSuccess) return TypedResults.NoContent();
 
-        return TypedResults.NotFound("Failed to update company info.");
+        return TypedResults.NotFound("Failed to update project.");
     }
 }

@@ -6,7 +6,7 @@ import { getSession } from "~/services/sessions.server"; import { ActionResponse
 import tryCatch from "~/utils/tryCatch";
 import { getTicketById } from "./server.get-ticket";
 import BackButton from "~/components/BackButton";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import DeveloperListModal from "./DeveloperListModal";
 import { BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
 import { useEditMode } from "~/utils/editMode";
@@ -16,6 +16,7 @@ import permissions from "~/data/permissions";
 import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
+import ArchiveWarningModal from "~/components/ArchiveWarningModal";
 export const handle = {
     breadcrumb: (match: any) => {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
@@ -55,6 +56,9 @@ export default function TicketDetailsRoute() {
     const { _, userInfo } = useOutletContext<any>();
 
     const navigation = useNavigation()
+
+    // State for archive warning modal
+    const [showArchiveWarning, setShowArchiveWarning] = useState(false);
 
     const updatePriorityFetcher = useFetcher({ key: "update-priority" })
     const updateStatusFetcher = useFetcher({ key: "update-status" })
@@ -129,6 +133,16 @@ export default function TicketDetailsRoute() {
         toggleEditMode();
     };
 
+    const handleArchiveClick = (e: React.FormEvent) => {
+        // If trying to unarchive a ticket and the project is archived, show warning
+        if (ticket.isArchived && ticket.projectIsArchived) {
+            e.preventDefault();
+            setShowArchiveWarning(true);
+            return;
+        }
+        // Otherwise, allow the form to submit normally
+    };
+
     // TODO: Update permissions
 
     // TODO: Add confirm modal on delete
@@ -183,7 +197,7 @@ export default function TicketDetailsRoute() {
                                                             </li>
                                                         )}
                                                         <li>
-                                                            <Form method="post" className="block hover:bg-warning/10 hover:text-warning" action={`/tickets/${ticketId}/archive`}>
+                                                            <Form method="post" className="block hover:bg-warning/10 hover:text-warning" action={`/tickets/${ticketId}/archive`} onSubmit={handleArchiveClick}>
                                                                 <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
                                                                 <button type="submit" name="intent" defaultValue={ticket.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
                                                                     <span className={`material-symbols-outlined `}>folder</span>
@@ -494,6 +508,14 @@ export default function TicketDetailsRoute() {
                     <p>Loading ticket details...</p>
                 </div>
             )}
+
+            {/* Archive Warning Modal */}
+            <ArchiveWarningModal
+                isOpen={showArchiveWarning}
+                onClose={() => setShowArchiveWarning(false)}
+                title="Cannot Unarchive Ticket"
+                message="Cannot unarchive this ticket because its project is archived. Please unarchive the project first before unarchiving individual tickets."
+            />
         </RouteLayout>
     );
 }

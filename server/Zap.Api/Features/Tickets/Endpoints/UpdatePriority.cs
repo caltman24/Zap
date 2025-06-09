@@ -18,6 +18,7 @@ public class UpdatePriority : IEndpoint
             .WithName("UpdateTicketPriority")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
             .WithTicketCompanyValidation()
+            .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
 
     public record Request(string Priority);

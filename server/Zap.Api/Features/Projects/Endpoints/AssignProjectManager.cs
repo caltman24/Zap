@@ -14,7 +14,8 @@ public class AssignProjectManager : IEndpoint
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPut("/{projectId}/pm", Handle)
             .WithCompanyMember(RoleNames.Admin)
-            .WithProjectCompanyValidation();
+            .WithProjectCompanyValidation()
+            .WithProjectArchiveValidation();
 
     public record Request(string? memberId);
 

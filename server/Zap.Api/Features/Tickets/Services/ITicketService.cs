@@ -28,6 +28,7 @@ public interface ITicketService
     public Task<bool> UpdateStatusAsync(string ticketId, string status);
     public Task<bool> UpdateTypeAsync(string ticketId, string type);
     public Task<bool> UpdateTicketAsync(string ticketId, UpdateTicketDto ticket);
+    public Task<bool> UpdateArchivedTicketAsync(string ticketId, string name, string description);
     public Task<bool> ToggleArchiveTicket(string ticketId);
 
     public Task<List<MemberInfoDto>> GetProjectDevelopersAsync(string ticketId);
@@ -42,6 +43,7 @@ public record BasicTicketDto(
     string Type,
     string ProjectId,
     bool isArchived,
+    bool ProjectIsArchived,
     MemberInfoDto Submitter,
     MemberInfoDto? Assignee
 );

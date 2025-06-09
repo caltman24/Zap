@@ -1,10 +1,12 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
 using Zap.Api.Common.Extensions;
 using Zap.Api.Common.Filters;
+using Zap.Api.Data;
 using Zap.Api.Features.Projects.Services;
 using Zap.Api.Features.Tickets.Services;
 
@@ -39,14 +41,31 @@ public class CreateTicket : IEndpoint
         }
     }
 
-    private static async Task<Results<ForbidHttpResult, CreatedAtRoute<CreateTicketResult>>> Handle(
+    private static async Task<Results<ForbidHttpResult, CreatedAtRoute<CreateTicketResult>, BadRequest<string>, NotFound<string>>> Handle(
             Request request,
             CurrentUser currentUser,
             ITicketService ticketService,
-            IProjectService projectService
+            IProjectService projectService,
+            AppDbContext db
             )
     {
         var userRole = currentUser.Member!.Role.Name;
+
+        // Check if the project is archived
+        var project = await db.Projects
+            .Where(p => p.Id == request.ProjectId)
+            .Select(p => new { p.IsArchived })
+            .FirstOrDefaultAsync();
+
+        if (project == null)
+        {
+            return TypedResults.NotFound("Project not found");
+        }
+
+        if (project.IsArchived)
+        {
+            return TypedResults.BadRequest("Cannot create tickets in an archived project.");
+        }
 
         // INFO: Can only create a ticket if user is admin of the requesting project's company
         // OR if the user is an assigned member to the requesting project
