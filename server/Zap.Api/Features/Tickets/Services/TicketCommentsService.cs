@@ -18,13 +18,24 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         await db.SaveChangesAsync();
     }
 
-    public async Task<bool> DeleteCommentAsync(string commentId)
+    public async Task<bool> DeleteCommentAsync(string commentId, string requestingUserId)
     {
         var rowsDeleted = await db.TicketComments
-            .Where(c => c.Id == commentId)
+            .Where(c => c.Id == commentId && c.SenderId == requestingUserId)
             .ExecuteDeleteAsync();
 
         return rowsDeleted > 0;
+    }
+
+    public async Task<bool> UpdateCommentAsync(string commentId, string message, string requestingUserId)
+    {
+        var rowsUpdated = await db.TicketComments
+            .Where(c => c.Id == commentId && c.SenderId == requestingUserId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(c => c.Message, message)
+                .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
+
+        return rowsUpdated > 0;
     }
 
     public async Task<List<CommentDto>> GetCommentsAsync(string ticketId)

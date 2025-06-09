@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Form } from "@remix-run/react";
 import { TicketComment } from "~/services/api.server/types";
 import { convertTo12HourTime } from "~/utils/dateTime";
 
@@ -8,10 +9,13 @@ type ChatBoxProps = {
     userId: string
     loading: boolean
     onDeleteComment: (commentId: string) => void
+    onEditComment: (commentId: string, message: string) => void
 }
 
-export default function ChatBox({ className, comments, userId, loading, onDeleteComment }: ChatBoxProps) {
+export default function ChatBox({ className, comments, userId, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
     const scrollableChatContainerRef = useRef<HTMLDivElement>(null)
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+    const [editMessage, setEditMessage] = useState("")
 
     useEffect(() => {
         const container = scrollableChatContainerRef.current;
@@ -19,6 +23,24 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
             container.scrollTop = container.scrollHeight;
         }
     }, []);
+
+    const handleEditClick = (commentId: string, currentMessage: string) => {
+        setEditingCommentId(commentId)
+        setEditMessage(currentMessage)
+    }
+
+    const handleCancelEdit = () => {
+        setEditingCommentId(null)
+        setEditMessage("")
+    }
+
+    const handleSaveEdit = (commentId: string) => {
+        if (editMessage.trim()) {
+            onEditComment(commentId, editMessage.trim())
+            setEditingCommentId(null)
+            setEditMessage("")
+        }
+    }
 
     const commentsList = (
         <>
@@ -51,12 +73,57 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
                         </div>
                         <div className="flex gap-2">
                             {c.sender.id === userId && (
-                                <span onClick={() => onDeleteComment(c.id)} className="material-symbols-outlined text-gray-600 hover:text-error opacity-0 group-hover:opacity-100 transform duration-100 ease-in hover:cursor-pointer">delete</span>
+                                <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transform duration-100 ease-in">
+                                    <span
+                                        onClick={() => handleEditClick(c.id, c.message)}
+                                        className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
+                                        title="Edit comment"
+                                    >
+                                        edit
+                                    </span>
+                                    <span
+                                        onClick={() => onDeleteComment(c.id)}
+                                        className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"
+                                        title="Delete comment"
+                                    >
+                                        delete
+                                    </span>
+                                </div>
                             )}
-                            <div className="chat-bubble whitespace-pre-line">{c.message}</div>
+                            {editingCommentId === c.id ? (
+                                <div className="chat-bubble p-2 w-full">
+                                    <textarea
+                                        value={editMessage}
+                                        onChange={(e) => setEditMessage(e.target.value)}
+                                        className="textarea w-full resize-none field-sizing-content min-h-auto"
+                                        maxLength={150}
+                                        placeholder="Edit your message..."
+                                        autoFocus
+                                    />
+                                    <div className="flex gap-2 mt-2 justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelEdit}
+                                            className="btn btn-ghost btn-sm"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSaveEdit(c.id)}
+                                            className="btn btn-primary btn-sm"
+                                            disabled={!editMessage.trim() || editMessage.length > 150}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="chat-bubble whitespace-pre-line">{c.message}</div>
+                            )}
                         </div>
                         {c.updatedAt && (
-                            <div className="chat-footer opacity-50">Edited at: [value]</div>
+                            <div className="chat-footer opacity-50">Edited at: {formatedEditedTime}</div>
                         )}
                     </div>
                 )

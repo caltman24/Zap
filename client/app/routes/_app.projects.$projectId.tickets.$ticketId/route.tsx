@@ -66,6 +66,7 @@ export default function TicketDetailsRoute() {
     const commentsFormRef = useRef<HTMLFormElement>(null);
 
     const deleteCommentFetcher = useFetcher({ key: "delete-comment" })
+    const updateCommentFetcher = useFetcher({ key: "update-comment" })
     const getCommentsFetcher = useFetcher({ key: "get-comments" })
     useEffect(() => {
         getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
@@ -75,6 +76,19 @@ export default function TicketDetailsRoute() {
             commentsFormRef.current?.reset();
         }
     }, [getCommentsFetcher.state, getCommentsFetcher.data])
+
+    // Refresh comments after successful edit or delete
+    useEffect(() => {
+        if (updateCommentFetcher.state === "idle" && updateCommentFetcher.data) {
+            getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
+        }
+    }, [updateCommentFetcher.state, updateCommentFetcher.data])
+
+    useEffect(() => {
+        if (deleteCommentFetcher.state === "idle" && deleteCommentFetcher.data) {
+            getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
+        }
+    }, [deleteCommentFetcher.state, deleteCommentFetcher.data])
 
 
     const developersModalRef = useRef<HTMLDialogElement>(null)
@@ -98,6 +112,16 @@ export default function TicketDetailsRoute() {
         deleteCommentFetcher.submit(formData, {
             method: "post",
             action: `/tickets/${ticketId}/delete-comment`
+        })
+    }
+
+    const handleOnEditComment = (commentId: string, message: string) => {
+        const formData = new FormData()
+        formData.set("commentId", commentId)
+        formData.set("message", message)
+        updateCommentFetcher.submit(formData, {
+            method: "post",
+            action: `/tickets/${ticketId}/update-comment`
         })
     }
 
@@ -431,6 +455,7 @@ export default function TicketDetailsRoute() {
                             <ChatBox
                                 className="p-4 flex flex-col w-full max-h-[600px] overflow-y-auto"
                                 onDeleteComment={handleOnDeleteComment}
+                                onEditComment={handleOnEditComment}
                                 comments={(getCommentsFetcher.data as any)?.data}
                                 loading={getCommentsFetcher.state === "loading"}
                                 userId={userInfo.memberId} />

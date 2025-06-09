@@ -96,7 +96,8 @@ public static class Endpoints
 
         group.MapEndpoint<CreateComment>()
             .MapEndpoint<GetComments>()
-            .MapEndpoint<DeleteComment>();
+            .MapEndpoint<DeleteComment>()
+            .MapEndpoint<UpdateComment>();
 
 
         return app;

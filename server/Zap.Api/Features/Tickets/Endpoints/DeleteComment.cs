@@ -17,10 +17,11 @@ public class DeleteComment : IEndpoint
     private static async Task<Results<NoContent, NotFound>> Handle(
             [FromRoute] string ticketId,
             [FromRoute] string commentId,
+            CurrentUser currentUser,
             ITicketCommentsService commentsService
             )
     {
-        var success = await commentsService.DeleteCommentAsync(commentId);
+        var success = await commentsService.DeleteCommentAsync(commentId, currentUser.Member!.Id);
         if (!success) return TypedResults.NotFound();
 
         return TypedResults.NoContent();
