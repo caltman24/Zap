@@ -136,6 +136,14 @@ public sealed class ProjectService : IProjectService
                 .Where(t => t.ProjectId == projectId)
                 .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, true));
         }
+        // If we're unarchiving the project (it's currently archived), also unarchive all its tickets
+        else
+        {
+            // Unarchive all tickets under this project
+            await _db.Tickets
+                .Where(t => t.ProjectId == projectId)
+                .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, false));
+        }
 
         // Toggle the project archive status
         var rowsChanged = await _db.Projects

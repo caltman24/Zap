@@ -22,7 +22,7 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
         if (container) {
             container.scrollTop = container.scrollHeight;
         }
-    }, []);
+    }, [comments]);
 
     const handleEditClick = (commentId: string, currentMessage: string) => {
         setEditingCommentId(commentId)

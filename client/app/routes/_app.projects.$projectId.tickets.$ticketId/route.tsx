@@ -467,7 +467,7 @@ export default function TicketDetailsRoute() {
                         <h2 className="text-xl font-bold mb-4">Comments</h2>
                         <div className="max-w-6xl">
                             <ChatBox
-                                className="p-4 flex flex-col w-full max-h-[600px] overflow-y-auto"
+                                className="p-4 flex flex-col col-reverse w-full max-h-[450px] overflow-y-auto"
                                 onDeleteComment={handleOnDeleteComment}
                                 onEditComment={handleOnEditComment}
                                 comments={(getCommentsFetcher.data as any)?.data}
