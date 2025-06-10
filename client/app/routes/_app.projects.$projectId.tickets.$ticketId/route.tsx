@@ -18,6 +18,7 @@ import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
 import getTicketHistory from "./server.get-ticket-history";
+import AttachmentSection from "./AttachmentSection";
 export const handle = {
     breadcrumb: (match: any) => {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
@@ -453,37 +454,45 @@ export default function TicketDetailsRoute() {
                         ) : (<>{TicketDetails}</>)}
                     </div>
 
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
-                        <h2 className="text-xl font-bold mb-4">Comments</h2>
-                        <div className="max-w-6xl">
-                            <ChatBox
-                                className="p-4 flex flex-col col-reverse w-full max-h-[450px] overflow-y-auto"
-                                onDeleteComment={handleOnDeleteComment}
-                                onEditComment={handleOnEditComment}
-                                comments={(getCommentsFetcher.data as any)?.data}
-                                loading={getCommentsFetcher.state === "loading"}
-                                userId={userInfo.memberId} />
+                    {/* Comments and Attachments Side by Side */}
+                    <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+                        <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-bold mb-4">Comments</h2>
+                            <div className="max-w-full">
+                                <ChatBox
+                                    className="p-4 flex flex-col col-reverse w-full max-h-[450px] overflow-y-auto"
+                                    onDeleteComment={handleOnDeleteComment}
+                                    onEditComment={handleOnEditComment}
+                                    comments={(getCommentsFetcher.data as any)?.data}
+                                    loading={getCommentsFetcher.state === "loading"}
+                                    userId={userInfo.memberId} />
 
-                            <Form
-                                className="mt-4"
-                                method="post"
-                                navigate={false}
-                                fetcherKey="create-comment"
-                                ref={commentsFormRef}
-                                action={`/tickets/${ticketId}/create-comment`}>
-                                <div className="flex gap-2">
-                                    <button type="submit" className="btn btn-primary">Send</button>
-                                    <textarea
-                                        placeholder="Message"
-                                        name="message"
-                                        className="textarea w-full resize-none field-sizing-content min-h-auto" />
-                                </div>
-                            </Form>
+                                <Form
+                                    className="mt-4"
+                                    method="post"
+                                    navigate={false}
+                                    fetcherKey="create-comment"
+                                    ref={commentsFormRef}
+                                    action={`/tickets/${ticketId}/create-comment`}>
+                                    <div className="flex gap-2">
+                                        <button type="submit" className="btn btn-primary">Send</button>
+                                        <textarea
+                                            placeholder="Message"
+                                            name="message"
+                                            className="textarea w-full resize-none field-sizing-content min-h-auto" />
+                                    </div>
+                                </Form>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
-                        <h2 className="text-xl font-bold mb-4">Attachments</h2>
+                        <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-bold mb-4">Attachments</h2>
+                            <AttachmentSection
+                                ticketId={ticketId!}
+                                userInfo={userInfo}
+                                ticket={ticket}
+                            />
+                        </div>
                     </div>
 
                     <div className="bg-base-100 rounded-lg shadow-lg p-6">
