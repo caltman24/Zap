@@ -99,7 +99,7 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "Archived Tickets",
         to: "/tickets/archived",
-        matchId: "routes/_app.tickets.resolved",
+        matchId: "routes/_app.tickets.archived",
         materialIcon: "assignment_returned",
         roles: [],
       },

@@ -73,9 +73,74 @@ public class TicketService : ITicketService
 
     public async Task<List<BasicTicketDto>> GetOpenTicketsAsync(string companyId)
     {
-        // FIXME: This should filter out resolved & archived tickets
         return await _db.Tickets
-            .Where(t => t.Project.CompanyId == companyId)
+            .Where(t => t.Project.CompanyId == companyId &&
+                       !t.IsArchived &&
+                       !t.Project.IsArchived &&
+                       t.Status.Name != TicketStatuses.Resolved)
+            .Select(t => new BasicTicketDto(
+                t.Id,
+                t.Name,
+                t.Description,
+                t.Priority.Name,
+                t.Status.Name,
+                t.Type.Name,
+                t.ProjectId,
+                t.IsArchived,
+                t.Project.IsArchived,
+                new MemberInfoDto(
+                    t.Submitter.Id,
+                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                    t.Submitter.User.AvatarUrl,
+                    t.Submitter.Role.Name),
+                t.Assignee == null
+                    ? null
+                    : new MemberInfoDto(
+                    t.Assignee.Id,
+                    $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                    t.Assignee.User.AvatarUrl,
+                    t.Assignee.Role.Name)
+            ))
+            .ToListAsync();
+    }
+
+    public async Task<List<BasicTicketDto>> GetArchivedTicketsAsync(string companyId)
+    {
+        return await _db.Tickets
+            .Where(t => t.Project.CompanyId == companyId && t.IsArchived)
+            .Select(t => new BasicTicketDto(
+                t.Id,
+                t.Name,
+                t.Description,
+                t.Priority.Name,
+                t.Status.Name,
+                t.Type.Name,
+                t.ProjectId,
+                t.IsArchived,
+                t.Project.IsArchived,
+                new MemberInfoDto(
+                    t.Submitter.Id,
+                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                    t.Submitter.User.AvatarUrl,
+                    t.Submitter.Role.Name),
+                t.Assignee == null
+                    ? null
+                    : new MemberInfoDto(
+                    t.Assignee.Id,
+                    $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                    t.Assignee.User.AvatarUrl,
+                    t.Assignee.Role.Name)
+            ))
+            .ToListAsync();
+    }
+
+    public async Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string companyId)
+    {
+        return await _db.Tickets
+            .Where(t => t.Project.CompanyId == companyId &&
+                       !t.IsArchived &&
+                       !t.Project.IsArchived &&
+                       t.Status.Name == TicketStatuses.Resolved)
             .Select(t => new BasicTicketDto(
                 t.Id,
                 t.Name,

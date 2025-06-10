@@ -42,7 +42,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 }
 
-//FIXME: Should only show tickets not resolved or unarchived
 export default function OpenTicketsRoute() {
     const { data: tickets, error } = useLoaderData<JsonResponseResult<BasicTicketInfo[]>>();
 

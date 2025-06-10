@@ -85,6 +85,8 @@ public static class Endpoints
             .MapEndpoint<GetTicket>()
             .MapEndpoint<GetMyTickets>()
             .MapEndpoint<GetOpenTickets>()
+            .MapEndpoint<GetArchivedTickets>()
+            .MapEndpoint<GetResolvedTickets>()
             .MapEndpoint<GetDeveloperList>()
             .MapEndpoint<DeleteTicket>()
             .MapEndpoint<UpdateAssignee>()
