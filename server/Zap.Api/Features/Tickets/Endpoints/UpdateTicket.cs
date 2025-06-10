@@ -84,7 +84,8 @@ public class UpdateTicket : IEndpoint
             var success = await ticketService.UpdateArchivedTicketAsync(
                 ticketId,
                 request.Name,
-                request.Description);
+                request.Description,
+                currentUser.Member!.Id);
 
             if (!success) return TypedResults.Problem();
             return TypedResults.NoContent();
@@ -96,7 +97,7 @@ public class UpdateTicket : IEndpoint
                     request.Description,
                     request.Priority,
                     request.Status,
-                    request.Type));
+                    request.Type), currentUser.Member!.Id);
         if (!fullUpdateSuccess) return TypedResults.Problem();
 
         return TypedResults.NoContent();

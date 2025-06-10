@@ -34,7 +34,7 @@ public class UpdateAssignee : IEndpoint
         }
 
         // We can allow a null memberId, this removes the assignee
-        var success = await ticketService.UpdateAsigneeAsync(ticketId, request.MemberId);
+        var success = await ticketService.UpdateAsigneeAsync(ticketId, request.MemberId, currentUser.Member!.Id);
 
         if (!success) return TypedResults.NotFound();
 

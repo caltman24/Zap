@@ -41,15 +41,15 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "All Projects",
         to: "/projects",
-        matchId: "routes/_app.projects",
+        matchId: "routes/_app.projects._index",
         materialIcon: "folder",
         roles: [],
       },
       {
         name: "My Projects",
-        to: "/projects/myprojects",
-        matchId: "routes/_app.projects._index",
-        materialIcon: "folder",
+        to: "/projects/my",
+        matchId: "routes/_app.projects.my",
+        materialIcon: "folder_shared",
         roles: [
           roleNames.submitter,
           roleNames.developer,
@@ -76,7 +76,7 @@ export const menuRoutes: MenuRoutes = [
     name: "Tickets",
     links: [
       {
-        name: "Open Tickets",
+        name: "All Tickets",
         to: "/tickets",
         matchId: "routes/_app.tickets._index",
         materialIcon: "assignment",
@@ -85,7 +85,7 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "My Tickets",
         to: "/tickets/mytickets",
-        matchId: "routes/_app.tickets.assigned",
+        matchId: "routes/_app.tickets.mytickets",
         materialIcon: "assignment_ind",
         roles: [],
       },
@@ -99,7 +99,7 @@ export const menuRoutes: MenuRoutes = [
       {
         name: "Archived Tickets",
         to: "/tickets/archived",
-        matchId: "routes/_app.tickets.archived",
+        matchId: "routes/_app.tickets.resolved",
         materialIcon: "assignment_returned",
         roles: [],
       },

@@ -38,7 +38,7 @@ public class UpdatePriority : IEndpoint
             CurrentUser currentUser
             )
     {
-        var success = await ticketService.UpdatePriorityAsync(ticketId, request.Priority);
+        var success = await ticketService.UpdatePriorityAsync(ticketId, request.Priority, currentUser.Member!.Id);
         if (!success) return TypedResults.Problem();
 
         return TypedResults.NoContent();

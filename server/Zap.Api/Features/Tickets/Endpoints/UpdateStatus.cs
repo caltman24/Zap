@@ -38,7 +38,7 @@ public class UpdateStatus : IEndpoint
             CurrentUser currentUser
             )
     {
-        var success = await ticketService.UpdateStatusAsync(ticketId, request.Status);
+        var success = await ticketService.UpdateStatusAsync(ticketId, request.Status, currentUser.Member!.Id);
         if (!success) return TypedResults.Problem();
 
         return TypedResults.NoContent();

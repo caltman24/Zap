@@ -84,7 +84,7 @@ public class CreateTicket : IEndpoint
             request.Type,
             request.ProjectId,
             currentUser.Member!.Id
-            ));
+            ), currentUser.Member!.Id);
 
         return TypedResults.CreatedAtRoute(newTicket, "GetTicket", new { TicketId = newTicket.Id });
     }

@@ -5,7 +5,7 @@ namespace Zap.Api.Features.Tickets.Services;
 
 public interface ITicketService
 {
-    public Task<CreateTicketResult> CreateTicketAsync(CreateTicketDto ticket);
+    public Task<CreateTicketResult> CreateTicketAsync(CreateTicketDto ticket, string creatorId);
     public Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId);
     public Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId);
     public Task<List<BasicTicketDto>> GetOpenTicketsAsync(string companyId);
@@ -25,13 +25,13 @@ public interface ITicketService
     public Task<bool> ValidateAssigneeAsync(string ticketId, string memberId);
     public Task<bool> ValidateCompanyAsync(string ticketId, string? companyId);
 
-    public Task<bool> UpdateAsigneeAsync(string ticketId, string? memberId);
-    public Task<bool> UpdatePriorityAsync(string ticketId, string priority);
-    public Task<bool> UpdateStatusAsync(string ticketId, string status);
-    public Task<bool> UpdateTypeAsync(string ticketId, string type);
-    public Task<bool> UpdateTicketAsync(string ticketId, UpdateTicketDto ticket);
-    public Task<bool> UpdateArchivedTicketAsync(string ticketId, string name, string description);
-    public Task<bool> ToggleArchiveTicket(string ticketId);
+    public Task<bool> UpdateAsigneeAsync(string ticketId, string? memberId, string updaterId);
+    public Task<bool> UpdatePriorityAsync(string ticketId, string priority, string updaterId);
+    public Task<bool> UpdateStatusAsync(string ticketId, string status, string updaterId);
+    public Task<bool> UpdateTypeAsync(string ticketId, string type, string updaterId);
+    public Task<bool> UpdateTicketAsync(string ticketId, UpdateTicketDto ticket, string updaterId);
+    public Task<bool> UpdateArchivedTicketAsync(string ticketId, string name, string description, string updaterId);
+    public Task<bool> ToggleArchiveTicket(string ticketId, string updaterId);
 
     public Task<List<MemberInfoDto>> GetProjectDevelopersAsync(string ticketId);
 }

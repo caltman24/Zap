@@ -49,7 +49,7 @@ public class ArchiveTicket : IEndpoint
             return TypedResults.BadRequest("Cannot unarchive a ticket when its project is archived. Please unarchive the project first.");
         }
 
-        var success = await ticketService.ToggleArchiveTicket(ticketId);
+        var success = await ticketService.ToggleArchiveTicket(ticketId, currentUser.Member!.Id);
         if (!success) return TypedResults.NotFound();
 
         return TypedResults.NoContent();

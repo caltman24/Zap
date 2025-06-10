@@ -17,6 +17,7 @@ import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
+import getTicketHistory from "./server.get-ticket-history";
 export const handle = {
     breadcrumb: (match: any) => {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
@@ -72,28 +73,17 @@ export default function TicketDetailsRoute() {
     const deleteCommentFetcher = useFetcher({ key: "delete-comment" })
     const updateCommentFetcher = useFetcher({ key: "update-comment" })
     const getCommentsFetcher = useFetcher({ key: "get-comments" })
+    const getHistoryFetcher = useFetcher({ key: "get-history" })
+
     useEffect(() => {
         getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
+        getHistoryFetcher.load(`/tickets/${ticketId}/get-history`)
     }, [])
     useEffect(() => {
         if (getCommentsFetcher.state === "idle" && getCommentsFetcher.data) {
             commentsFormRef.current?.reset();
         }
     }, [getCommentsFetcher.state, getCommentsFetcher.data])
-
-    // Refresh comments after successful edit or delete
-    useEffect(() => {
-        if (updateCommentFetcher.state === "idle" && updateCommentFetcher.data) {
-            getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
-        }
-    }, [updateCommentFetcher.state, updateCommentFetcher.data])
-
-    useEffect(() => {
-        if (deleteCommentFetcher.state === "idle" && deleteCommentFetcher.data) {
-            getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
-        }
-    }, [deleteCommentFetcher.state, deleteCommentFetcher.data])
-
 
     const developersModalRef = useRef<HTMLDialogElement>(null)
 
@@ -497,9 +487,28 @@ export default function TicketDetailsRoute() {
                     </div>
 
                     <div className="bg-base-100 rounded-lg shadow-lg p-6">
-                        <h2 className="text-xl font-bold mb-4">History</h2>
-                        <div className="max-w-lg">
-                            <TicketTimeline />
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold">History</h2>
+                            <button
+                                onClick={() => getHistoryFetcher.load(`/tickets/${ticketId}/get-history`)}
+                                disabled={getHistoryFetcher.state === "loading"}
+                                className="btn btn-sm btn-ghost btn-circle"
+                                title="Refresh history"
+                            >
+                                {getHistoryFetcher.state === "loading" ? (
+                                    <span className="loading loading-spinner loading-sm"></span>
+                                ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+                        <div className="w-2xl">
+                            <TicketTimeline
+                                history={(getHistoryFetcher.data as any)?.data || []}
+                                loading={getHistoryFetcher.state === "loading"}
+                            />
                         </div>
                     </div>
                 </div>

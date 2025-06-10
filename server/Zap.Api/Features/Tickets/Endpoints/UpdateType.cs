@@ -38,7 +38,7 @@ public class UpdateType : IEndpoint
             CurrentUser currentUser
             )
     {
-        var success = await ticketService.UpdateTypeAsync(ticketId, request.Type);
+        var success = await ticketService.UpdateTypeAsync(ticketId, request.Type, currentUser.Member!.Id);
         if (!success) return TypedResults.Problem();
 
         return TypedResults.NoContent();

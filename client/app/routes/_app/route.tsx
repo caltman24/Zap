@@ -1,6 +1,6 @@
 import { Link, Outlet, redirect, useLoaderData, useLocation, useNavigation } from "@remix-run/react";
 import SideMenu from "./SideMenu";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardNavbar from "./DashboardNavbar";
 import { filterMenuRoutesByRoles, menuRoutes } from "~/data/routes";
 import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
@@ -46,12 +46,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function AppRoute() {
     const { data: userData, error } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
     const navigation = useNavigation()
+    // Add state for mobile menu
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
         <div>
             <div className="flex min-h-screen h-screen max-h-screen bg-base-300">
-                {/* sidebar */}
-                <SideMenu menuRoutes={filterMenuRoutesByRoles(menuRoutes, [(userData?.role?.toLowerCase() || roleNames.submitter)])} />
+                {/* Mobile menu button */}
+                <button
+                    className="lg:hidden fixed z-30 bottom-4 right-4 btn btn-circle btn-primary"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                    <span className="material-symbols-outlined">
+                        {mobileMenuOpen ? "close" : "menu"}
+                    </span>
+                </button>
+
+                {/* sidebar - hidden on mobile unless toggled */}
+                <div className={`${mobileMenuOpen ? "block" : "hidden"} lg:block fixed min-w-64 lg:relative z-20 h-screen`}>
+                    <SideMenu menuRoutes={filterMenuRoutesByRoles(menuRoutes, [(userData?.role?.toLowerCase() || roleNames.submitter)])} />
+                </div>
 
                 {/* contnet */}
                 <div className="w-full">
