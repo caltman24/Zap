@@ -1,4 +1,4 @@
-import { Form, Link, useLoaderData, useSearchParams } from "@remix-run/react";
+import { Form, Link, useLoaderData, useSearchParams, useNavigation, useActionData } from "@remix-run/react";
 import RouteLayout from "~/layouts/RouteLayout";
 import { ActionFunctionArgs, data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import permissions from "~/data/permissions";
@@ -12,6 +12,7 @@ import { BasicProjectResponse, CreateTicketRequest } from "~/services/api.server
 import { createNewTicket } from "./server.create-ticket";
 import { AuthenticationError } from "~/services/api.server/errors";
 import BackButton from "~/components/BackButton";
+import { useState, useEffect, useRef } from "react";
 
 export const handle = {
     breadcrumb: () => <Link to="/tickets/new">New</Link>,
@@ -56,135 +57,243 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function NewTicketRoute() {
     const projectList = useLoaderData<typeof loader>() as JsonResponseResult<BasicProjectResponse[]>
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigation = useNavigation();
+    const actionData = useActionData<typeof action>();
+    const formRef = useRef<HTMLFormElement>(null);
+
     const selectedProjectId = searchParams.get("projectId");
     const validProjectId = projectList.data?.some(
         (p) => p.id === selectedProjectId
     )
         ? selectedProjectId
         : "";
+
+    const isSubmitting = navigation.state === "submitting";
+    const [nameLength, setNameLength] = useState(0);
+    const [descriptionLength, setDescriptionLength] = useState(0);
+
+    // Reset form on successful submission
+    useEffect(() => {
+        if (actionData?.success) {
+            formRef.current?.reset();
+            setNameLength(0);
+            setDescriptionLength(0);
+        }
+    }, [actionData]);
+
     return (
         <RouteLayout>
             {validProjectId && <div className="mb-3"><BackButton /></div>}
 
-            <h1 className="text-3xl font-bold mb-2">New Ticket</h1>
+            <div className="max-w-4xl mx-auto">
+                <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-base-content mb-2">Create New Ticket</h1>
+                    <p className="text-base-content/70">Fill out the form below to create a new ticket for your project.</p>
+                </div>
 
-            <Form method="post" className="max-w-[40rem]">
-                <fieldset disabled={false} className="fieldset">
-                    <div className="mb-4">
-                        <label className="label mb-1">
-                            Project
-                        </label>
-                        <div className="relative w-full">
-                            <select
-                                name="projectId"
-                                className={`select select-bordered w-full font-medium`}
-                                required
-                                defaultValue={validProjectId ?? ""}
-                            >
-                                <option value="" disabled >-- select project --</option>
-                                {projectList.data?.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
+                <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                    {/* Error Display */}
+                    {actionData?.error && (
+                        <div className="alert alert-error mb-6">
+                            <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{actionData.error}</span>
                         </div>
-                    </div>
-                    <div className=" mb-4">
-                        <label className="label mb-1">
-                            Ticket Name
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            className="input input-bordered w-full"
-                            placeholder="Enter ticket name"
-                            required
-                            maxLength={50}
-                        />
-                    </div>
+                    )}
 
-                    <div className=" mb-4">
-                        <label className="label mb-1">
-                            Description
-                        </label>
-                        <textarea
-                            name="description"
-                            className="textarea textarea-bordered w-full"
-                            placeholder="Ticket description"
-                            rows={4}
-                            required
-                            maxLength={1000}
-                        ></textarea>
-                    </div>
+                    <Form method="post" ref={formRef} className="space-y-6">
+                        <fieldset disabled={isSubmitting} className="space-y-6">
+                            {/* Project Selection */}
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text font-medium">
+                                        Project <span className="text-error">*</span>
+                                    </span>
+                                </label>
+                                <select
+                                    name="projectId"
+                                    className="select select-bordered w-full focus:select-primary"
+                                    required
+                                    defaultValue={validProjectId ?? ""}
+                                    aria-describedby="project-help"
+                                >
+                                    <option value="" disabled>-- Select a project --</option>
+                                    {projectList.data?.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                                <div className="label">
+                                    <span id="project-help" className="label-text-alt text-base-content/60">
+                                        Choose the project this ticket belongs to
+                                    </span>
+                                </div>
+                            </div>
 
-                    <div className="flex gap-4">
-                        <div className=" mb-4">
-                            <label className="label mb-1">
-                                Priority
-                            </label>
-                            <div className="relative w-[10rem]">
-                                <select
-                                    name="priority"
-                                    className={`select select-bordered w-full`}
+                            {/* Ticket Name */}
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text font-medium">
+                                        Ticket Name <span className="text-error">*</span>
+                                    </span>
+                                    <span className="label-text-alt text-base-content/60">
+                                        {nameLength}/50
+                                    </span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    className="input input-bordered w-full focus:input-primary"
+                                    placeholder="Enter a descriptive ticket name"
                                     required
-                                    defaultValue=""
-                                >
-                                    <option value="" disabled >-- select priority --</option>
-                                    <option value="Low" className="text-info">Low</option>
-                                    <option value="Medium" className="text-warning">Medium</option>
-                                    <option value="High" className="text-error">High</option>
-                                    <option value="Urgent" className="text-error font-bold">Urgent</option>
-                                </select>
+                                    maxLength={50}
+                                    onChange={(e) => setNameLength(e.target.value.length)}
+                                    aria-describedby="name-help"
+                                />
+                                <div className="label">
+                                    <span id="name-help" className="label-text-alt text-base-content/60">
+                                        A clear, concise title that describes the issue or request
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div className=" mb-4">
-                            <label className="label mb-1">
-                                Status
-                            </label>
-                            <div className="relative w-[13rem]">
-                                <select
-                                    name="status"
-                                    className={`select select-bordered w-full`}
+
+                            {/* Description */}
+                            <div className="form-control">
+                                <label className="label">
+                                    <span className="label-text font-medium">
+                                        Description <span className="text-error">*</span>
+                                    </span>
+                                    <span className="label-text-alt text-base-content/60">
+                                        {descriptionLength}/1000
+                                    </span>
+                                </label>
+                                <textarea
+                                    name="description"
+                                    className="textarea textarea-bordered w-full h-32 focus:textarea-primary"
+                                    placeholder="Provide a detailed description of the ticket..."
                                     required
-                                    defaultValue=""
-                                >
-                                    <option value="" disabled >-- select status --</option>
-                                    <option value="New" className="text-cyan-500">New</option>
-                                    <option value="In Development" className="text-blue-500">In Development</option>
-                                    <option value="Testing" className="text-warning">Testing</option>
-                                    <option value="Resolved" className="text-green-500 ">Resolved</option>
-                                </select>
+                                    maxLength={1000}
+                                    onChange={(e) => setDescriptionLength(e.target.value.length)}
+                                    aria-describedby="description-help"
+                                />
+                                <div className="label">
+                                    <span id="description-help" className="label-text-alt text-base-content/60">
+                                        Include steps to reproduce, expected behavior, and any relevant details
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div className=" mb-4">
-                            <label className="label mb-1">
-                                Type
-                            </label>
-                            <div className="relative w-[13rem]">
-                                <select
-                                    name="type"
-                                    className={`select select-bordered w-full`}
-                                    required
-                                    defaultValue=""
-                                >
-                                    <option value="" disabled >-- select type --</option>
-                                    <option value="Defect" className="text-error">Defect</option>
-                                    <option value="Feature" className="text-green-500">Feature</option>
-                                    <option value="General Task" className="text-cyan-500">General Task</option>
-                                    <option value="Work Task" className="text-indigo-500 ">Work Task</option>
-                                    <option value="Change Request" className="text-amber-500 ">Change Request</option>
-                                    <option value="Enhancement" className="text-blue-500 ">Enhancment</option>
-                                </select>
+
+                            {/* Priority, Status, and Type Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Priority */}
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text font-medium">
+                                            Priority <span className="text-error">*</span>
+                                        </span>
+                                    </label>
+                                    <select
+                                        name="priority"
+                                        className="select select-bordered w-full focus:select-primary"
+                                        required
+                                        defaultValue=""
+                                        aria-describedby="priority-help"
+                                    >
+                                        <option value="" disabled>-- Select priority --</option>
+                                        <option value="Low">🟢 Low</option>
+                                        <option value="Medium">🟡 Medium</option>
+                                        <option value="High">🟠 High</option>
+                                        <option value="Urgent">🔴 Urgent</option>
+                                    </select>
+                                    <div className="label">
+                                        <span id="priority-help" className="label-text-alt text-base-content/60">
+                                            How urgent is this ticket?
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Status */}
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text font-medium">
+                                            Status <span className="text-error">*</span>
+                                        </span>
+                                    </label>
+                                    <select
+                                        name="status"
+                                        className="select select-bordered w-full focus:select-primary"
+                                        required
+                                        defaultValue="New"
+                                        aria-describedby="status-help"
+                                    >
+                                        <option value="New">🆕 New</option>
+                                        <option value="In Development">⚙️ In Development</option>
+                                        <option value="Testing">🧪 Testing</option>
+                                        <option value="Resolved">✅ Resolved</option>
+                                    </select>
+                                    <div className="label">
+                                        <span id="status-help" className="label-text-alt text-base-content/60">
+                                            Current state of the ticket
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Type */}
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text font-medium">
+                                            Type <span className="text-error">*</span>
+                                        </span>
+                                    </label>
+                                    <select
+                                        name="type"
+                                        className="select select-bordered w-full focus:select-primary"
+                                        required
+                                        defaultValue=""
+                                        aria-describedby="type-help"
+                                    >
+                                        <option value="" disabled>-- Select type --</option>
+                                        <option value="Defect">🐛 Defect</option>
+                                        <option value="Feature">✨ Feature</option>
+                                        <option value="General Task">📋 General Task</option>
+                                        <option value="Work Task">💼 Work Task</option>
+                                        <option value="Change Request">🔄 Change Request</option>
+                                        <option value="Enhancement">⚡ Enhancement</option>
+                                    </select>
+                                    <div className="label">
+                                        <span id="type-help" className="label-text-alt text-base-content/60">
+                                            What kind of ticket is this?
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div className="flex justify-start mt-2">
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                        >Create Ticket</button>
-                    </div>
-                </fieldset>
-            </Form>
+
+                            {/* Submit Button */}
+                            <div className="flex justify-end pt-4 border-t border-base-300">
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary btn-lg min-w-32"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="loading loading-spinner loading-sm"></span>
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Create Ticket
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </fieldset>
+                    </Form>
+                </div>
+            </div>
         </RouteLayout>
     );
 }
@@ -208,21 +317,37 @@ export async function action({ request }: ActionFunctionArgs) {
     const type = formData.get("type") as string;
     const projectId = formData.get("projectId") as string;
 
+    // Basic validation
+    if (!name?.trim()) {
+        return Response.json({
+            error: "Ticket name is required."
+        }, { status: 400 });
+    }
 
-    const projectData: CreateTicketRequest = {
-        name,
-        description,
+    if (!description?.trim()) {
+        return Response.json({
+            error: "Description is required."
+        }, { status: 400 });
+    }
+
+    if (!projectId) {
+        return Response.json({
+            error: "Please select a project."
+        }, { status: 400 });
+    }
+
+    const ticketData: CreateTicketRequest = {
+        name: name.trim(),
+        description: description.trim(),
         priority,
         status,
         type,
         projectId
     };
 
-
     const { data, error } = await tryCatch(
-        createNewTicket(
-            tokenResponse.token,
-            projectData));
+        createNewTicket(tokenResponse.token, ticketData)
+    );
 
     if (error instanceof AuthenticationError) {
         return redirect("/logout");
@@ -230,8 +355,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (error) {
         return Response.json({
-            error: "Failed to create project. Please try again later."
-        });
+            error: "Failed to create ticket. Please try again later."
+        }, { status: 500 });
     }
 
     return redirect(`/projects/${projectId}/tickets/${data.id}`);
