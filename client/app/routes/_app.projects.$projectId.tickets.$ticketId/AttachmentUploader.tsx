@@ -80,26 +80,80 @@ export default function AttachmentUploader({
                 const fileId = file.name + file.size;
                 setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
 
-                // Simulate progress
+                // ===================================================================
+                // ACTUAL UPLOAD IMPLEMENTATION:
+                // Replace the simulated upload below with your actual API upload logic
+                // Example using fetch:
+                // 
+                // const formData = new FormData();
+                // formData.append('file', file);
+                // formData.append('ticketId', ticketId);
+                // 
+                // fetch('/api/attachments/upload', {
+                //     method: 'POST',
+                //     body: formData,
+                //     // Include progress tracking:
+                //     onUploadProgress: (progressEvent) => {
+                //         const percentCompleted = Math.round(
+                //             (progressEvent.loaded * 100) / progressEvent.total
+                //         );
+                //         setUploadProgress(prev => ({ ...prev, [fileId]: percentCompleted }));
+                //     }
+                // })
+                // .then(response => response.json())
+                // .then(data => {
+                //     // Show 100% complete
+                //     setUploadProgress(prev => ({ ...prev, [fileId]: 100 }));
+                //     
+                //     // Remove progress bar after a moment
+                //     setTimeout(() => {
+                //         setUploadProgress(prev => {
+                //             const newProgress = { ...prev };
+                //             delete newProgress[fileId];
+                //             return newProgress;
+                //         });
+                //     }, 500);
+                //     
+                //     // Handle successful upload (e.g., add attachment to list)
+                // })
+                // .catch(error => {
+                //     // Handle upload failure
+                //     setErrors(prev => [...prev, `Failed to upload ${file.name}: ${error.message}`]);
+                //     setUploadProgress(prev => {
+                //         const newProgress = { ...prev };
+                //         delete newProgress[fileId];
+                //         return newProgress;
+                //     });
+                // });
+                // ===================================================================
+
+                // Simulate progress (REPLACE THIS WITH ACTUAL UPLOAD CODE)
                 const interval = setInterval(() => {
                     setUploadProgress(prev => {
                         const currentProgress = prev[fileId] || 0;
-                        if (currentProgress >= 100) {
+                        // Stop at 90% to allow for completion step
+                        if (currentProgress >= 90) {
                             clearInterval(interval);
+
+                            // Set to 100% and then remove after a short delay
+                            setTimeout(() => {
+                                setUploadProgress(prev => ({ ...prev, [fileId]: 100 }));
+
+                                // Remove the progress bar after showing 100%
+                                setTimeout(() => {
+                                    setUploadProgress(prev => {
+                                        const newProgress = { ...prev };
+                                        delete newProgress[fileId];
+                                        return newProgress;
+                                    });
+                                }, 500);
+                            }, 200);
+
                             return prev;
                         }
                         return { ...prev, [fileId]: currentProgress + 10 };
                     });
                 }, 100);
-
-                // Complete after 1 second
-                setTimeout(() => {
-                    setUploadProgress(prev => {
-                        const newProgress = { ...prev };
-                        delete newProgress[fileId];
-                        return newProgress;
-                    });
-                }, 1000);
             });
 
             onFileUpload(validFiles);
