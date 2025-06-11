@@ -31,8 +31,6 @@ public class Ticket
     public ICollection<TicketAttachment> Attachments { get; set; } = [];
     public ICollection<TicketHistory> History { get; set; } = [];
 
-    // attachments: pdfs, word docs(excel ect..), images
-    // comments
-    // history
-    //
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = null;
 }
