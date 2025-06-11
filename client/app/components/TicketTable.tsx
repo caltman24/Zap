@@ -79,13 +79,9 @@ export default function TicketTable({ tickets }: TicketTableProps) {
                                             {formatDateTimeShort(new Date(ticket.updatedAt))}
                                         </span>
                                     ) : (
-                                        <span className="text-xs opacity-60">{new Date(ticket.createdAt).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}</span>
+                                        <span className="text-xs">
+                                            {formatDateTimeShort(new Date(ticket.createdAt))}
+                                        </span>
                                     )}
                                 </td>
                             </tr>
