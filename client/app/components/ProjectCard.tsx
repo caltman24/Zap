@@ -16,15 +16,16 @@ export default function ProjectCard({ project, showArchived, collection }: Proje
       className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300"
     >
       <div className="card-body p-5">
-        {/* Priority indicator */}
-        <div className="absolute top-3 right-3">
-          <div className={`badge ${getPriorityClass(project.priority)}`}>
-            {project.priority}
+        <div className="flex justify-between">
+          {/* Project title */}
+          <h2 className="card-title text-xl mb-1">{project.name}</h2>
+
+          {/* Priority indicator */}
+          <div className="text-[1rem]">
+            {getPriorityDisplay(project.priority)}
           </div>
         </div>
 
-        {/* Project title */}
-        <h2 className="card-title text-xl mb-1">{project.name}</h2>
 
         {/* Due date */}
         <div className="flex flex-col text-sm text-base-content/70 mb-4">
@@ -85,5 +86,21 @@ function getPriorityClass(priority: string): string {
       return 'badge-info';
     default:
       return 'badge-ghost';
+  }
+}
+
+// Helper function to get priority display with emoji
+function getPriorityDisplay(priority: string): string {
+  switch (priority?.toLowerCase()) {
+    case 'urgent':
+      return '🔴 Urgent';
+    case 'high':
+      return '🟠 High';
+    case 'medium':
+      return '🟡 Medium';
+    case 'low':
+      return '🟢 Low';
+    default:
+      return priority;
   }
 }

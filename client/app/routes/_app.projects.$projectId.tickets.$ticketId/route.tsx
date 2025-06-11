@@ -254,11 +254,7 @@ export default function TicketDetailsRoute() {
                 </div>
                 <div className="stat bg-base-200 rounded-lg">
                     <div className="stat-title">Priority</div>
-                    <div
-                        className={`stat-value text-lg ${getPriorityClass(
-                            ticket.priority
-                        )}`}
-                    >
+                    <div className="stat-value text-lg">
                         {updatePriorityFetcher.state === "submitting" ? (
                             <span className="loading loading-spinner"></span>
                         ) : (
@@ -273,22 +269,17 @@ export default function TicketDetailsRoute() {
                                 }}
                                 className="bg-base-200 w-full"
                                 value={ticket.priority}>
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                                <option value="Urgent">Urgent</option>
+                                <option value="Low">🟢 Low</option>
+                                <option value="Medium">🟡 Medium</option>
+                                <option value="High">🟠 High</option>
+                                <option value="Urgent">🔴 Urgent</option>
                             </select>
                         )}
                     </div>
                 </div>
                 <div className="stat bg-base-200 rounded-lg">
-
                     <div className="stat-title">Status</div>
-                    <div
-                        className={`stat-value text-lg ${getStatusClass(
-                            ticket.status
-                        )}`}
-                    >
+                    <div className="stat-value text-lg">
                         {updateStatusFetcher.state === "submitting" ? (
                             <span className="loading loading-spinner"></span>
                         ) : (
@@ -304,10 +295,10 @@ export default function TicketDetailsRoute() {
                                 name="status"
                                 className="bg-base-200 w-full"
                                 value={ticket.status}>
-                                <option value="New">New</option>
-                                <option value="In Development">In Development</option>
-                                <option value="Testing">Testing</option>
-                                <option value="Resolved">Resolved</option>
+                                <option value="New">🆕 New</option>
+                                <option value="In Development">⚙️ In Development</option>
+                                <option value="Testing">🧪 Testing</option>
+                                <option value="Resolved">✅ Resolved</option>
                             </select>
                         )
                         }
@@ -331,12 +322,12 @@ export default function TicketDetailsRoute() {
                                 name="type"
                                 className="bg-base-200 w-full"
                                 value={ticket.type}>
-                                <option value="Defect">Defect</option>
-                                <option value="Feature">Feature</option>
-                                <option value="General Task">General Task</option>
-                                <option value="Change Request">Change Request</option>
-                                <option value="Work Task">Work Task</option>
-                                <option value="Enhancement">Enhancement</option>
+                                <option value="Defect">🐛 Defect</option>
+                                <option value="Feature">✨ Feature</option>
+                                <option value="General Task">📋 General Task</option>
+                                <option value="Change Request">🔄 Change Request</option>
+                                <option value="Work Task">💼 Work Task</option>
+                                <option value="Enhancement">⚡ Enhancement</option>
                             </select>
                         )
                         }
@@ -417,10 +408,10 @@ export default function TicketDetailsRoute() {
                                             name="priority"
                                             className="select w-max"
                                             defaultValue={ticket.priority}>
-                                            <option value="Low">Low</option>
-                                            <option value="Medium">Medium</option>
-                                            <option value="High">High</option>
-                                            <option value="Urgent">Urgent</option>
+                                            <option value="Low">🟢 Low</option>
+                                            <option value="Medium">🟡 Medium</option>
+                                            <option value="High">🟠 High</option>
+                                            <option value="Urgent">🔴 Urgent</option>
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-1">
@@ -429,10 +420,10 @@ export default function TicketDetailsRoute() {
                                             name="status"
                                             className="select w-max"
                                             defaultValue={ticket.status}>
-                                            <option value="New">New</option>
-                                            <option value="In Development">In Development</option>
-                                            <option value="Testing">Testing</option>
-                                            <option value="Resolved">Resolved</option>
+                                            <option value="New">🆕 New</option>
+                                            <option value="In Development">⚙️ In Development</option>
+                                            <option value="Testing">🧪 Testing</option>
+                                            <option value="Resolved">✅ Resolved</option>
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-1">
@@ -441,12 +432,12 @@ export default function TicketDetailsRoute() {
                                             name="type"
                                             className="select w-max"
                                             defaultValue={ticket.type}>
-                                            <option value="Defect">Defect</option>
-                                            <option value="Feature">Feature</option>
-                                            <option value="General Task">General Task</option>
-                                            <option value="Change Request">Change Request</option>
-                                            <option value="Work Task">Work Task</option>
-                                            <option value="Enhancement">Enhancement</option>
+                                            <option value="Defect">🐛 Defect</option>
+                                            <option value="Feature">✨ Feature</option>
+                                            <option value="General Task">📋 General Task</option>
+                                            <option value="Change Request">🔄 Change Request</option>
+                                            <option value="Work Task">💼 Work Task</option>
+                                            <option value="Enhancement">⚡ Enhancement</option>
                                         </select>
                                     </div>
                                 </div>
@@ -589,23 +580,5 @@ export async function action({ request, params }: ActionFunctionArgs) {
         error: null,
     });
 }
-// Helper function to get badge color based on priority
-function getPriorityClass(priority: string): string {
-    switch (priority?.toLowerCase()) {
-        case 'high': return 'text-error';
-        case 'medium': return 'text-warning';
-        case 'low': return 'text-info';
-        default: return '';
-    }
-}
-// Helper function to get badge color based on status
-function getStatusClass(status: string): string {
-    switch (status?.toLowerCase()) {
-        case 'open': return 'text-info';
-        case 'in progress': return 'text-warning';
-        case 'resolved': return 'text-success';
-        case 'closed': return 'text-neutral';
-        default: return '';
-    }
-}
+
 

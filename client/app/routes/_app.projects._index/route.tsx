@@ -81,16 +81,4 @@ export default function ProjectsRoute() {
     );
 }
 
-// Helper function to get badge color based on priority
-function getPriorityClass(priority: string): string {
-    switch (priority.toLowerCase()) {
-        case 'high':
-            return 'badge-error';
-        case 'medium':
-            return 'badge-warning';
-        case 'low':
-            return 'badge-info';
-        default:
-            return 'badge-ghost';
-    }
-}
+

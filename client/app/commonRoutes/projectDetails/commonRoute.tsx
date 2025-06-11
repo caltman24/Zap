@@ -2,7 +2,7 @@ import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNav
 import { useRef, useState, } from "react";
 import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
 import { CompanyMemberPerRole, ProjectManagerInfo, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
-import { useEditMode, getPriorityClass } from "~/utils/editMode";
+import { useEditMode } from "~/utils/editMode";
 import { ActionResponseParams, JsonResponseResult } from "~/utils/response";
 import RouteLayout from "~/layouts/RouteLayout";
 import roleNames from "~/data/roles";
@@ -265,8 +265,8 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                     </div>
                                     <div className="stat bg-base-200 rounded-lg">
                                         <div className="stat-title">Priority</div>
-                                        <div className={`stat-value text-lg ${getPriorityClass(project.priority)}`}>
-                                            {project.priority}
+                                        <div className="stat-value text-lg">
+                                            {getPriorityDisplay(project.priority)}
                                         </div>
                                     </div>
                                     <div className="stat bg-base-200 rounded-lg">
@@ -359,5 +359,21 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
             }
         </RouteLayout >
     );
+}
+
+// Helper function to get priority display with emoji
+function getPriorityDisplay(priority: string): string {
+    switch (priority?.toLowerCase()) {
+        case 'urgent':
+            return '🔴 Urgent';
+        case 'high':
+            return '🟠 High';
+        case 'medium':
+            return '🟡 Medium';
+        case 'low':
+            return '🟢 Low';
+        default:
+            return priority;
+    }
 }
 

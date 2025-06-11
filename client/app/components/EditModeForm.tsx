@@ -58,21 +58,6 @@ export function PrioritySelect({
   className?: string;
   required?: boolean;
 }) {
-  const getPriorityTextClass = (value: string): string => {
-    switch (value?.toLowerCase()) {
-      case 'low':
-        return 'text-info';
-      case 'medium':
-        return 'text-warning';
-      case 'high':
-        return 'text-error';
-      case 'urgent':
-        return 'text-error font-bold';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div className="form-control">
       <label className="label">
@@ -81,16 +66,16 @@ export function PrioritySelect({
       <div className="relative w-full">
         <select
           name="priority"
-          className={`select select-bordered w-full ${getPriorityTextClass(value)} ${className}`}
+          className={`select select-bordered w-full ${className}`}
           required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >
           <option value="">Select priority</option>
-          <option value="Low" className="text-info">Low</option>
-          <option value="Medium" className="text-warning">Medium</option>
-          <option value="High" className="text-error">High</option>
-          <option value="Urgent" className="text-error font-bold">Urgent</option>
+          <option value="Low">🟢 Low</option>
+          <option value="Medium">🟡 Medium</option>
+          <option value="High">🟠 High</option>
+          <option value="Urgent">🔴 Urgent</option>
         </select>
       </div>
     </div>
