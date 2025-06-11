@@ -39,6 +39,18 @@ export function formatDateHeader(date: Date): string {
   }
 }
 
+export function formatDateTimeShort(date: Date): string {
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  const meridiem = date.getHours() < 12 ? "AM" : "PM";
+
+  return `${month}-${day}-${year} ${hours}:${minutes} ${meridiem}`;
+}
+
 export function isSameDay(date1: Date, date2: Date): boolean {
   return (
     date1.getFullYear() === date2.getFullYear() &&

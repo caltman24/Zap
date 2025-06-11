@@ -1,5 +1,6 @@
 import { Form, Link } from "@remix-run/react";
 import { BasicTicketInfo } from "~/services/api.server/types";
+import { formatDateTimeShort } from "~/utils/dateTime";
 
 export type TicketTableProps = {
     tickets?: BasicTicketInfo[] | null
@@ -11,19 +12,27 @@ export default function TicketTable({ tickets }: TicketTableProps) {
             <table className="table table-zebra w-full">
                 <thead>
                     <tr>
+                        <th className="w-10"></th>
                         <th>Title</th>
                         <th>Status</th>
                         <th>Priority</th>
                         <th>Type</th>
                         <th>Submitter</th>
                         <th>Developer</th>
-                        <th>Actions</th>
+                        <th>Last Updated</th>
                     </tr>
                 </thead>
                 <tbody>
                     {tickets?.length! > 0 ? (
                         tickets?.map((ticket) => (
                             <tr key={ticket.id}>
+                                <td>
+                                    <div className="flex gap-1 items-center">
+                                        <Link to={`/projects/${ticket.projectId}/tickets/${ticket.id}`} className="btn btn-xs btn-ghost">
+                                            <span className="material-symbols-outlined">visibility</span>
+                                        </Link>
+                                    </div>
+                                </td>
                                 <td>{ticket.name}</td>
                                 <td>
                                     <div>
@@ -65,11 +74,19 @@ export default function TicketTable({ tickets }: TicketTableProps) {
                                     )}
                                 </td>
                                 <td>
-                                    <div className="flex gap-1 items-center">
-                                        <Link to={`/projects/${ticket.projectId}/tickets/${ticket.id}`} className="btn btn-xs btn-ghost">
-                                            <span className="material-symbols-outlined">visibility</span>
-                                        </Link>
-                                    </div>
+                                    {ticket.updatedAt ? (
+                                        <span className="text-xs">
+                                            {formatDateTimeShort(new Date(ticket.updatedAt))}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs opacity-60">{new Date(ticket.createdAt).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}</span>
+                                    )}
                                 </td>
                             </tr>
                         ))

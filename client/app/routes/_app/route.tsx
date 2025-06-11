@@ -51,7 +51,7 @@ export default function AppRoute() {
 
     return (
         <div>
-            <div className="flex min-h-screen h-screen max-h-screen bg-base-300">
+            <div className="flex min-h-screen h-screen max-h-screen overflow-y-hidden bg-base-300">
                 {/* Mobile menu button */}
                 <button
                     className="lg:hidden fixed z-30 bottom-4 right-4 btn btn-circle btn-primary"

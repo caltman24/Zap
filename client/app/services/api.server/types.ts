@@ -122,6 +122,8 @@ export type BasicTicketInfo = {
   assignee: BasicUserInfo | null;
   isArchived: boolean;
   projectIsArchived: boolean;
+  createdAt: string;
+  updatedAt: string | null;
 };
 
 export type CreateTicketResult = {

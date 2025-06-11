@@ -65,6 +65,8 @@ public class TicketService : ITicketService
                 t.ProjectId,
                 t.IsArchived,
                 t.Project.IsArchived,
+                t.CreatedAt,
+                t.UpdatedAt,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -98,6 +100,8 @@ public class TicketService : ITicketService
                 t.ProjectId,
                 t.IsArchived,
                 t.Project.IsArchived,
+                t.CreatedAt,
+                t.UpdatedAt,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -128,6 +132,8 @@ public class TicketService : ITicketService
                 t.ProjectId,
                 t.IsArchived,
                 t.Project.IsArchived,
+                t.CreatedAt,
+                t.UpdatedAt,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -161,6 +167,8 @@ public class TicketService : ITicketService
                 t.ProjectId,
                 t.IsArchived,
                 t.Project.IsArchived,
+                t.CreatedAt,
+                t.UpdatedAt,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -191,6 +199,8 @@ public class TicketService : ITicketService
                 t.ProjectId,
                 t.IsArchived,
                 t.Project.IsArchived,
+                t.CreatedAt,
+                t.UpdatedAt,
                 new MemberInfoDto(
                     t.Submitter.Id,
                     $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -222,7 +232,9 @@ public class TicketService : ITicketService
 
         var rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.AssigneeId, memberId));
+            .ExecuteUpdateAsync(setter => setter
+                    .SetProperty(t => t.AssigneeId, memberId)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0)
         {
@@ -273,10 +285,9 @@ public class TicketService : ITicketService
 
         var rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter =>
-                    setter.SetProperty(
-                        t => t.PriorityId,
-                        _db.TicketPriorities.First(s => s.Name == priority).Id));
+            .ExecuteUpdateAsync(setter => setter
+                    .SetProperty(t => t.PriorityId, _db.TicketPriorities.First(s => s.Name == priority).Id)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0 && oldPriority != priority)
         {
@@ -302,10 +313,9 @@ public class TicketService : ITicketService
 
         var rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter =>
-                    setter.SetProperty(
-                        t => t.StatusId,
-                        _db.TicketStatuses.First(s => s.Name == status).Id));
+            .ExecuteUpdateAsync(setter => setter
+                    .SetProperty(t => t.StatusId, _db.TicketStatuses.First(s => s.Name == status).Id)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0 && oldStatus != status)
         {
@@ -360,7 +370,8 @@ public class TicketService : ITicketService
                     .SetProperty(t => t.TypeId, _db.TicketTypes.First(s => s.Name == ticket.Type).Id)
                     .SetProperty(t => t.PriorityId, _db.TicketPriorities.First(s => s.Name == ticket.Priority).Id)
                     .SetProperty(t => t.Name, ticket.Name)
-                    .SetProperty(t => t.Description, ticket.Description));
+                    .SetProperty(t => t.Description, ticket.Description)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0)
         {
@@ -421,10 +432,9 @@ public class TicketService : ITicketService
 
         var rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter =>
-                    setter.SetProperty(
-                        t => t.TypeId,
-                        _db.TicketTypes.First(t => t.Name == type).Id));
+            .ExecuteUpdateAsync(setter => setter
+                    .SetProperty(t => t.TypeId, _db.TicketTypes.First(t => t.Name == type).Id)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0 && oldType != type)
         {
@@ -512,7 +522,9 @@ public class TicketService : ITicketService
 
         int rowsChanged = await _db.Tickets
             .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, t => !t.IsArchived));
+            .ExecuteUpdateAsync(setter => setter
+                    .SetProperty(t => t.IsArchived, t => !t.IsArchived)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0)
         {
@@ -544,7 +556,8 @@ public class TicketService : ITicketService
             .Where(t => t.Id == ticketId && t.IsArchived)
             .ExecuteUpdateAsync(setters => setters
                     .SetProperty(t => t.Name, name)
-                    .SetProperty(t => t.Description, description));
+                    .SetProperty(t => t.Description, description)
+                    .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
 
         if (rowsChanged > 0)
         {

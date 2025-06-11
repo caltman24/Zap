@@ -31,6 +31,7 @@ public class AppDbContext : IdentityUserContext<AppUser>
         return base.SaveChanges();
     }
 
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         UpdateTimestamps();

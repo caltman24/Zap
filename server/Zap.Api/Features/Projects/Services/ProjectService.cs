@@ -49,6 +49,8 @@ public sealed class ProjectService : IProjectService
                     t.ProjectId,
                     t.IsArchived,
                     p.IsArchived,
+                    p.CreatedAt,
+                    p.UpdatedAt,
                     new MemberInfoDto(
                         t.Submitter.Id,
                         $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
@@ -134,7 +136,9 @@ public sealed class ProjectService : IProjectService
             // Archive all tickets under this project
             await _db.Tickets
                 .Where(t => t.ProjectId == projectId)
-                .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, true));
+                .ExecuteUpdateAsync(setter => setter
+                        .SetProperty(t => t.IsArchived, true)
+                        .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
         }
         // If we're unarchiving the project (it's currently archived), also unarchive all its tickets
         else
@@ -142,13 +146,17 @@ public sealed class ProjectService : IProjectService
             // Unarchive all tickets under this project
             await _db.Tickets
                 .Where(t => t.ProjectId == projectId)
-                .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.IsArchived, false));
+                .ExecuteUpdateAsync(setter => setter
+                        .SetProperty(t => t.IsArchived, false)
+                        .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
         }
 
         // Toggle the project archive status
         var rowsChanged = await _db.Projects
             .Where(p => p.Id == projectId)
-            .ExecuteUpdateAsync(setter => setter.SetProperty(s => s.IsArchived, s => !s.IsArchived));
+            .ExecuteUpdateAsync(setter => setter
+                    .SetProperty(s => s.IsArchived, s => !s.IsArchived)
+                    .SetProperty(s => s.UpdatedAt, DateTime.UtcNow));
 
         return rowsChanged > 0;
     }
@@ -161,7 +169,8 @@ public sealed class ProjectService : IProjectService
                     .SetProperty(p => p.Name, projectDto.Name)
                     .SetProperty(p => p.Description, projectDto.Description)
                     .SetProperty(p => p.Priority, projectDto.Priority)
-                    .SetProperty(p => p.DueDate, projectDto.DueDate));
+                    .SetProperty(p => p.DueDate, projectDto.DueDate)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
         return rowsChanged > 0;
     }
@@ -172,7 +181,8 @@ public sealed class ProjectService : IProjectService
             .Where(p => p.Id == projectId && p.IsArchived)
             .ExecuteUpdateAsync(setters => setters
                     .SetProperty(p => p.Name, name)
-                    .SetProperty(p => p.Description, description));
+                    .SetProperty(p => p.Description, description)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
         return rowsChanged > 0;
     }
@@ -181,7 +191,9 @@ public sealed class ProjectService : IProjectService
     {
         int rowsChanged = await _db.Projects
             .Where(p => p.Id == projectId)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.ProjectManagerId, memberId));
+            .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.ProjectManagerId, memberId)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
         return rowsChanged > 0;
     }
@@ -325,7 +337,9 @@ public sealed class ProjectService : IProjectService
                 await _db.Tickets
                     .Where(t => t.ProjectId == project.Id)
                     .Where(t => t.AssigneeId == member.Id)
-                    .ExecuteUpdateAsync(setter => setter.SetProperty(t => t.AssigneeId, t => null));
+                    .ExecuteUpdateAsync(setter => setter
+                            .SetProperty(t => t.AssigneeId, t => null)
+                            .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
             }
 
             removeResult = project.AssignedMembers.Remove(member);

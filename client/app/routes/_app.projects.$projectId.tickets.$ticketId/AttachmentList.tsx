@@ -1,3 +1,4 @@
+import { formatDateTimeShort } from "~/utils/dateTime";
 import { AttachmentFile } from "./AttachmentSection";
 
 interface AttachmentListProps {
@@ -8,14 +9,14 @@ interface AttachmentListProps {
     canRemove: (attachment: AttachmentFile) => boolean;
 }
 
-export default function AttachmentList({ 
-    attachments, 
-    onRemove, 
-    onView, 
-    onDownload, 
-    canRemove 
+export default function AttachmentList({
+    attachments,
+    onRemove,
+    onView,
+    onDownload,
+    canRemove
 }: AttachmentListProps) {
-    
+
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -26,36 +27,26 @@ export default function AttachmentList({
 
     const getFileIcon = (type: string, name: string): string => {
         const extension = name.split('.').pop()?.toLowerCase();
-        
+
         if (type.startsWith('image/')) return 'image';
         if (type === 'application/pdf' || extension === 'pdf') return 'picture_as_pdf';
         if (type.includes('word') || extension === 'doc' || extension === 'docx') return 'description';
         if (type === 'text/plain' || extension === 'txt') return 'text_snippet';
         if (type.includes('zip') || extension === 'zip') return 'folder_zip';
-        
+
         return 'attach_file';
     };
 
     const getFileTypeColor = (type: string, name: string): string => {
         const extension = name.split('.').pop()?.toLowerCase();
-        
+
         if (type.startsWith('image/')) return 'text-success';
         if (type === 'application/pdf' || extension === 'pdf') return 'text-error';
         if (type.includes('word') || extension === 'doc' || extension === 'docx') return 'text-info';
         if (type === 'text/plain' || extension === 'txt') return 'text-warning';
         if (type.includes('zip') || extension === 'zip') return 'text-secondary';
-        
-        return 'text-base-content';
-    };
 
-    const formatDate = (date: Date): string => {
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
+        return 'text-base-content';
     };
 
     const canPreview = (type: string): boolean => {
@@ -66,7 +57,7 @@ export default function AttachmentList({
         return (
             <div className="text-center py-8 text-base-content/60">
                 <svg className="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
                         d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                 </svg>
                 <p>No attachments yet.</p>
@@ -77,8 +68,8 @@ export default function AttachmentList({
     return (
         <div className="space-y-3">
             {attachments.map((attachment) => (
-                <div 
-                    key={attachment.id} 
+                <div
+                    key={attachment.id}
                     className="flex items-center gap-4 p-4 bg-base-200 rounded-lg hover:bg-base-300/50 transition-colors"
                 >
                     {/* File Icon */}
@@ -106,7 +97,7 @@ export default function AttachmentList({
                                 <span>{attachment.uploadedBy.name}</span>
                             </div>
                             <span>•</span>
-                            <span>{formatDate(attachment.uploadedAt)}</span>
+                            <span>{formatDateTimeShort(attachment.uploadedAt)}</span>
                         </div>
                     </div>
 
@@ -121,7 +112,7 @@ export default function AttachmentList({
                                 <span className="material-symbols-outlined text-lg">visibility</span>
                             </button>
                         )}
-                        
+
                         <button
                             onClick={() => onDownload(attachment)}
                             className="btn btn-sm btn-ghost btn-circle"

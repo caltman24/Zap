@@ -46,6 +46,8 @@ public record BasicTicketDto(
     string ProjectId,
     bool isArchived,
     bool ProjectIsArchived,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
     MemberInfoDto Submitter,
     MemberInfoDto? Assignee
 );
