@@ -3,7 +3,7 @@ using Zap.Api.Common.Constants;
 
 namespace Zap.Api.Data.Models;
 
-public class CompanyRole
+public class CompanyRole : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = string.Empty;

@@ -2,7 +2,7 @@
 
 namespace Zap.Api.Data.Models;
 
-public class Ticket
+public class Ticket : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     [StringLength(50)] public required string Name { get; set; }
@@ -30,7 +30,4 @@ public class Ticket
     public ICollection<TicketComment> Comments { get; set; } = [];
     public ICollection<TicketAttachment> Attachments { get; set; } = [];
     public ICollection<TicketHistory> History { get; set; } = [];
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; } = null;
 }

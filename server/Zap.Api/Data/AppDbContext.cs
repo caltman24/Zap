@@ -25,9 +25,32 @@ public class AppDbContext : IdentityUserContext<AppUser>
     public DbSet<TicketAttachment> TicketAttachments { get; set; } = default!;
     public DbSet<TicketHistory> TicketHistories { get; set; } = default!;
 
+    public override int SaveChanges()
+    {
+        UpdateTimestamps();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateTimestamps();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Set default value for CreatedAt on all entities that inherit from BaseEntity
+        foreach (var entityType in builder.Model.GetEntityTypes())
+        {
+            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                builder.Entity(entityType.ClrType)
+                    .Property(nameof(BaseEntity.CreatedAt))
+                    .HasDefaultValueSql("NOW()");
+            }
+        }
 
         builder.Entity<Company>()
             .HasOne(u => u.Owner)
@@ -129,5 +152,27 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .HasOne(a => a.Creator)
             .WithMany()
             .HasForeignKey(a => a.CreatorId);
+    }
+
+    private void UpdateTimestamps()
+    {
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+        var currentTime = DateTime.UtcNow;
+
+        foreach (var entry in entries)
+        {
+            if (entry.State == EntityState.Added)
+            {
+                ((BaseEntity)entry.Entity).CreatedAt = currentTime;
+            }
+
+            if (entry.State == EntityState.Modified)
+            {
+                ((BaseEntity)entry.Entity).UpdatedAt = currentTime;
+            }
+        }
+
     }
 }

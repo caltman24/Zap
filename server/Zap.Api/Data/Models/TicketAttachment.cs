@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Zap.Api.Data.Models;
 
-public class TicketAttachment
+public class TicketAttachment : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
@@ -14,8 +14,6 @@ public class TicketAttachment
 
     public string StoreKey { get; set; } = default!;
     public string StoreUrl { get; set; } = default!;
-
-    public DateTime CreatedAt { get; set; } = default!;
 
 
     // Name of file

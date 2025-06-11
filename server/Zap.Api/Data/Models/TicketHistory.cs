@@ -3,7 +3,7 @@ using Zap.Api.Common.Enums;
 
 namespace Zap.Api.Data.Models;
 
-public class TicketHistory
+public class TicketHistory : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
@@ -19,7 +19,5 @@ public class TicketHistory
     public string? RelatedEntityId { get; set; }
 
     public TicketHistoryTypes Type { get; set; } = default!;
-
-    public DateTime CreatedAt { get; set; } = default!;
 }
 

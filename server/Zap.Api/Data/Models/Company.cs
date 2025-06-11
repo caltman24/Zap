@@ -2,7 +2,7 @@
 
 namespace Zap.Api.Data.Models;
 
-public class Company
+public class Company : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     [StringLength(75)] public required string Name { get; set; }
