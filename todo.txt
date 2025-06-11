@@ -8,13 +8,9 @@
 
 
 // TODO //
-[X] - add comments to ticket
 [] - Implement permission based features on ticket details page
-[X] - edit owned comments
-[] - add history to ticket
-[] - add attatchements to ticket
+[] - add attachments to ticket
 
-[X] - Server & Client: Archive tickets when project is archived
 
 [] - Client: all tickets view for project tickets
 [] - Client: sort/filter tickets table
@@ -22,15 +18,10 @@
 
 [] - Server: Figure out ticket-member delete behaviors on db
 
-[] - Client: role validation
-[] - Client: Project Priority easy change (similar to ticket)
+[] - Client: polish role validation
 [] - Client: Project remove member modal info/confirmation
-[] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
-[] - Client: Finish Resolved Tickets route
 [] - Client: Finish My tickets route
 [] - Client: Review and polish routes/breadcrumbs for better UX and navigation
-
-
 
 [] - User settings page
 [] - Admin: Manage user roles
@@ -67,4 +58,10 @@
 [X] - Server: role validation / member companyId & resource companyId validation
 [X] - On remove developer from project: remove from assigned tickets
 [X] - Client: archive ticket
+[X] - edit owned comments
+[X] - add history to ticket
+[X] - add comments to ticket
+[X] - Server & Client: Archive tickets when project is archived
+[X] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
+[X] - Client: Finish Resolved Tickets route
 
