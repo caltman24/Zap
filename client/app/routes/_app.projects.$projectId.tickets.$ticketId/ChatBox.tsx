@@ -44,7 +44,7 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
 
     const commentsList = (
         <>
-            {comments ? (
+            {comments && comments.length > 0 ? (
                 comments.map((c, index) => {
                     const css = c.sender.id === userId ? "chat-end" : "chat-start";
                     const createdAtDate = new Date(c.createdAt);
@@ -150,7 +150,13 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
                     )
                 })
             ) : (
-                <div>No Comments</div>
+                <div className="flex flex-col items-center justify-center text-center py-8">
+                    <div className="text-base-content/50 mb-2">
+                        <span className="material-symbols-outlined text-4xl">mail</span>
+                    </div>
+                    <p className="text-base-content/70 text-lg font-medium">No comments yet</p>
+                    <p className="text-base-content/50 text-sm">Start the conversation by adding a comment below</p>
+                </div>
             )}
         </>
     )

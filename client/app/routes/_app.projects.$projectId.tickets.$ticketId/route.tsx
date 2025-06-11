@@ -1,14 +1,14 @@
 
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigate, useNavigation, useOutletContext, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
+import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigation, useOutletContext, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient"; import { AuthenticationError } from "~/services/api.server/errors";
-import { getSession } from "~/services/sessions.server"; import { ActionResponse, ActionResponseParams, ActionResponseResult, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
+import { getSession } from "~/services/sessions.server"; import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { getTicketById } from "./server.get-ticket";
 import BackButton from "~/components/BackButton";
 import { useEffect, useRef, useState } from "react";
 import DeveloperListModal from "./DeveloperListModal";
-import { BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
+import { BasicUserInfo } from "~/services/api.server/types";
 import { useEditMode } from "~/utils/editMode";
 import { EditModeForm } from "~/components/EditModeForm";
 import { validateRole } from "~/utils/validate";
@@ -17,7 +17,7 @@ import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
-import getTicketHistory from "./server.get-ticket-history";
+
 import AttachmentSection from "./AttachmentSection";
 export const handle = {
     breadcrumb: (match: any) => {
@@ -55,7 +55,7 @@ export default function TicketDetailsRoute() {
     const { ticketId } = useParams();
     const actionData = useActionData() as ActionResponseParams
     const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
-    const { _, userInfo } = useOutletContext<any>();
+    const { userInfo } = useOutletContext<any>();
 
     const navigation = useNavigation()
 
@@ -144,216 +144,229 @@ export default function TicketDetailsRoute() {
 
     const TicketDetails = (
         <>
-            <div className="flex justify-between items-center">
-                <div>
-                    {ticket.isArchived &&
-                        <div className="badge badge-warning font-medium mb-2">Archived</div>
-                    }
-                    <div className="flex gap-2 items-center">
-                        <h1 className="text-3xl font-bold mb-2">{ticket.name}</h1>
-                        {true && (
-                            <>
-                                <div className="dropdown dropdown-center">
-                                    <div tabIndex={0} role="button" className="btn btn-sm shadow-sm btn-soft flex gap-1 p-0 items-center border-0">
-                                        <div className="bg-base-200 grid place-items-center w-full h-full py-0.5 px-2 rounded-tl-sm rounded-bl-sm">
-                                            <span className="!text-lg material-symbols-outlined w-full">edit</span>
-                                        </div>
-                                        <svg className="w-5 pr-1" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path className="fill-base-content" d="M11.1808 15.8297L6.54199 9.20285C5.89247 8.27496 6.55629 7 7.68892 7L16.3111 7C17.4437 7 18.1075 8.27496 17.458 9.20285L12.8192 15.8297C12.4211 16.3984 11.5789 16.3984 11.1808 15.8297Z" fill="#33363F" />
-                                        </svg>
+            {/* Header Section */}
+            <div className="border-b border-base-300/30 p-6">
+                <div className="flex justify-between items-start">
+                    <div className="flex flex-col space-y-3">
+                        {ticket.isArchived && (
+                            <div className="font-semibold text-lg text-warning">
+                                📁 Archived
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-bold text-base-content leading-tight">
+                                {ticket.name}
+                            </h1>
+                            <p className="text-base-content/70 text-lg leading-relaxed max-w-3xl">
+                                {ticket.description}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3 items-center flex-shrink-0 ml-6">
+                        <button
+                            onClick={handleEditToggle}
+                            className="btn btn-soft btn-sm gap-2 shadow-sm"
+                        >
+                            <span className="material-symbols-outlined text-sm">edit</span>
+                            Edit Details
+                        </button>
+                        <Form method="post" action={`/tickets/${ticketId}/archive`} onSubmit={handleArchiveClick}>
+                            <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
+                            <button
+                                type="submit"
+                                name="intent"
+                                value={ticket.isArchived ? "unarchive" : "archive"}
+                                className={`btn btn-sm gap-2 shadow-sm ${ticket.isArchived ? 'btn-success' : 'btn-warning'}`}
+                            >
+                                <span className="material-symbols-outlined text-sm">folder</span>
+                                {ticket.isArchived ? "Unarchive" : "Archive"}
+                            </button>
+                        </Form>
+                        <Form method="post" action={`/tickets/${ticketId}/delete`}>
+                            <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
+                            <button
+                                type="submit"
+                                className="btn btn-sm btn-error gap-2 shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                                Delete
+                            </button>
+                        </Form>
+                    </div>
+                </div>
+            </div>
+
+            {/* Developer Modal */}
+            <DeveloperListModal
+                modalRef={developersModalRef}
+                members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
+                currentMember={ticket.assignee}
+                actionFetcher={assignDeveloperFetcher}
+                actionFetcherSubmit={(formData) => {
+                    assignDeveloperFetcher.submit(formData, {
+                        method: "post",
+                        action: `/tickets/${ticketId}/update-dev`
+                    })
+                }}
+            />
+
+
+            {/* Ticket Stats Section */}
+            <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
+                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
+                            Submitter
+                        </div>
+                        {ticket.submitter && (
+                            <div className="flex gap-3 items-center">
+                                <div className="avatar">
+                                    <div className="w-10 rounded-full ring-2 ring-base-300/50">
+                                        <img src={ticket.submitter.avatarUrl} alt="Submitter" />
                                     </div>
-                                    <ul tabIndex={0} className="menu dropdown-content bg-base-300 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
-                                        <li>
-                                            <a onClick={handleEditToggle} className="flex items-center gap-2">
-                                                <span className="material-symbols-outlined">edit</span>
-                                                Ticket Details
-                                            </a>
-                                        </li>
-                                        {true && (
-                                            <>
-                                                {true && (
-                                                    <>
-                                                        <li>
-                                                            <a onClick={() => handleOnGetDevelopers()}>
-                                                                <span className="material-symbols-outlined">person_add</span>
-                                                                Assign Developer
-                                                            </a>
-                                                        </li>
-                                                        {ticket.assignee && (
-                                                            <li>
-                                                                <a onClick={() => handleOnUnassignDeveloper()}>
-                                                                    <span className="material-symbols-outlined">person_remove</span>
-                                                                    Unassign Developer
-                                                                </a>
-                                                            </li>
-                                                        )}
-                                                        <li>
-                                                            <Form method="post" className="block hover:bg-warning/10 hover:text-warning" action={`/tickets/${ticketId}/archive`} onSubmit={handleArchiveClick}>
-                                                                <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
-                                                                <button type="submit" name="intent" defaultValue={ticket.isArchived ? "unarchive" : "archive"} className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                    <span className={`material-symbols-outlined `}>folder</span>
-                                                                    <p className="w-full">
-                                                                        {ticket.isArchived ? "Unarchive" : "Archive"}
-                                                                    </p>
-                                                                </button>
-                                                            </Form>
-                                                        </li>
-                                                        <li>
-                                                            <Form method="post" action={`/tickets/${ticketId}/delete`} className="block hover:text-error hover:bg-error/10">
-                                                                <button type="submit" className="flex items-center text-left gap-2 cursor-pointer w-full">
-                                                                    <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
-                                                                    <span className={`material-symbols-outlined`}>delete</span>
-                                                                    <p className="w-full">Delete</p>
-                                                                </button>
-                                                            </Form>
-                                                        </li>
-                                                    </>
-                                                )}
-                                            </>
-                                        )}
-                                    </ul>
-                                    {true && (
-                                        <DeveloperListModal
-                                            modalRef={developersModalRef}
-                                            members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
-                                            currentMember={ticket.assignee}
-                                            actionFetcher={assignDeveloperFetcher}
-                                            actionFetcherSubmit={(formData) => {
-                                                assignDeveloperFetcher.submit(formData, {
-                                                    method: "post",
-                                                    action: `/tickets/${ticketId}/update-dev`
-                                                })
-                                            }}
-                                        />
-                                    )}
                                 </div>
-                                {/* Archive/Unarchive Project button */}
-                            </>
+                                <div className="text-base font-semibold text-base-content">
+                                    {ticket.submitter.name}
+                                </div>
+                            </div>
                         )}
                     </div>
-                </div>
-            </div>
 
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title mb-2">Submitter</div>
-                    {ticket.submitter && (
-                        <div className="flex gap-2 items-center">
-                            <div className="avatar">
-                                <div className="w-9 rounded-full">
-
-                                    <img src={ticket.submitter.avatarUrl} />
-                                </div>
-                            </div>
-                            <div className="stat-value text-lg font-bold">
-                                {ticket.submitter.name}
-                            </div>
+                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
+                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
+                            Priority
                         </div>
-                    )}
-                </div>
-                <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title">Priority</div>
-                    <div className="stat-value text-lg">
-                        {updatePriorityFetcher.state === "submitting" ? (
-                            <span className="loading loading-spinner"></span>
-                        ) : (
-                            <select
-                                onChange={(e) => {
-                                    const formData = new FormData();
-                                    formData.append("priority", e.currentTarget.value)
-                                    updatePriorityFetcher.submit(formData, {
-                                        method: "post",
-                                        action: `/tickets/${ticketId}/update-priority`,
-                                    })
-                                }}
-                                className="bg-base-200 w-full"
-                                value={ticket.priority}>
-                                <option value="Low">🟢 Low</option>
-                                <option value="Medium">🟡 Medium</option>
-                                <option value="High">🟠 High</option>
-                                <option value="Urgent">🔴 Urgent</option>
-                            </select>
-                        )}
+                        <div className="text-base font-semibold">
+                            {updatePriorityFetcher.state === "submitting" ? (
+                                <span className="loading loading-spinner loading-sm"></span>
+                            ) : (
+                                <select
+                                    onChange={(e) => {
+                                        const formData = new FormData();
+                                        formData.append("priority", e.currentTarget.value)
+                                        updatePriorityFetcher.submit(formData, {
+                                            method: "post",
+                                            action: `/tickets/${ticketId}/update-priority`,
+                                        })
+                                    }}
+                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
+                                    value={ticket.priority}>
+                                    <option value="Low">🟢 Low</option>
+                                    <option value="Medium">🟡 Medium</option>
+                                    <option value="High">🟠 High</option>
+                                    <option value="Urgent">🔴 Urgent</option>
+                                </select>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title">Status</div>
-                    <div className="stat-value text-lg">
-                        {updateStatusFetcher.state === "submitting" ? (
-                            <span className="loading loading-spinner"></span>
-                        ) : (
-                            <select
-                                onChange={(e) => {
-                                    const formData = new FormData();
-                                    formData.append("status", e.target.value)
-                                    updateStatusFetcher.submit(formData, {
-                                        method: "post",
-                                        action: `/tickets/${ticketId}/update-status`,
-                                    })
-                                }}
-                                name="status"
-                                className="bg-base-200 w-full"
-                                value={ticket.status}>
-                                <option value="New">🆕 New</option>
-                                <option value="In Development">⚙️ In Development</option>
-                                <option value="Testing">🧪 Testing</option>
-                                <option value="Resolved">✅ Resolved</option>
-                            </select>
-                        )
-                        }
+
+                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
+                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
+                            Status
+                        </div>
+                        <div className="text-base font-semibold">
+                            {updateStatusFetcher.state === "submitting" ? (
+                                <span className="loading loading-spinner loading-sm"></span>
+                            ) : (
+                                <select
+                                    onChange={(e) => {
+                                        const formData = new FormData();
+                                        formData.append("status", e.target.value)
+                                        updateStatusFetcher.submit(formData, {
+                                            method: "post",
+                                            action: `/tickets/${ticketId}/update-status`,
+                                        })
+                                    }}
+                                    name="status"
+                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
+                                    value={ticket.status}>
+                                    <option value="New">🆕 New</option>
+                                    <option value="In Development">⚙️ In Development</option>
+                                    <option value="Testing">🧪 Testing</option>
+                                    <option value="Resolved">✅ Resolved</option>
+                                </select>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <div className="stat bg-base-200 rounded-lg">
-                    <div className="stat-title">Type</div>
-                    <div className="stat-value text-lg font-bold">
-                        {updateTypeFetcher.state === "submitting" ? (
-                            <span className="loading loading-spinner"></span>
-                        ) : (
-                            <select
-                                onChange={(e) => {
-                                    const formData = new FormData();
-                                    formData.append("type", e.target.value)
-                                    updateTypeFetcher.submit(formData, {
-                                        method: "post",
-                                        action: `/tickets/${ticketId}/update-type`,
-                                    })
-                                }}
-                                name="type"
-                                className="bg-base-200 w-full"
-                                value={ticket.type}>
-                                <option value="Defect">🐛 Defect</option>
-                                <option value="Feature">✨ Feature</option>
-                                <option value="General Task">📋 General Task</option>
-                                <option value="Change Request">🔄 Change Request</option>
-                                <option value="Work Task">💼 Work Task</option>
-                                <option value="Enhancement">⚡ Enhancement</option>
-                            </select>
-                        )
-                        }
+
+                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
+                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
+                            Type
+                        </div>
+                        <div className="text-base font-semibold">
+                            {updateTypeFetcher.state === "submitting" ? (
+                                <span className="loading loading-spinner loading-sm"></span>
+                            ) : (
+                                <select
+                                    onChange={(e) => {
+                                        const formData = new FormData();
+                                        formData.append("type", e.target.value)
+                                        updateTypeFetcher.submit(formData, {
+                                            method: "post",
+                                            action: `/tickets/${ticketId}/update-type`,
+                                        })
+                                    }}
+                                    name="type"
+                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
+                                    value={ticket.type}>
+                                    <option value="Defect">🐛 Defect</option>
+                                    <option value="Feature">✨ Feature</option>
+                                    <option value="General Task">📋 General Task</option>
+                                    <option value="Change Request">🔄 Change Request</option>
+                                    <option value="Work Task">💼 Work Task</option>
+                                    <option value="Enhancement">⚡ Enhancement</option>
+                                </select>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="mt-6">
-                <h2 className="text-lg font-bold mb-2">Developer</h2>
+            {/* Developer Assignment Section */}
+            <div className="p-6 border-b border-base-300/30">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-base-content">Assigned Developer</h3>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => handleOnGetDevelopers()}
+                            className="btn btn-soft btn-sm gap-2 shadow-sm"
+                            title="Assign Developer"
+                        >
+                            <span className="material-symbols-outlined text-sm">person_add</span>
+                            Assign
+                        </button>
+                        {ticket.assignee && (
+                            <button
+                                onClick={() => handleOnUnassignDeveloper()}
+                                className="btn btn-soft btn-sm gap-2 shadow-sm"
+                                title="Unassign Developer"
+                            >
+                                <span className="material-symbols-outlined text-sm">person_remove</span>
+                                Unassign
+                            </button>
+                        )}
+                    </div>
+                </div>
                 {ticket.assignee ? (
-                    <div className="flex gap-2 items-center">
-                        <div className="avatar">
-                            <div className="w-9 rounded-full">
-                                <img src={ticket.assignee.avatarUrl} />
+                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
+                        <div className="flex gap-3 items-center">
+                            <div className="avatar">
+                                <div className="w-10 rounded-full ring-2 ring-base-300/50">
+                                    <img src={ticket.assignee.avatarUrl} alt="Assigned Developer" />
+                                </div>
+                            </div>
+                            <div className="text-base font-semibold text-base-content">
+                                {ticket.assignee.name}
                             </div>
                         </div>
-                        <div className="font-bold">{ticket.assignee.name} </div>
                     </div>
                 ) : (
-                    <p className="font-medium text-gray-400">Unassigned</p>
+                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
+                        <div className="text-base font-medium text-base-content/50">
+                            Not assigned
+                        </div>
+                    </div>
                 )}
-            </div>
-
-            <div className="flex flex-col mt-4">
-                <p className="text-lg font-medium">Description:</p>
-                <p className="">{ticket.description}</p>
             </div>
         </>
     )
@@ -366,92 +379,94 @@ export default function TicketDetailsRoute() {
                     <div className="flex justify-between items-center mb-2">
                         <BackButton />
                     </div>
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 overflow-hidden">
                         {isEditing ? (
-                            <EditModeForm
-                                error={formError}
-                                isSubmitting={navigation.state === "submitting"}
-                                onCancel={handleEditToggle}
-                            >
-                                <div className="form-control mb-4">
-                                    <label className="label">
-                                        <span className="label-text">Ticket Name</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        className="input input-bordered w-full"
-                                        defaultValue={ticket.name}
-                                        required
-                                        maxLength={50}
-                                    />
-                                </div>
+                            <div className="p-6">
+                                <EditModeForm
+                                    error={formError}
+                                    isSubmitting={navigation.state === "submitting"}
+                                    onCancel={handleEditToggle}
+                                >
+                                    <div className="form-control mb-4">
+                                        <label className="label">
+                                            <span className="label-text">Ticket Name</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            className="input input-bordered w-full"
+                                            defaultValue={ticket.name}
+                                            required
+                                            maxLength={50}
+                                        />
+                                    </div>
 
-                                <div className="form-control mb-4">
-                                    <label className="label">
-                                        <span className="label-text">Description</span>
-                                    </label>
-                                    <textarea
-                                        name="description"
-                                        className="textarea textarea-bordered w-full"
-                                        defaultValue={ticket.description}
-                                        rows={4}
-                                        required
-                                        maxLength={1000}
-                                    ></textarea>
-                                </div>
+                                    <div className="form-control mb-4">
+                                        <label className="label">
+                                            <span className="label-text">Description</span>
+                                        </label>
+                                        <textarea
+                                            name="description"
+                                            className="textarea textarea-bordered w-full"
+                                            defaultValue={ticket.description}
+                                            rows={4}
+                                            required
+                                            maxLength={1000}
+                                        ></textarea>
+                                    </div>
 
-                                <div className="flex gap-3">
-                                    <div className="flex flex-col gap-1">
-                                        <label className="label" htmlFor="priority">Description</label>
-                                        <select
-                                            name="priority"
-                                            className="select w-max"
-                                            defaultValue={ticket.priority}>
-                                            <option value="Low">🟢 Low</option>
-                                            <option value="Medium">🟡 Medium</option>
-                                            <option value="High">🟠 High</option>
-                                            <option value="Urgent">🔴 Urgent</option>
-                                        </select>
+                                    <div className="flex gap-3">
+                                        <div className="flex flex-col gap-1">
+                                            <label className="label" htmlFor="priority">Priority</label>
+                                            <select
+                                                name="priority"
+                                                className="select w-max"
+                                                defaultValue={ticket.priority}>
+                                                <option value="Low">🟢 Low</option>
+                                                <option value="Medium">🟡 Medium</option>
+                                                <option value="High">🟠 High</option>
+                                                <option value="Urgent">🔴 Urgent</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <label className="label" htmlFor="status">Status</label>
+                                            <select
+                                                name="status"
+                                                className="select w-max"
+                                                defaultValue={ticket.status}>
+                                                <option value="New">🆕 New</option>
+                                                <option value="In Development">⚙️ In Development</option>
+                                                <option value="Testing">🧪 Testing</option>
+                                                <option value="Resolved">✅ Resolved</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <label className="label" htmlFor="type">Type</label>
+                                            <select
+                                                name="type"
+                                                className="select w-max"
+                                                defaultValue={ticket.type}>
+                                                <option value="Defect">🐛 Defect</option>
+                                                <option value="Feature">✨ Feature</option>
+                                                <option value="General Task">📋 General Task</option>
+                                                <option value="Change Request">🔄 Change Request</option>
+                                                <option value="Work Task">💼 Work Task</option>
+                                                <option value="Enhancement">⚡ Enhancement</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col gap-1">
-                                        <label className="label" htmlFor="status">Status</label>
-                                        <select
-                                            name="status"
-                                            className="select w-max"
-                                            defaultValue={ticket.status}>
-                                            <option value="New">🆕 New</option>
-                                            <option value="In Development">⚙️ In Development</option>
-                                            <option value="Testing">🧪 Testing</option>
-                                            <option value="Resolved">✅ Resolved</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <label className="label" htmlFor="type">Type</label>
-                                        <select
-                                            name="type"
-                                            className="select w-max"
-                                            defaultValue={ticket.type}>
-                                            <option value="Defect">🐛 Defect</option>
-                                            <option value="Feature">✨ Feature</option>
-                                            <option value="General Task">📋 General Task</option>
-                                            <option value="Change Request">🔄 Change Request</option>
-                                            <option value="Work Task">💼 Work Task</option>
-                                            <option value="Enhancement">⚡ Enhancement</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </EditModeForm>
+                                </EditModeForm>
+                            </div>
                         ) : (<>{TicketDetails}</>)}
                     </div>
 
                     {/* Comments and Attachments Side by Side */}
                     <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-                        <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                        <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6">
                             <h2 className="text-xl font-bold mb-4">Comments</h2>
-                            <div className="max-w-full">
+                            <div className={`max-w-full flex flex-col justify-end h-[450px]`}>
                                 <ChatBox
-                                    className="p-4 flex flex-col col-reverse w-full max-h-[450px] overflow-y-auto"
+                                    className={`p-4 flex flex-col w-full ${(getCommentsFetcher.state !== "loading" && (!(getCommentsFetcher.data as any)?.data || (getCommentsFetcher.data as any)?.data?.length === 0)) ? 'flex-1 justify-center' : 'col-reverse max-h-[450px] overflow-y-auto'}`}
                                     onDeleteComment={handleOnDeleteComment}
                                     onEditComment={handleOnEditComment}
                                     comments={(getCommentsFetcher.data as any)?.data}
@@ -476,7 +491,7 @@ export default function TicketDetailsRoute() {
                             </div>
                         </div>
 
-                        <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                        <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6">
                             <h2 className="text-xl font-bold mb-4">Attachments</h2>
                             <AttachmentSection
                                 ticketId={ticketId!}
@@ -486,13 +501,13 @@ export default function TicketDetailsRoute() {
                         </div>
                     </div>
 
-                    <div className="bg-base-100 rounded-lg shadow-lg p-6">
+                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-bold">History</h2>
                             <button
                                 onClick={() => getHistoryFetcher.load(`/tickets/${ticketId}/get-history`)}
                                 disabled={getHistoryFetcher.state === "loading"}
-                                className="btn btn-sm btn-ghost btn-circle"
+                                className="btn btn-sm btn-ghost btn-circle shadow-sm"
                                 title="Refresh history"
                             >
                                 {getHistoryFetcher.state === "loading" ? (

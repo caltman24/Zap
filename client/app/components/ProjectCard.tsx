@@ -1,5 +1,6 @@
 import { Link } from "@remix-run/react";
 import { CompanyProjectsResponse } from "~/services/api.server/types";
+import { DeadlineDisplay } from "~/utils/deadline";
 
 type ProjectCollection = "archived" | "myprojects" | "projects"
 
@@ -27,18 +28,19 @@ export default function ProjectCard({ project, showArchived, collection }: Proje
         </div>
 
 
-        {/* Due date */}
-        <div className="flex flex-col text-sm text-base-content/70 mb-4">
+        {/* Due date with status */}
+        <div className="flex flex-col mb-4 space-y-2">
           {(project.isArchived && showArchived) && (
-            <div className="flex items-center">
-              <span className="material-symbols-outlined mr-1">folder</span>
+            <div className="flex items-center text-base-content/70 text-sm">
+              <span className="material-symbols-outlined mr-1 text-sm">folder</span>
               Archived
             </div>
           )}
-          <div className="flex items-center">
-            <span className="material-symbols-outlined mr-1">assignment_late</span>
-            Due: {new Date(project.dueDate).toLocaleDateString()}
-          </div>
+          <DeadlineDisplay
+            dueDate={project.dueDate}
+            variant="card"
+            className="text-sm"
+          />
         </div>
 
         {/* Divider */}
@@ -104,3 +106,5 @@ function getPriorityDisplay(priority: string): string {
       return priority;
   }
 }
+
+
