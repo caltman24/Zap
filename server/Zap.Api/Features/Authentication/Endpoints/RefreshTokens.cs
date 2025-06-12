@@ -34,24 +34,51 @@ public class RefreshTokens : IEndpoint
         ILogger<Program> logger)
     {
         logger.LogDebug("Processing refresh token request");
-        var refreshTokenProtector =
-            bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
-        var refreshTicket = refreshTokenProtector.Unprotect(request.RefreshToken);
 
-        //TODO:Figure out if the time expires or if the validation fails
-
-        // Reject the /refresh attempt with a 401 if the token expired or the security stamp validation fails
-        if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
-            timeProvider.GetUtcNow() >= expiresUtc ||
-            await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not { } user)
+        try
         {
-            logger.LogDebug("Refresh token validation failed");
+            var refreshTokenProtector =
+                bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
+
+            var refreshTicket = refreshTokenProtector.Unprotect(request.RefreshToken);
+
+            if (refreshTicket == null)
+            {
+                logger.LogWarning("Refresh token could not be unprotected");
+                return TypedResults.Challenge();
+            }
+
+            if (refreshTicket.Properties?.ExpiresUtc is not { } expiresUtc)
+            {
+                logger.LogWarning("Refresh ticket doesn't have an expiration time");
+                return TypedResults.Challenge();
+            }
+
+            var currentTime = timeProvider.GetUtcNow();
+            if (currentTime >= expiresUtc)
+            {
+                logger.LogWarning("Refresh token expired at {ExpiryTime}, current time is {CurrentTime}",
+                    expiresUtc, currentTime);
+                return TypedResults.Challenge();
+            }
+
+            var user = await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal);
+
+            if (user == null)
+            {
+                logger.LogWarning("Security stamp validation failed for user");
+                return TypedResults.Challenge();
+            }
+
+            logger.LogInformation("Refresh token validated successfully for user {Email}", user.Email);
+            var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
+
+            return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error processing refresh token");
             return TypedResults.Challenge();
         }
-
-        logger.LogInformation("Refresh token validated successfully for user {Email}", user.Email);
-        var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
-
-        return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
     }
 }

@@ -9,12 +9,17 @@ import { UserInfoResponse } from "~/services/api.server/types";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import apiClient from "~/services/api.server/apiClient";
 import roleNames from "~/data/roles";
+import tryCatch from "~/utils/tryCatch";
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const accessToken = session.get("tokens").accessToken
-    console.log(accessToken)
+    const { data: tokenResponse,
+        error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    if (tokenError) {
+        return redirect("/logout");
+    }
+    const accessToken = tokenResponse.token;
 
     // INFO: Fetch new user info every page load, in case member data changed e.g member role
     const newUserInfo = await apiClient.getUserInfo(accessToken)
