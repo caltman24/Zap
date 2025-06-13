@@ -10,6 +10,8 @@
 // TODO //
 [] - Implement permission based features on ticket details page
 [] - add attachments to ticket
+[] - Paginate ticket History
+[] - Paginate ticket comments
 
 
 [] - Client: all tickets view for project tickets
