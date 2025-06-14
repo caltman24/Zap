@@ -10,7 +10,8 @@
 // TODO //
 [] - Implement permission based features on ticket details page
 [] - add attachments to ticket
-[] - Paginate ticket History
+[X] - Paginate ticket History 
+[] - Display ticket history in a lazy loaded list
 [] - Paginate ticket comments
 
 

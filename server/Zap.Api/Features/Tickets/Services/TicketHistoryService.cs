@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Zap.Api.Common;
 using Zap.Api.Common.Enums;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
@@ -55,6 +56,45 @@ public class TicketHistoryService(AppDbContext db) : ITicketHistoryService
         )).ToList();
     }
 
+    public async Task<PaginatedResponse<TicketHistoryDto>> GetTicketHistoryAsync(string ticketId, int page, int pageSize)
+    {
+        var historyEntries = await db.TicketHistories
+            .Where(h => h.TicketId == ticketId)
+            .Include(h => h.Creator)
+            .ThenInclude(c => c.User)
+            .Include(h => h.Creator)
+            .ThenInclude(c => c.Role)
+            .OrderBy(h => h.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var historyList = historyEntries.Select(h => new TicketHistoryDto(
+            h.Id,
+            h.Type,
+            h.OldValue,
+            h.NewValue,
+            h.RelatedEntityName,
+            h.RelatedEntityId,
+            new MemberInfoDto(
+                h.Creator.Id,
+                $"{h.Creator.User.FirstName} {h.Creator.User.LastName}",
+                h.Creator.User.AvatarUrl,
+                h.Creator.Role.Name
+            ),
+            h.CreatedAt,
+            FormatHistoryEntry(h)
+        )).ToList();
+
+        return new PaginatedResponse<TicketHistoryDto>
+        {
+            Items = historyList,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = await db.TicketHistories.CountAsync(h => h.TicketId == ticketId)
+        };
+    }
+
     private static string FormatHistoryEntry(TicketHistory entry)
     {
         return entry.Type switch
@@ -73,4 +113,5 @@ public class TicketHistoryService(AppDbContext db) : ITicketHistoryService
             _ => "Unknown action"
         };
     }
+
 }
