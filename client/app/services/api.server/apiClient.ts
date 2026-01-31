@@ -150,7 +150,13 @@ export class ApiService extends BaseApiClient {
 }
 
 // Create and export a singleton instance
+// Use a runtime-safe API base URL. In Remix server/runtime code `process.env` is available,
+// but when bundling for the browser this falls back to the relative path so the frontend
+// can call the same origin. Keep a default that points to the local API port used during
+// development / docker smoke tests.
 const apiClient = new ApiService(
-  process.env.API_BASE_URL || "http://localhost:5090"
+  typeof process !== "undefined" && process.env?.API_BASE_URL
+    ? process.env.API_BASE_URL
+    : ""
 );
 export default apiClient;

@@ -1,0 +1,15 @@
+[build]
+  publish = "build/public"
+  command = "pnpm --filter client run build"
+
+[context.production.environment]
+  NODE_ENV = "production"
+  # API_BASE_URL should be set to the deployed API url (e.g. https://api.example.com)
+  # SESSION_SECRET must be provided for server-side session encryption
+  # Example: API_BASE_URL = "https://api.zap.example.com"
+
+[context.production]
+  command = "pnpm --filter client run build"
+
+[functions]
+  node_bundler = "esbuild"

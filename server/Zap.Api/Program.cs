@@ -1,7 +1,10 @@
+using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using dotenv.net;
 using Scalar.AspNetCore;
 using Zap.Api.Configuration;
-
+using Zap.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 DotEnv.Load();
@@ -9,8 +12,51 @@ DotEnv.Load();
 builder.Logging.AddStructuredLogging(builder.Configuration);
 builder.Services.AddRequiredServices(builder.Configuration);
 
-
 var app = builder.Build();
+
+// Determine whether to apply EF Core migrations on startup.
+// Controlled by the environment variable `APPLY_MIGRATIONS`.
+// If the variable is not set, default to applying migrations during Development or Testing
+// environments and skip by default in Production to avoid unintended schema changes.
+var applyMigrationsEnv = Environment.GetEnvironmentVariable("APPLY_MIGRATIONS");
+var applyMigrations = false;
+if (!string.IsNullOrWhiteSpace(applyMigrationsEnv))
+{
+    bool.TryParse(applyMigrationsEnv, out applyMigrations);
+}
+else
+{
+    applyMigrations = app.Environment.IsDevelopment() || string.Equals(app.Environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
+}
+
+if (applyMigrations)
+{
+    // Apply any pending EF Core migrations at startup. This runs inside a service scope
+    // so scoped services (like AppDbContext) can be resolved. Failures are logged but
+    // won't crash the host to avoid blocking diagnostic access.
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            var db = services.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while applying database migrations.");
+        }
+    }
+}
+else
+{
+    // Keep a startup log entry so operators can tell whether migrations were intentionally skipped.
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("APPLY_MIGRATIONS is false or unset for this environment; skipping automatic database migrations.");
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi().AllowAnonymous();
@@ -20,6 +66,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRequiredServices();
+
+// Lightweight health endpoint used by orchestrators/load-balancers.
+app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+
 app.MapZapApiEndpoints();
 
 app.Run();
