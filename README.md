@@ -6,11 +6,21 @@ Zap is a project management and bug tracking application (think simplified Jira/
 
 ## Architecture
 
-Browser  -->  Remix SSR (Netlify)  --HTTP/JSON-->  .NET 9 Minimal API (Railway)
-                                                        |
-+                                                   PostgreSQL + AWS S3
+A simplified architecture diagram:
 
-The client is a Remix v2 + Vite app that runs server-side. All API calls are proxied through Remix loaders/actions — the browser never talks directly to the .NET backend. The backend is an ASP.NET Core 9 Minimal API using a vertical-slice architecture.
+```text
+Browser
+  |
+  v
+Remix SSR (Netlify)
+  -- HTTP/JSON -->
+.NET 9 Minimal API (Railway)
+  |
+  +--> PostgreSQL
+  +--> AWS S3 (attachments)
+```
+
+Notes: the client is a Remix v2 + Vite app that runs server-side. All API calls are proxied through Remix loaders/actions — the browser never talks directly to the .NET backend. The backend is an ASP.NET Core 9 Minimal API using a vertical-slice architecture.
 
 ---
 
