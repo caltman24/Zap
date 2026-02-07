@@ -22,7 +22,12 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    # Prefer a central server/.env for compose-managed dev envs but
+    # keep the existing Zap.Api/.env as a fallback to avoid breaking
+    # current local setups. Compose will merge values, later files
+    # override earlier ones when duplicate keys exist.
     env_file:
+      - ./server/.env
       - ./server/Zap.Api/.env
     environment:
       # When running in compose, the DB host is the service name `db`.

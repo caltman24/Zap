@@ -1,0 +1,15 @@
+# server/.dockerignore
+# Ignore build artifacts and local IDE/state files to keep images small
+bin
+obj
+.vs
+**/bin
+**/obj
+.git
+.gitignore
+*.user
+*.suo
+*.db
+*.log
+node_modules
+client/node_modules
