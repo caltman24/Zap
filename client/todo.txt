@@ -1,0 +1,28 @@
+=== CLIENT TODO ===
+
+- [ ] Implement permission-based features on the ticket details page (UI/guards)
+- [ ] Add attachments support (upload UI, preview, delete)
+- [x] Paginate ticket history (client-side pagination)
+- [ ] Display ticket history in a lazy-loaded list
+- [ ] Paginate ticket comments
+
+- [ ] All-tickets view for project (table/list)
+- [ ] Sort / filter tickets table
+
+- [ ] Polish role validation (client-side UX & messages)
+- [ ] Project "remove member" modal: info / confirmation
+- [ ] Review and polish routes / breadcrumbs for better UX
+
+- [ ] User settings page (profile, preferences)
+
+=== CLIENT DONE ===
+
+- [x] Finish "My tickets" route
+- [x] Filter tickets table to show resolved tickets
+- [x] Archive ticket UI
+- [x] Open Tickets route (filters out resolved tickets)
+- [x] Finished Resolved Tickets route
+- [x] Edit owned comments (client)
+- [x] Add comments to ticket (client)
+
+Note: Server-side endpoints may be required for some items above (attachments, pagination, validation).

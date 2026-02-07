@@ -1,0 +1,23 @@
+=== SERVER TODO ===
+
+- [ ] Add attachments endpoint and storage handling (upload, delete, serve)
+- [ ] Paginate ticket history and comments (API support)
+- [ ] Implement permission checks for ticket details (resource/company validations)
+- [ ] Priority / Status / Type constants (shared enums)
+- [ ] Manage Tickets / Assignments endpoints
+- [ ] Ticket comments endpoints
+- [ ] Ticket attachments handling
+- [ ] Password reset flow (email + token)
+- [ ] Email confirmation on sign up
+- [ ] Notifications (push / in-app)
+- [ ] Manage roles & role validation
+- [ ] Manage invitations (invite codes / emails)
+
+=== SERVER DONE ===
+
+- [x] Figure out ticket-member delete behaviors on DB
+- [x] Role validation (member.companyId vs resource.companyId)
+- [x] Archive tickets when project is archived (server-side)
+
+Notes:
+- See `server/Zap.Api/todo.txt` for project-specific items and Docker/local run instructions.
