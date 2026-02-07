@@ -115,6 +115,7 @@ Common commands
 - Client dev: `cd client && pnpm install && pnpm dev` (default port: 5173)
 - Server dev: `cd server/Zap.Api && dotnet restore && dotnet run` (default port: 5090)
 - Server tests: `cd server/Zap.Tests && dotnet test`
+- Docker (Full Stack): `docker-compose up` (starts PostgreSQL and API)
 - Client lint: `cd client && pnpm lint`
 - Client typecheck: `cd client && pnpm typecheck`
 
@@ -138,7 +139,6 @@ Applying EF migrations
 
 - No CI/CD pipeline (no GitHub Actions or similar configured)
 - No client tests configured (no test runner present)
-- No docker-compose — PostgreSQL must be run separately
 - Incomplete features (see `todo.txt`): user settings/profile, admin tools, invite system, realtime notifications
 - Stubs / TODOs in code: `DeleteCompany` throws `NotImplementedException`, `TicketAttachmentsService` is empty
 
