@@ -5,7 +5,8 @@ This document describes how agentic coding tools should work in this repo: how t
 ## 1. Project Layout
 
 - Root repo contains a Remix + Vite TypeScript client in `client/`.
-- Backend .NET API lives in `server/` (solution `server/ZapServer.sln`, projects `Zap.Api` and `Zap.Tests`).
+- Backend .NET API lives in `server/` (solution `server/ZapServer.sln`, projects `Zap.Api` and `Zap.Tests`). See `server/AGENT.md` for server-specific agent guidance (build, run, compose, tests, migrations).
+- Server agent guide (quick link): `server/AGENT.md`
 - All `client` commands below assume the working directory `client/` unless noted.
 - All `server` commands below assume the working directory `server/` unless noted.
 - Node 20+ is required for the client (see `client/package.json` `engines.node`).
@@ -44,34 +45,7 @@ This document describes how agentic coding tools should work in this repo: how t
   - If you generate tests, prefer using the same runner across the codebase and add a `test` script instead of ad-hoc commands.
   - For now, there is **no canonical client single-test command**; if you introduce one, document it here and keep it consistent.
 
-### 3.2 Server (.NET API and Tests)
 
-- Restore packages:
-  - `cd server`
-  - `dotnet restore` (or `dotnet restore ZapServer.sln`).
-- Build API only:
-  - `cd server`
-  - `dotnet build Zap.Api/Zap.Api.csproj`
-- Build full solution (API + tests):
-  - `cd server`
-  - `dotnet build ZapServer.sln`
-- Run API locally (development):
-  - `cd server/Zap.Api`
-  - `dotnet run`
-  - Loads environment variables from `.env` via `dotenv.net`; ensure `.env` is present in `Zap.Api`.
-- Run all server tests (xUnit via `Zap.Tests`):
-  - `cd server/Zap.Tests`
-  - `dotnet test`
-  - Or from solution root: `cd server && dotnet test ZapServer.sln`
-- Run a single test class or method:
-  - `cd server/Zap.Tests`
-  - By fully-qualified name (recommended):
-    - `dotnet test --filter "FullyQualifiedName~Zap.Tests.IntegrationTests.AuthenticationTests"`
-  - By trait/name contains (less strict):
-    - `dotnet test --filter "Name~Authentication"`
-- Collect code coverage (coverlet collector is configured):
-  - `cd server/Zap.Tests`
-  - `dotnet test --collect:"XPlat Code Coverage"`
 
 ## 4. Running a Single Check During Development
 
