@@ -11,30 +11,22 @@ namespace Zap.Api.Features.Tickets;
 
 public class UpdateComment : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/{ticketId}/comments/{commentId}", Handle)
             .WithCompanyMember()
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
-
-    public record Request(string Message);
-
-    public class RequestValidator : AbstractValidator<Request>
-    {
-        public RequestValidator()
-        {
-            RuleFor(r => r.Message).NotEmpty().NotNull().MaximumLength(150);
-        }
     }
 
     private static async Task<Results<NoContent, NotFound>> Handle(
-            [FromRoute] string ticketId,
-            [FromRoute] string commentId,
-            CurrentUser currentUser,
-            ITicketCommentsService commentsService,
-            Request request
-            )
+        [FromRoute] string ticketId,
+        [FromRoute] string commentId,
+        CurrentUser currentUser,
+        ITicketCommentsService commentsService,
+        Request request
+    )
     {
         var success = await commentsService.UpdateCommentAsync(
             commentId,
@@ -44,5 +36,15 @@ public class UpdateComment : IEndpoint
         if (!success) return TypedResults.NotFound();
 
         return TypedResults.NoContent();
+    }
+
+    public record Request(string Message);
+
+    public class RequestValidator : AbstractValidator<Request>
+    {
+        public RequestValidator()
+        {
+            RuleFor(r => r.Message).NotEmpty().NotNull().MaximumLength(150);
+        }
     }
 }

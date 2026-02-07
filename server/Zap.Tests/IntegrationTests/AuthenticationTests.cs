@@ -1,6 +1,4 @@
-﻿using Xunit.Abstractions;
-
-namespace Zap.Tests.IntegrationTests;
+﻿namespace Zap.Tests.IntegrationTests;
 
 public class AuthenticationTests : IAsyncDisposable
 {
@@ -13,14 +11,20 @@ public class AuthenticationTests : IAsyncDisposable
         _db = _app.CreateAppDbContext();
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        await _app.DisposeAsync();
+        await _db.DisposeAsync();
+    }
+
     [Fact]
     public async Task Register_User_Returns_Success()
     {
         var registerRequest = new RegisterRequest(
-            Email: "test2019@test.com",
-            Password: "@Password1",
-            FirstName: "Test",
-            LastName: "User");
+            "test2019@test.com",
+            "@Password1",
+            "Test",
+            "User");
 
         var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
@@ -38,10 +42,10 @@ public class AuthenticationTests : IAsyncDisposable
     public async Task Register_User_Without_Name_Returns_400_BadRequest()
     {
         var registerRequest = new RegisterRequest(
-            Email: "test@test.com",
-            Password: "@pwd", // Fails validation. Minimum 6
-            FirstName: null, // Fails - Null
-            LastName: null); // Fails - Null
+            "test@test.com",
+            "@pwd", // Fails validation. Minimum 6
+            null, // Fails - Null
+            null); // Fails - Null
 
         var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
@@ -53,10 +57,10 @@ public class AuthenticationTests : IAsyncDisposable
     public async Task Register_Existing_User_Returns_400_BadRequest()
     {
         var registerRequest = new RegisterRequest(
-            Email: "test2020@test.com",
-            Password: "@Password1",
-            FirstName: "Test",
-            LastName: "User");
+            "test2020@test.com",
+            "@Password1",
+            "Test",
+            "User");
 
         var client = _app.CreateClient();
         var res = await client.PostAsJsonAsync("/auth/register", registerRequest);
@@ -104,12 +108,6 @@ public class AuthenticationTests : IAsyncDisposable
         var res = await client.GetAsync("/");
 
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _app.DisposeAsync();
-        await _db.DisposeAsync();
     }
 }
 

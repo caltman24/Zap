@@ -11,11 +11,10 @@ public class AppUser : IdentityUser
     [StringLength(500)] public string AvatarUrl { get; set; } = "https://gravatar.com/avatar/HASH?d=mp";
     [StringLength(500)] public string? AvatarKey { get; set; } = null!;
 
+    [NotMapped] public string FullName => $"{FirstName} {LastName}";
+
     public void SetDefaultAvatar()
     {
         AvatarUrl = $"https://ui-avatars.com/api/?name={FirstName}+{LastName}";
     }
-
-    [NotMapped]
-    public string FullName => $"{FirstName} {LastName}";
 }

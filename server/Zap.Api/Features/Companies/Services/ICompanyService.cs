@@ -42,4 +42,3 @@ public record CompanyProjectDto(
     bool IsArchived,
     int MemberCount,
     IEnumerable<string> AvatarUrls);
-

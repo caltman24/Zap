@@ -9,10 +9,28 @@ namespace Zap.Api.Features.Projects.Endpoints;
 
 public class CreateProject : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/", Handle)
             .WithName("CreateProject")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
+    }
+
+
+    private static async Task<Results<BadRequest<string>, CreatedAtRoute<ProjectDto>>> Handle(
+        Request request, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
+    {
+        var newProject = await projectService.CreateProjectAsync(new CreateProjectDto
+        (
+            request.Name,
+            request.Description,
+            request.Priority,
+            request.DueDate,
+            currentUser.Member!
+        ));
+
+        return TypedResults.CreatedAtRoute(newProject, "GetProject", new { ProjectId = newProject.Id });
+    }
 
     public record Request(string Name, string Description, string Priority, DateTime DueDate);
 
@@ -25,21 +43,5 @@ public class CreateProject : IEndpoint
             RuleFor(x => x.Priority).NotEmpty().NotNull().MaximumLength(50);
             RuleFor(x => x.DueDate).NotNull().GreaterThan(DateTime.UtcNow);
         }
-    }
-
-
-    private static async Task<Results<BadRequest<string>, CreatedAtRoute<ProjectDto>>> Handle(
-        Request request, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
-    {
-        var newProject = await projectService.CreateProjectAsync(new CreateProjectDto
-        (
-            Name: request.Name,
-            Description: request.Description,
-            Priority: request.Priority,
-            DueDate: request.DueDate,
-            Member: currentUser.Member!
-        ));
-
-        return TypedResults.CreatedAtRoute(newProject, "GetProject", new { ProjectId = newProject.Id });
     }
 }

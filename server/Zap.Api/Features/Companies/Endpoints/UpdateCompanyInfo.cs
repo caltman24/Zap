@@ -9,14 +9,14 @@ namespace Zap.Api.Features.Companies.Endpoints;
 
 public class UpdateCompanyInfo : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/info", Handle)
             .DisableAntiforgery()
             .Accepts<Request>("multipart/form-data")
             .RequireRateLimiting("upload")
             .WithCompanyMember(RoleNames.Admin);
-
-    public record Request(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
+    }
 
     private static async Task<Results<BadRequest<string>, NoContent, ProblemHttpResult>> Handle(
         [FromForm] IFormFile? file,
@@ -40,4 +40,6 @@ public class UpdateCompanyInfo : IEndpoint
 
         return TypedResults.BadRequest("Failed to update company info");
     }
+
+    public record Request(string Name, string Description, bool RemoveLogo, string? WebsiteUrl);
 }

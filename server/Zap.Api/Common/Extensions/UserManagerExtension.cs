@@ -10,8 +10,7 @@ public static class UserManagerExtension
     {
         return await userManager.AddClaimsAsync(user, [
             new Claim(ClaimTypes.GivenName, user.FirstName),
-            new Claim(ClaimTypes.Surname, user.LastName),
+            new Claim(ClaimTypes.Surname, user.LastName)
         ]);
     }
-    
 }

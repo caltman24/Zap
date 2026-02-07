@@ -12,9 +12,31 @@ namespace Zap.Api.Features.Companies.Endpoints;
 
 public class RegisterCompany : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) => app
-        .MapPost("/register", Handle)
-        .WithRequestValidation<Request>();
+    public static void Map(IEndpointRouteBuilder app)
+    {
+        app
+            .MapPost("/register", Handle)
+            .WithRequestValidation<Request>();
+    }
+
+    private static async Task<Results<BadRequest<string>, NoContent>>
+        Handle(
+            Request request, ICompanyService companyService, CurrentUser currentUser,
+            HttpContext context, ILogger<Program> logger, UserManager<AppUser> userManager)
+    {
+        if (currentUser.User == null) return TypedResults.BadRequest("User not found");
+
+        if (currentUser.CompanyId != null) return TypedResults.BadRequest("User is already a member in a company");
+
+        await companyService.CreateCompanyAsync(new CreateCompanyDto(
+            request.Name,
+            request.Description,
+            currentUser.User));
+
+        logger.LogDebug("Added user {Email} to role {Role}", currentUser.Email, RoleNames.Admin);
+
+        return TypedResults.NoContent();
+    }
 
     public record Request(string Name, string Description);
 
@@ -28,26 +50,4 @@ public class RegisterCompany : IEndpoint
     }
 
     public record Response(string CompanyId);
-
-    private static async Task<Results<BadRequest<string>, NoContent>>
-        Handle(
-            Request request, ICompanyService companyService, CurrentUser currentUser,
-            HttpContext context, ILogger<Program> logger, UserManager<AppUser> userManager)
-    {
-        if (currentUser.User == null) return TypedResults.BadRequest("User not found");
-
-        if (currentUser.CompanyId != null)
-        {
-            return TypedResults.BadRequest("User is already a member in a company");
-        }
-
-        await companyService.CreateCompanyAsync(new CreateCompanyDto(
-            Name: request.Name,
-            Description: request.Description,
-            User: currentUser.User));
-
-        logger.LogDebug("Added user {Email} to role {Role}", currentUser.Email, RoleNames.Admin);
-
-        return TypedResults.NoContent();
-    }
 }

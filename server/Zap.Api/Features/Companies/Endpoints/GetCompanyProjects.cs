@@ -8,9 +8,11 @@ namespace Zap.Api.Features.Companies.Endpoints;
 
 public class GetCompanyProjects : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/", Handle)
-        .WithCompanyMember();
+            .WithCompanyMember();
+    }
 
     private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectDto>>>> Handle(
         ICompanyService companyService, CurrentUser currentUser, ILogger<Program> logger,

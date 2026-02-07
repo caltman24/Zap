@@ -11,16 +11,18 @@ namespace Zap.Api.Features.Tickets;
 
 public class GetDeveloperList : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/{ticketId}/developer-list", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketCompanyValidation();
+    }
 
     private static async Task<Ok<List<MemberInfoDto>>> Handle(
-            [FromRoute] string ticketId,
-            CurrentUser currentUser,
-            ITicketService ticketService
-            )
+        [FromRoute] string ticketId,
+        CurrentUser currentUser,
+        ITicketService ticketService
+    )
     {
         var projects = await ticketService.GetProjectDevelopersAsync(ticketId);
 

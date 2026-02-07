@@ -9,11 +9,13 @@ namespace Zap.Api.Features.Tickets;
 
 public class GetTicketHistory : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/{ticketId}/history", Handle)
             .WithName("GetTicketHistory")
             .WithCompanyMember()
             .WithTicketCompanyValidation();
+    }
 
     private static async Task<Ok<List<TicketHistoryDto>>> Handle(
         [FromRoute] string ticketId,

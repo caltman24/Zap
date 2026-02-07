@@ -13,29 +13,34 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         {
             SenderId = senderId,
             TicketId = ticketId,
-            Message = message,
+            Message = message
         });
         await db.SaveChangesAsync();
     }
 
     public async Task<bool> DeleteCommentAsync(string commentId, string requestingUserId)
     {
-        var rowsDeleted = await db.TicketComments
-            .Where(c => c.Id == commentId && c.SenderId == requestingUserId)
-            .ExecuteDeleteAsync();
+        var comment = await db.TicketComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.SenderId == requestingUserId);
 
-        return rowsDeleted > 0;
+        if (comment == null) return false;
+
+        db.TicketComments.Remove(comment);
+        await db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<bool> UpdateCommentAsync(string commentId, string message, string requestingUserId)
     {
-        var rowsUpdated = await db.TicketComments
-            .Where(c => c.Id == commentId && c.SenderId == requestingUserId)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(c => c.Message, message)
-                .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
+        var comment = await db.TicketComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.SenderId == requestingUserId);
 
-        return rowsUpdated > 0;
+        if (comment == null) return false;
+
+        comment.Message = message;
+        comment.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<List<CommentDto>> GetCommentsAsync(string ticketId)
@@ -44,19 +49,18 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
             .Where(c => c.TicketId == ticketId)
             .OrderBy(c => c.CreatedAt)
             .Select(c => new CommentDto(
-                        c.Id,
-                        c.TicketId,
-                        c.Message,
-                        new MemberInfoDto(
-                            c.SenderId,
-                            c.Sender.User.FullName,
-                            c.Sender.User.AvatarUrl,
-                            c.Sender.Role.Name
-                            ),
-                        c.CreatedAt,
-                        c.UpdatedAt
+                c.Id,
+                c.TicketId,
+                c.Message,
+                new MemberInfoDto(
+                    c.SenderId,
+                    c.Sender.User.FullName,
+                    c.Sender.User.AvatarUrl,
+                    c.Sender.Role.Name
+                ),
+                c.CreatedAt,
+                c.UpdatedAt
             ))
             .ToListAsync();
     }
 }
-

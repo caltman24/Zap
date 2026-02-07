@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Zap.Api.Common.Constants;
-
 namespace Zap.Api.Data.Models;
 
 public class CompanyRole : BaseEntity

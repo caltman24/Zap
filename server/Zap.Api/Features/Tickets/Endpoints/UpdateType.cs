@@ -13,13 +13,28 @@ namespace Zap.Api.Features.Tickets;
 
 public class UpdateType : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/{ticketId}/type", Handle)
             .WithName("UpdateTicketType")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
+    }
+
+    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
+        [FromRoute] string ticketId,
+        Request request,
+        ITicketService ticketService,
+        CurrentUser currentUser
+    )
+    {
+        var success = await ticketService.UpdateTypeAsync(ticketId, request.Type, currentUser.Member!.Id);
+        if (!success) return TypedResults.Problem();
+
+        return TypedResults.NoContent();
+    }
 
     public record Request(string Type);
 
@@ -30,18 +45,4 @@ public class UpdateType : IEndpoint
             RuleFor(x => x.Type).ValidateTicketType();
         }
     }
-
-    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
-            [FromRoute] string ticketId,
-            Request request,
-            ITicketService ticketService,
-            CurrentUser currentUser
-            )
-    {
-        var success = await ticketService.UpdateTypeAsync(ticketId, request.Type, currentUser.Member!.Id);
-        if (!success) return TypedResults.Problem();
-
-        return TypedResults.NoContent();
-    }
 }
-

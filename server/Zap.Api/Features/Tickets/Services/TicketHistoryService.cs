@@ -9,7 +9,9 @@ namespace Zap.Api.Features.Tickets.Services;
 
 public class TicketHistoryService(AppDbContext db) : ITicketHistoryService
 {
-    public async Task CreateHistoryEntryAsync(string ticketId, string creatorId, TicketHistoryTypes type, string? oldValue = null, string? newValue = null, string? relatedEntityName = null, string? relatedEntityId = null)
+    public async Task CreateHistoryEntryAsync(string ticketId, string creatorId, TicketHistoryTypes type,
+        string? oldValue = null, string? newValue = null, string? relatedEntityName = null,
+        string? relatedEntityId = null)
     {
         var historyEntry = new TicketHistory
         {
@@ -56,7 +58,8 @@ public class TicketHistoryService(AppDbContext db) : ITicketHistoryService
         )).ToList();
     }
 
-    public async Task<PaginatedResponse<TicketHistoryDto>> GetTicketHistoryAsync(string ticketId, int page, int pageSize)
+    public async Task<PaginatedResponse<TicketHistoryDto>> GetTicketHistoryAsync(string ticketId, int page,
+        int pageSize)
     {
         var historyEntries = await db.TicketHistories
             .Where(h => h.TicketId == ticketId)
@@ -113,5 +116,4 @@ public class TicketHistoryService(AppDbContext db) : ITicketHistoryService
             _ => "Unknown action"
         };
     }
-
 }

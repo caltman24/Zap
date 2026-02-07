@@ -1,7 +1,5 @@
-using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using dotenv.net;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Zap.Api.Configuration;
 using Zap.Api.Data;
@@ -21,13 +19,10 @@ var app = builder.Build();
 var applyMigrationsEnv = Environment.GetEnvironmentVariable("APPLY_MIGRATIONS");
 var applyMigrations = false;
 if (!string.IsNullOrWhiteSpace(applyMigrationsEnv))
-{
     bool.TryParse(applyMigrationsEnv, out applyMigrations);
-}
 else
-{
-    applyMigrations = app.Environment.IsDevelopment() || string.Equals(app.Environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
-}
+    applyMigrations = app.Environment.IsDevelopment() ||
+                      string.Equals(app.Environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
 
 if (applyMigrations)
 {
@@ -41,8 +36,15 @@ if (applyMigrations)
         try
         {
             var db = services.GetRequiredService<AppDbContext>();
-            db.Database.Migrate();
-            logger.LogInformation("Database migrations applied successfully.");
+            if (db.Database.IsRelational())
+            {
+                db.Database.Migrate();
+                logger.LogInformation("Database migrations applied successfully.");
+            }
+            else
+            {
+                logger.LogInformation("Non-relational database provider detected; skipping migrations.");
+            }
         }
         catch (Exception ex)
         {
@@ -54,7 +56,8 @@ else
 {
     // Keep a startup log entry so operators can tell whether migrations were intentionally skipped.
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("APPLY_MIGRATIONS is false or unset for this environment; skipping automatic database migrations.");
+    logger.LogInformation(
+        "APPLY_MIGRATIONS is false or unset for this environment; skipping automatic database migrations.");
 }
 
 if (app.Environment.IsDevelopment())

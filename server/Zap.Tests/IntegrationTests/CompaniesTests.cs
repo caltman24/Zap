@@ -14,6 +14,12 @@ public class CompaniesTests : IAsyncDisposable
         _db = _app.CreateAppDbContext();
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        await _app.DisposeAsync();
+        await _db.DisposeAsync();
+    }
+
     [Fact]
     public async Task Register_Company_Returns_Success()
     {
@@ -94,7 +100,7 @@ public class CompaniesTests : IAsyncDisposable
         var projectId2 = Guid.NewGuid().ToString();
 
         await CreateTestCompany(_db, userId, user, [
-            new Project()
+            new Project
             {
                 Id = projectId,
                 Name = "Test Project",
@@ -104,7 +110,7 @@ public class CompaniesTests : IAsyncDisposable
                 DueDate = DateTime.Now.AddDays(1),
                 IsArchived = true
             },
-            new Project()
+            new Project
             {
                 Id = projectId2,
                 Name = "Test Project",
@@ -121,7 +127,7 @@ public class CompaniesTests : IAsyncDisposable
 
         Assert.NotNull(res);
         Assert.Null(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
-        Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId2 && x.IsArchived == false));
+        Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId2 && !x.IsArchived));
     }
 
     [Fact]
@@ -137,7 +143,7 @@ public class CompaniesTests : IAsyncDisposable
         var projectId2 = Guid.NewGuid().ToString();
 
         await CreateTestCompany(_db, userId, user, [
-            new Project()
+            new Project
             {
                 Id = projectId,
                 Name = "Test Project",
@@ -147,7 +153,7 @@ public class CompaniesTests : IAsyncDisposable
                 DueDate = DateTime.Now.AddDays(1),
                 IsArchived = true
             },
-            new Project()
+            new Project
             {
                 Id = projectId2,
                 Name = "Test Project",
@@ -164,7 +170,7 @@ public class CompaniesTests : IAsyncDisposable
 
         Assert.NotNull(res);
         Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
-        Assert.Null(res.FirstOrDefault(x => x.Id == projectId2 && x.IsArchived == false));
+        Assert.Null(res.FirstOrDefault(x => x.Id == projectId2 && !x.IsArchived));
     }
 
     [Fact]
@@ -180,7 +186,7 @@ public class CompaniesTests : IAsyncDisposable
         var projectId2 = Guid.NewGuid().ToString();
 
         await CreateTestCompany(_db, userId, user, [
-            new Project()
+            new Project
             {
                 Id = projectId,
                 Name = "Test Project",
@@ -190,7 +196,7 @@ public class CompaniesTests : IAsyncDisposable
                 DueDate = DateTime.Now.AddDays(1),
                 IsArchived = true
             },
-            new Project()
+            new Project
             {
                 Id = projectId2,
                 Name = "Test Project",
@@ -207,7 +213,7 @@ public class CompaniesTests : IAsyncDisposable
 
         Assert.NotNull(res);
         Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
-        Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId2 && x.IsArchived == false));
+        Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId2 && !x.IsArchived));
     }
 
     [Fact]
@@ -219,7 +225,7 @@ public class CompaniesTests : IAsyncDisposable
         Assert.NotNull(user);
 
         await CreateTestCompany(_db, userId, user, role: RoleNames.Admin);
-        var client = _app.CreateClient(userId, role: RoleNames.Admin);
+        var client = _app.CreateClient(userId);
 
         // Create multipart form data content
         using var content = new MultipartFormDataContent();
@@ -243,7 +249,7 @@ public class CompaniesTests : IAsyncDisposable
         Assert.NotNull(user);
 
         await CreateTestCompany(_db, userId, user, role: RoleNames.ProjectManager);
-        var client = _app.CreateClient(userId, role: RoleNames.ProjectManager);
+        var client = _app.CreateClient(userId, RoleNames.ProjectManager);
 
         // Create multipart form data content
         using var content = new MultipartFormDataContent();
@@ -269,39 +275,30 @@ public class CompaniesTests : IAsyncDisposable
     {
         var roleName = role ?? RoleNames.Admin;
 
-        var company = new Company()
+        var company = new Company
         {
             Id = companyId ?? Guid.NewGuid().ToString(),
             Name = "Test Company",
             Description = "Test Description",
             OwnerId = userId,
             Members =
-                [
-                    new CompanyMember
-                    {
-                        UserId = userId,
-                        RoleId = await db.CompanyRoles
-                            .Where(r => r.Name == roleName)
-                            .Select(r => r.Id)
-                            .FirstAsync()
-                    }
-                ]
+            [
+                new CompanyMember
+                {
+                    UserId = userId,
+                    RoleId = await db.CompanyRoles
+                        .Where(r => r.Name == roleName)
+                        .Select(r => r.Id)
+                        .FirstAsync()
+                }
+            ]
         };
-        if (projects != null)
-        {
-            company.Projects = projects;
-        }
+        if (projects != null) company.Projects = projects;
 
         var c = db.Companies.Add(company);
         await db.SaveChangesAsync();
 
         return c.Entity;
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _app.DisposeAsync();
-        await _db.DisposeAsync();
     }
 }
 

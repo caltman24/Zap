@@ -1,7 +1,5 @@
 ﻿using System.Net.Http.Headers;
 using Amazon.S3;
-using Amazon.S3.Model;
-using dotenv.net.Utilities;
 using Zap.Tests.Helpers;
 
 namespace Zap.Tests.IntegrationTests;
@@ -19,6 +17,13 @@ public class UploadFileTests : IAsyncDisposable
         _s3Client = _app.Services.GetRequiredService<IAmazonS3>();
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        _s3Client.Dispose();
+        await _app.DisposeAsync();
+        await _db.DisposeAsync();
+    }
+
 
     [Fact]
     public async Task Update_Company_With_Image_Invalid_MIME_As_Admin_Returns_400_BadRequest()
@@ -29,7 +34,7 @@ public class UploadFileTests : IAsyncDisposable
         Assert.NotNull(user);
 
         await CompaniesTests.CreateTestCompany(_db, userId, user, role: RoleNames.Admin);
-        var client = _app.CreateClient(userId, role: RoleNames.Admin);
+        var client = _app.CreateClient(userId);
 
         //Image
         await using var imageStream = File.OpenRead("./test-image.jpg");
@@ -58,7 +63,7 @@ public class UploadFileTests : IAsyncDisposable
         Assert.NotNull(user);
 
         await CompaniesTests.CreateTestCompany(_db, userId, user);
-        var client = _app.CreateClient(userId, role: RoleNames.Admin);
+        var client = _app.CreateClient(userId);
 
         //Image
         await using var imageStream = File.OpenRead("./test-image.jpg");
@@ -79,13 +84,6 @@ public class UploadFileTests : IAsyncDisposable
         await _s3Client.ClearTestBucketAsync();
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        _s3Client.Dispose();
-        await _app.DisposeAsync();
-        await _db.DisposeAsync();
-    }
-
     private static MultipartFormDataContent CreateUploadFormContent(UploadFormRequest request)
     {
         // Create multipart form data content
@@ -99,9 +97,7 @@ public class UploadFileTests : IAsyncDisposable
 
         const int maxSizeKb = 50 * 1024; // 50kb
         if (request.FileStream.Length > maxSizeKb)
-        {
             throw new ArgumentException($"The file size is too large. {maxSizeKb}kb Max");
-        }
 
         //Image
         var streamContent = new StreamContent(request.FileStream);

@@ -13,13 +13,28 @@ namespace Zap.Api.Features.Tickets;
 
 public class UpdatePriority : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/{ticketId}/priority", Handle)
             .WithName("UpdateTicketPriority")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
+    }
+
+    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
+        [FromRoute] string ticketId,
+        Request request,
+        ITicketService ticketService,
+        CurrentUser currentUser
+    )
+    {
+        var success = await ticketService.UpdatePriorityAsync(ticketId, request.Priority, currentUser.Member!.Id);
+        if (!success) return TypedResults.Problem();
+
+        return TypedResults.NoContent();
+    }
 
     public record Request(string Priority);
 
@@ -30,18 +45,4 @@ public class UpdatePriority : IEndpoint
             RuleFor(x => x.Priority).ValidateTicketPriority();
         }
     }
-
-    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
-            [FromRoute] string ticketId,
-            Request request,
-            ITicketService ticketService,
-            CurrentUser currentUser
-            )
-    {
-        var success = await ticketService.UpdatePriorityAsync(ticketId, request.Priority, currentUser.Member!.Id);
-        if (!success) return TypedResults.Problem();
-
-        return TypedResults.NoContent();
-    }
 }
-

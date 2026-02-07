@@ -1,9 +1,3 @@
-using System.Net;
-using System.Net.Http.Json;
-using Zap.Api.Data.Models;
-using Zap.Api.Features.Companies.Services;
-using Zap.Api.Features.Tickets.Services;
-
 namespace Zap.Tests.IntegrationTests;
 
 public class CommentTests : IAsyncDisposable
@@ -15,6 +9,12 @@ public class CommentTests : IAsyncDisposable
     {
         _app = new ZapApplication();
         _db = _app.CreateAppDbContext();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _app.DisposeAsync();
+        await _db.DisposeAsync();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class CommentTests : IAsyncDisposable
             CompanyId = company.Id,
             DueDate = DateTime.UtcNow.AddDays(30)
         };
-        
+
         var ticket = new Ticket
         {
             Id = Guid.NewGuid().ToString(),
@@ -70,7 +70,8 @@ public class CommentTests : IAsyncDisposable
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        
+
+        _db.ChangeTracker.Clear();
         var updatedComment = await _db.TicketComments.FindAsync(comment.Id);
         Assert.NotNull(updatedComment);
         Assert.Equal("Updated message", updatedComment.Message);
@@ -83,17 +84,17 @@ public class CommentTests : IAsyncDisposable
         // Arrange
         var ownerUserId = Guid.NewGuid().ToString();
         var otherUserId = Guid.NewGuid().ToString();
-        
+
         await _app.CreateUserAsync(ownerUserId);
         await _app.CreateUserAsync(otherUserId);
-        
+
         var ownerUser = await _db.Users.FindAsync(ownerUserId);
         var otherUser = await _db.Users.FindAsync(otherUserId);
         Assert.NotNull(ownerUser);
         Assert.NotNull(otherUser);
 
         var company = await CompaniesTests.CreateTestCompany(_db, ownerUserId, ownerUser);
-        
+
         // Add other user to the same company
         var otherMember = new CompanyMember
         {
@@ -102,6 +103,7 @@ public class CommentTests : IAsyncDisposable
             RoleId = await _db.CompanyRoles.Where(r => r.Name == "Developer").Select(r => r.Id).FirstAsync()
         };
         _db.CompanyMembers.Add(otherMember);
+        await _db.SaveChangesAsync();
 
         var project = new Project
         {
@@ -112,7 +114,7 @@ public class CommentTests : IAsyncDisposable
             CompanyId = company.Id,
             DueDate = DateTime.UtcNow.AddDays(30)
         };
-        
+
         var ticket = new Ticket
         {
             Id = Guid.NewGuid().ToString(),
@@ -120,6 +122,7 @@ public class CommentTests : IAsyncDisposable
             Description = "Test Description",
             ProjectId = project.Id,
             SubmitterId = company.Members.First().Id,
+            AssigneeId = otherMember.Id, // Assign otherMember so they pass the ticket company validation filter
             PriorityId = (await _db.TicketPriorities.FirstAsync()).Id,
             StatusId = (await _db.TicketStatuses.FirstAsync()).Id,
             TypeId = (await _db.TicketTypes.FirstAsync()).Id
@@ -146,7 +149,7 @@ public class CommentTests : IAsyncDisposable
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        
+
         var unchangedComment = await _db.TicketComments.FindAsync(comment.Id);
         Assert.NotNull(unchangedComment);
         Assert.Equal("Original message", unchangedComment.Message); // Should remain unchanged
@@ -172,7 +175,7 @@ public class CommentTests : IAsyncDisposable
             CompanyId = company.Id,
             DueDate = DateTime.UtcNow.AddDays(30)
         };
-        
+
         var ticket = new Ticket
         {
             Id = Guid.NewGuid().ToString(),
@@ -205,7 +208,8 @@ public class CommentTests : IAsyncDisposable
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        
+
+        _db.ChangeTracker.Clear();
         var deletedComment = await _db.TicketComments.FindAsync(comment.Id);
         Assert.Null(deletedComment); // Should be deleted
     }
@@ -216,17 +220,17 @@ public class CommentTests : IAsyncDisposable
         // Arrange
         var ownerUserId = Guid.NewGuid().ToString();
         var otherUserId = Guid.NewGuid().ToString();
-        
+
         await _app.CreateUserAsync(ownerUserId);
         await _app.CreateUserAsync(otherUserId);
-        
+
         var ownerUser = await _db.Users.FindAsync(ownerUserId);
         var otherUser = await _db.Users.FindAsync(otherUserId);
         Assert.NotNull(ownerUser);
         Assert.NotNull(otherUser);
 
         var company = await CompaniesTests.CreateTestCompany(_db, ownerUserId, ownerUser);
-        
+
         // Add other user to the same company
         var otherMember = new CompanyMember
         {
@@ -235,6 +239,7 @@ public class CommentTests : IAsyncDisposable
             RoleId = await _db.CompanyRoles.Where(r => r.Name == "Developer").Select(r => r.Id).FirstAsync()
         };
         _db.CompanyMembers.Add(otherMember);
+        await _db.SaveChangesAsync();
 
         var project = new Project
         {
@@ -245,7 +250,7 @@ public class CommentTests : IAsyncDisposable
             CompanyId = company.Id,
             DueDate = DateTime.UtcNow.AddDays(30)
         };
-        
+
         var ticket = new Ticket
         {
             Id = Guid.NewGuid().ToString(),
@@ -253,6 +258,7 @@ public class CommentTests : IAsyncDisposable
             Description = "Test Description",
             ProjectId = project.Id,
             SubmitterId = company.Members.First().Id,
+            AssigneeId = otherMember.Id, // Assign otherMember so they pass the ticket company validation filter
             PriorityId = (await _db.TicketPriorities.FirstAsync()).Id,
             StatusId = (await _db.TicketStatuses.FirstAsync()).Id,
             TypeId = (await _db.TicketTypes.FirstAsync()).Id
@@ -278,14 +284,8 @@ public class CommentTests : IAsyncDisposable
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        
+
         var existingComment = await _db.TicketComments.FindAsync(comment.Id);
         Assert.NotNull(existingComment); // Should still exist
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _app.DisposeAsync();
-        await _db.DisposeAsync();
     }
 }

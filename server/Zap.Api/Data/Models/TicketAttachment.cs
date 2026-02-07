@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Zap.Api.Data.Models;
 
 public class TicketAttachment : BaseEntity
@@ -20,5 +18,4 @@ public class TicketAttachment : BaseEntity
     // size of file
     // type of file
     // s3: object key / url. (Url embeds object key inside)
-
 }

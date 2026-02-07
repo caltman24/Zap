@@ -15,12 +15,71 @@ namespace Zap.Api.Features.Tickets;
 
 public class UpdateTicket : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/{ticketId}", Handle)
             .WithName("UpdateTicket")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
             .WithTicketCompanyValidation()
             .WithRequestValidation<Request>();
+    }
+
+    private static async
+        Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent, BadRequest<string>, NotFound<string>>> Handle(
+            [FromRoute] string ticketId,
+            Request request,
+            ITicketService ticketService,
+            CurrentUser currentUser,
+            AppDbContext db
+        )
+    {
+        // Check if ticket is archived
+        var ticket = await db.Tickets
+            .Where(t => t.Id == ticketId)
+            .Select(t => new
+            {
+                t.IsArchived,
+                t.Name,
+                t.Description,
+                PriorityName = t.Priority.Name,
+                StatusName = t.Status.Name,
+                TypeName = t.Type.Name
+            })
+            .FirstOrDefaultAsync();
+
+        if (ticket == null) return TypedResults.NotFound("Ticket not found");
+
+        // If ticket is archived, only allow name and description updates
+        if (ticket.IsArchived)
+        {
+            // Check if priority, status, or type are being changed
+            if (request.Priority != ticket.PriorityName ||
+                request.Status != ticket.StatusName ||
+                request.Type != ticket.TypeName)
+                return TypedResults.BadRequest("Archived tickets can only have their name and description updated.");
+
+            // Only update name and description for archived tickets
+            var success = await ticketService.UpdateArchivedTicketAsync(
+                ticketId,
+                request.Name,
+                request.Description,
+                currentUser.Member!.Id);
+
+            if (!success) return TypedResults.Problem();
+            return TypedResults.NoContent();
+        }
+
+        // For non-archived tickets, allow full updates
+        var fullUpdateSuccess = await ticketService.UpdateTicketAsync(ticketId, new UpdateTicketDto(
+            request.Name,
+            request.Description,
+            request.Priority,
+            request.Status,
+            request.Type), currentUser.Member!.Id);
+        if (!fullUpdateSuccess) return TypedResults.Problem();
+
+        return TypedResults.NoContent();
+    }
 
     public record Request(
         string Name,
@@ -41,66 +100,4 @@ public class UpdateTicket : IEndpoint
             RuleFor(x => x.Type).ValidateTicketType();
         }
     }
-
-    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent, BadRequest<string>, NotFound<string>>> Handle(
-            [FromRoute] string ticketId,
-            Request request,
-            ITicketService ticketService,
-            CurrentUser currentUser,
-            AppDbContext db
-            )
-    {
-        // Check if ticket is archived
-        var ticket = await db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => new
-            {
-                t.IsArchived,
-                t.Name,
-                t.Description,
-                PriorityName = t.Priority.Name,
-                StatusName = t.Status.Name,
-                TypeName = t.Type.Name
-            })
-            .FirstOrDefaultAsync();
-
-        if (ticket == null)
-        {
-            return TypedResults.NotFound("Ticket not found");
-        }
-
-        // If ticket is archived, only allow name and description updates
-        if (ticket.IsArchived)
-        {
-            // Check if priority, status, or type are being changed
-            if (request.Priority != ticket.PriorityName ||
-                request.Status != ticket.StatusName ||
-                request.Type != ticket.TypeName)
-            {
-                return TypedResults.BadRequest("Archived tickets can only have their name and description updated.");
-            }
-
-            // Only update name and description for archived tickets
-            var success = await ticketService.UpdateArchivedTicketAsync(
-                ticketId,
-                request.Name,
-                request.Description,
-                currentUser.Member!.Id);
-
-            if (!success) return TypedResults.Problem();
-            return TypedResults.NoContent();
-        }
-
-        // For non-archived tickets, allow full updates
-        var fullUpdateSuccess = await ticketService.UpdateTicketAsync(ticketId, new UpdateTicketDto(
-                    request.Name,
-                    request.Description,
-                    request.Priority,
-                    request.Status,
-                    request.Type), currentUser.Member!.Id);
-        if (!fullUpdateSuccess) return TypedResults.Problem();
-
-        return TypedResults.NoContent();
-    }
 }
-

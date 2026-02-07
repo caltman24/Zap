@@ -37,7 +37,7 @@ public static class ConfigureApp
                     context.Response.ContentType = "application/json";
                     var response = new
                     {
-                        StatusCode = context.Response.StatusCode,
+                        context.Response.StatusCode,
                         Message = context.Response.StatusCode == StatusCodes.Status500InternalServerError
                             ? "An unexpected error occurred"
                             : contextFeature.Error.Message

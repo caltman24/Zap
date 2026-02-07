@@ -40,7 +40,7 @@ public static class ConfigureServices
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
-                   .UseRequiredSeeding();
+                .UseRequiredSeeding();
         });
 
 
@@ -107,12 +107,12 @@ public static class ConfigureServices
 
     private static IServiceCollection AddS3Storage(this IServiceCollection services)
     {
-        services.AddAWSService<IAmazonS3>(new AWSOptions()
+        services.AddAWSService<IAmazonS3>(new AWSOptions
         {
             Region = RegionEndpoint.GetBySystemName(EnvReader.GetStringValue("AWS_REGION")),
             Credentials = new BasicAWSCredentials(EnvReader.GetStringValue("AWS_ACCESS_KEY"),
                 EnvReader.GetStringValue("AWS_SECRET_KEY")),
-            Profile = EnvReader.GetStringValue("AWS_PROFILE"),
+            Profile = EnvReader.GetStringValue("AWS_PROFILE")
         });
         services.Configure<S3Options>(options =>
         {
@@ -132,7 +132,7 @@ public static class ConfigureServices
             {
                 return RateLimitPartition.GetTokenBucketLimiter(
                     context.User?.Identity?.Name ?? context.Request.Headers.Host.ToString(),
-                    partition => new TokenBucketRateLimiterOptions()
+                    partition => new TokenBucketRateLimiterOptions
                     {
                         TokenLimit = 90, // Burst of 90 requests
                         QueueLimit = 0,
@@ -147,7 +147,7 @@ public static class ConfigureServices
             {
                 return RateLimitPartition.GetFixedWindowLimiter(
                     context.User?.Identity?.Name ?? context.Request.Headers.Host.ToString(),
-                    partition => new FixedWindowRateLimiterOptions()
+                    partition => new FixedWindowRateLimiterOptions
                     {
                         AutoReplenishment = true,
                         PermitLimit = 5,

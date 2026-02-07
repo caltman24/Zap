@@ -1,7 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using dotenv.net;
 
-
 namespace Zap.Tests;
 
 public class ZapApplication : WebApplicationFactory<Program>

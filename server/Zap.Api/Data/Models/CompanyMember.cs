@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Zap.Api.Common.Constants;
-
 namespace Zap.Api.Data.Models;
 
 public class CompanyMember : BaseEntity

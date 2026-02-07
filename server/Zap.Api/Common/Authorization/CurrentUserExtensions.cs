@@ -17,7 +17,11 @@ internal static class CurrentUserExtensions
         return services;
     }
 
-    private sealed class ClaimsTransformation(CurrentUser currentUser, UserManager<AppUser> userManager, AppDbContext db, ILogger<ClaimsTransformation> logger)
+    private sealed class ClaimsTransformation(
+        CurrentUser currentUser,
+        UserManager<AppUser> userManager,
+        AppDbContext db,
+        ILogger<ClaimsTransformation> logger)
         : IClaimsTransformation
     {
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -33,12 +37,10 @@ internal static class CurrentUserExtensions
                 // we do this once and store it on the current user.
                 currentUser.User = await userManager.FindByIdAsync(id);
                 if (currentUser.User != null)
-                {
                     currentUser.Member = await db.CompanyMembers
                         .AsNoTracking()
                         .Include(m => m.Role)
                         .FirstOrDefaultAsync(m => m.UserId == currentUser.User.Id);
-                }
             }
 
             return principal;

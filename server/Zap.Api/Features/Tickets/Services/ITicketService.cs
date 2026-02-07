@@ -1,4 +1,3 @@
-using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Tickets.Services;
@@ -13,15 +12,16 @@ public interface ITicketService
     public Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string companyId);
     public Task DeleteTicketAsync(string ticketId);
 
-    ///<summary>
-    /// Validate if the member is the actual project manager of the ticket's parenting project
-    ///</summary>
+    /// <summary>
+    ///     Validate if the member is the actual project manager of the ticket's parenting project
+    /// </summary>
     public Task<bool> ValidateProjectManagerAsync(string ticketId, string memberId);
 
-    ///<summary>
-    /// Validate if the member is an actual assigned member of the ticket
-    ///</summary>
+    /// <summary>
+    ///     Validate if the member is an actual assigned member of the ticket
+    /// </summary>
     public Task<bool> ValidateAssignedMemberAsync(string ticketId, string memberId);
+
     public Task<bool> ValidateAssigneeAsync(string ticketId, string memberId);
     public Task<bool> ValidateCompanyAsync(string ticketId, string? companyId);
 

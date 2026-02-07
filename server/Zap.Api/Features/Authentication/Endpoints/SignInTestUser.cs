@@ -9,8 +9,11 @@ namespace Zap.Api.Features.Authentication.Endpoints;
 
 public class SignInTestUser : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/signin-test", Handle);
+    }
+
     private static async Task<Results<BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> Handle(
         SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, ILogger<Program> logger)
     {
