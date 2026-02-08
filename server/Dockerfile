@@ -5,7 +5,6 @@ WORKDIR /src
 
 # copy csproj and restore as distinct layers
 COPY ./Zap.Api/*.csproj ./Zap.Api/
-COPY ./Zap.DataAccess/*.csproj ./Zap.DataAccess/
 COPY ./Zap.Tests/*.csproj ./Zap.Tests/
 # Restore explicitly from nuget.org inside the build container to avoid relying on
 # any host-side NuGet configuration or cached feeds that are not available in the

@@ -1,4 +1,4 @@
-﻿# Zap Server
+# Zap Server
 
 - .NET 9
 - Vertical Slice Architecture
@@ -61,7 +61,7 @@ Notes:
 
 Notes:
 - The app exposes a `/health` endpoint at port 80 for smoke checks.
-- On startup the application will attempt to apply any pending EF Core migrations.
+- On startup the application will attempt to apply any pending EF Core migrations only if `APPLY_MIGRATIONS=true` (or by default in `Development` and `Testing` environments).
 
 ### Database Seeding
 When using `EnsureCreated` or `ef database update`, roles will automatically be seeded if they do not already exist.

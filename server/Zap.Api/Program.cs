@@ -71,7 +71,19 @@ app.UseHttpsRedirection();
 app.UseRequiredServices();
 
 // Lightweight health endpoint used by orchestrators/load-balancers.
-app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+app.MapGet("/health", async (AppDbContext db) =>
+{
+    try
+    {
+        // Simple connectivity check
+        var canConnect = await db.Database.CanConnectAsync();
+        return canConnect ? Results.Ok("Healthy") : Results.StatusCode(503);
+    }
+    catch
+    {
+        return Results.StatusCode(503);
+    }
+}).AllowAnonymous();
 
 app.MapZapApiEndpoints();
 
