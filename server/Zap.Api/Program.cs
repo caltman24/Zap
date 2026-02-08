@@ -60,6 +60,26 @@ else
         "APPLY_MIGRATIONS is false or unset for this environment; skipping automatic database migrations.");
 }
 
+// Seed test data in Development environment only.
+// This creates a test user (test@test.com) with a complete company, members, projects, and tickets
+// for development and testing purposes. Seeding is idempotent - it will skip if the test user already exists.
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            await TestDataSeeder.SeedTestDataAsync(services, logger, app.Environment);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while seeding test data.");
+        }
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi().AllowAnonymous();
