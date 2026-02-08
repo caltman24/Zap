@@ -1,70 +1,50 @@
-// QUESTIONS ?? //
-[] - Project: What happens assigned member/pm is removed from company?
-[] - Ticket: What happens assigned member / submitter is removed from company?
-[] - Ticket: What happens assigned member / submitter is removed from parent project?
-[] - Project: When a project is archived, do the tickets get archived too?
-[] - Dashboard: Does it change based off role?
-[] - Dashboard: Is the dashboard only for admins? (probably not)
+=== QUESTIONS ===
+- [ ] Project: What happens when the assigned member / PM is removed from the company?
+- [ ] Ticket: What happens when the assigned member / submitter is removed from the company?
+- [ ] Ticket: What happens when the assigned member / submitter is removed from the parent project?
+- [ ] Project: When a project is archived, are its tickets archived as well?
+- [ ] Dashboard: Does the dashboard change depending on role?
+- [ ] Dashboard: Is the dashboard intended only for admins? (probably not)
 
 
-// TODO //
-[] - Implement permission based features on ticket details page
-[] - add attachments to ticket
-[X] - Paginate ticket History 
-[] - Display ticket history in a lazy loaded list
-[] - Paginate ticket comments
+=== TODO ===
+- [ ] Implement permission-based features on the ticket details page
+- [ ] Add attachments to tickets
+- [x] Paginate ticket history
+- [ ] Display ticket history in a lazy-loaded list
+- [ ] Paginate ticket comments
+
+- [See client/todo.txt and server/todo.txt for area-specific tasks.]
 
 
-[] - Client: all tickets view for project tickets
-[] - Client: sort/filter tickets table
-[] - Client: filter tickets table to show resolved tickets
+=== TESTS ===
+- [TEST] - [ ] Projects tests: Assigning PMs, editing details/archive, role validations, adding tickets
+- [TEST] - [ ] Tickets tests: assigning tickets, editing (name/priority/status/etc.), role validations
+- [TEST] - [x] comments
+- [TEST] - [ ] history
+- [TEST] - [ ] attachments
 
-[] - Server: Figure out ticket-member delete behaviors on db
-
-[] - Client: polish role validation
-[] - Client: Project remove member modal info/confirmation
-[] - Client: Finish My tickets route
-[] - Client: Review and polish routes/breadcrumbs for better UX and navigation
-
-[] - User settings page
-[] - Admin: Manage user roles
-[] - Admin: Manage company members
-[] - Invite codes / emails
-[] - Join company via invite
-[] - Dynamic Dashboard
-[] - Realtime notifications
+Note: Put detailed test plans in `client/todo.txt` or `server/todo.txt` as appropriate.
 
 
-// TESTS //
-[] - Projects Tests
-        + Assigning PMs
-        + Editing project details / archive
-        + Role validations
-        + Adding tickets
-[] - Tickets Tests
-        + Assigning Tickets
-        + Editing ticket details(name, priority, status, ect...)
-        + Role validations
-        + comments
-        + history
-        + attatchments
-
-
-// COMPLETE //
-[X] - Create new ticket
-[X] - Ticket assigned member validation
-[X] - Priority, Status, and Type validation middleware or filter
-[X] - assign to ticket
-[X] - add ticket to project
-[X] - change priority & status
-[X] - archive ticket
-[X] - Server: role validation / member companyId & resource companyId validation
-[X] - On remove developer from project: remove from assigned tickets
-[X] - Client: archive ticket
-[X] - edit owned comments
-[X] - add history to ticket
-[X] - add comments to ticket
-[X] - Server & Client: Archive tickets when project is archived
-[X] - Client: Open Tickets Route -> Filter out resolved tickets (HENCE OPEN TICKETS)
-[X] - Client: Finish Resolved Tickets route
+=== DONE ===
+- [x] Server: Figure out ticket-member delete behaviors on DB
+- [x] Client: Finish "My tickets" route
+- [x] Client: Filter tickets table to show resolved tickets
+- [x] Create new ticket
+- [x] Ticket assigned-member validation
+- [x] Priority / Status / Type validation (middleware / filter)
+- [x] Assign to ticket
+- [x] Add ticket to project
+- [x] Change priority & status
+- [x] Archive ticket
+- [x] Server: Role validation (member.companyId vs resource.companyId)
+- [x] On remove developer from project: remove them from assigned tickets
+- [x] Client: Archive ticket UI
+- [x] Edit owned comments
+- [x] Add history to ticket
+- [x] Add comments to ticket
+- [x] Server & Client: Archive tickets when project is archived
+- [x] Client: Open Tickets route (filters out resolved tickets)
+- [x] Client: Finished Resolved Tickets route
 

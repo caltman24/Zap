@@ -19,16 +19,14 @@ internal static class AuthorizationHandlerExtensions
             .AddRequirements(new CheckCurrentUserRequirement());
     }
 
-    internal static AuthorizationPolicyBuilder RequireCompanyMember(this AuthorizationPolicyBuilder builder, params string[] roles)
+    internal static AuthorizationPolicyBuilder RequireCompanyMember(this AuthorizationPolicyBuilder builder,
+        params string[] roles)
     {
         builder.RequireAuthenticatedUser()
             .AddRequirements(new CheckCurrentUserRequirement())
             .AddRequirements(new CheckCurrentMemberRequirement());
 
-        if (roles.Any())
-        {
-            builder.AddRequirements(new CompanyRolesAuthorizationRequirement(roles));
-        }
+        if (roles.Any()) builder.AddRequirements(new CompanyRolesAuthorizationRequirement(roles));
 
         return builder;
     }
@@ -53,10 +51,7 @@ internal static class AuthorizationHandlerExtensions
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
             CheckCurrentUserRequirement requirement)
         {
-            if (currentUser.User != null)
-            {
-                context.Succeed(requirement);
-            }
+            if (currentUser.User != null) context.Succeed(requirement);
 
             return Task.CompletedTask;
         }
@@ -65,15 +60,14 @@ internal static class AuthorizationHandlerExtensions
     private class CheckCurrentMemberRequirement : IAuthorizationRequirement
     {
     }
+
     private class CheckCurrentMemberAuthHandler(CurrentUser currentUser)
         : AuthorizationHandler<CheckCurrentMemberRequirement>
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, CheckCurrentMemberRequirement requirement)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
+            CheckCurrentMemberRequirement requirement)
         {
-            if (currentUser.Member != null && currentUser.CompanyId != null)
-            {
-                context.Succeed(requirement);
-            }
+            if (currentUser.Member != null && currentUser.CompanyId != null) context.Succeed(requirement);
 
             return Task.CompletedTask;
         }
@@ -81,12 +75,14 @@ internal static class AuthorizationHandlerExtensions
 
     private class CompanyRolesAuthorizationRequirement : IAuthorizationRequirement
     {
-        public IEnumerable<string> AllowedRoles { get; }
         public CompanyRolesAuthorizationRequirement(IEnumerable<string> allowedRoles)
         {
             AllowedRoles = allowedRoles;
         }
+
+        public IEnumerable<string> AllowedRoles { get; }
     }
+
     private class CompanyRolesAuthorizationHandler : AuthorizationHandler<CompanyRolesAuthorizationRequirement>
     {
         public readonly CurrentUser _currentUser;
@@ -96,26 +92,23 @@ internal static class AuthorizationHandlerExtensions
             _currentUser = currentUser;
         }
 
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, CompanyRolesAuthorizationRequirement requirement)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
+            CompanyRolesAuthorizationRequirement requirement)
         {
             if (_currentUser.Member != null)
             {
                 var found = false;
                 foreach (var role in requirement.AllowedRoles)
-                {
                     if (_currentUser.Member.Role?.Name == role)
                     {
                         found = true;
                         break;
                     }
-                }
-                if (found)
-                {
-                    context.Succeed(requirement);
-                }
+
+                if (found) context.Succeed(requirement);
             }
+
             return Task.CompletedTask;
         }
-
     }
 }

@@ -9,8 +9,8 @@ namespace Zap.Api.Features.Companies.Services;
 public sealed class CompanyService : ICompanyService
 {
     private readonly AppDbContext _db;
-    private readonly ILogger<CompanyService> _logger;
     private readonly IFileUploadService _fileUploadService;
+    private readonly ILogger<CompanyService> _logger;
 
     public CompanyService(AppDbContext db, ILogger<CompanyService> logger, IFileUploadService fileUploadService)
     {
@@ -108,20 +108,17 @@ public sealed class CompanyService : ICompanyService
 
         return result.Select(p =>
         {
-            if (p.ProjectManagerAvatar != null)
-            {
-                p.AvatarUrls.Add(p.ProjectManagerAvatar);
-            }
+            if (p.ProjectManagerAvatar != null) p.AvatarUrls.Add(p.ProjectManagerAvatar);
 
             return new CompanyProjectDto(
-                    p.Id,
-                    p.Name,
-                    p.Priority,
-                    p.DueDate,
-                    p.IsArchived,
-                    p.MemberCount,
-                    p.AvatarUrls
-                );
+                p.Id,
+                p.Name,
+                p.Priority,
+                p.DueDate,
+                p.IsArchived,
+                p.MemberCount,
+                p.AvatarUrls
+            );
         }).ToList();
     }
 
@@ -171,7 +168,7 @@ public sealed class CompanyService : ICompanyService
     }
 
     /// <summary>
-    /// Gets each member from each role in the company
+    ///     Gets each member from each role in the company
     /// </summary>
     /// <param name="memberIds">List of member id's</param>
     /// <returns>Dictionary of member ids (Key) to role (Value)</returns>
@@ -190,10 +187,10 @@ public sealed class CompanyService : ICompanyService
 
             memberList.Add(new MemberInfoDto(
                 member.Id,
-                    $"{member.User.FirstName} {member.User.LastName}",
-                    member.User.AvatarUrl,
-                    roleName
-                ));
+                $"{member.User.FirstName} {member.User.LastName}",
+                member.User.AvatarUrl,
+                roleName
+            ));
         }
 
         return membersByRole;
@@ -207,5 +204,4 @@ public sealed class CompanyService : ICompanyService
             .Select(m => m.Role.Name)
             .FirstOrDefaultAsync();
     }
-
 }

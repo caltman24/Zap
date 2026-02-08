@@ -8,9 +8,11 @@ public static class TicketTypes
     public const string WorkTask = "Work Task";
     public const string ChangeRequest = "Change Request";
     public const string Enhanecment = "Enhancement";
+
     public static IReadOnlyList<string> ToList()
     {
-        var l = new List<string>() {
+        var l = new List<string>
+        {
             Defect,
             Feature,
             GeneralTask,

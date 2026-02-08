@@ -5,7 +5,6 @@ using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
 using Zap.Api.Data;
-using Zap.Api.Features.Projects.Services;
 using Zap.Api.Features.Tickets.Filters;
 using Zap.Api.Features.Tickets.Services;
 
@@ -13,18 +12,20 @@ namespace Zap.Api.Features.Tickets;
 
 public class ArchiveTicket : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/{ticketId}/archive", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketCompanyValidation();
+    }
 
 
     private static async Task<Results<ForbidHttpResult, NoContent, NotFound, BadRequest<string>>> Handle(
-            [FromRoute] string ticketId,
-            CurrentUser currentUser,
-            ITicketService ticketService,
-            AppDbContext db
-            )
+        [FromRoute] string ticketId,
+        CurrentUser currentUser,
+        ITicketService ticketService,
+        AppDbContext db
+    )
     {
         var userRole = currentUser.Member!.Role.Name;
 
@@ -45,9 +46,8 @@ public class ArchiveTicket : IEndpoint
         // If the ticket is currently archived (meaning we're trying to unarchive it)
         // and the project is archived, prevent the operation
         if (ticketInfo.IsArchived && ticketInfo.ProjectIsArchived)
-        {
-            return TypedResults.BadRequest("Cannot unarchive a ticket when its project is archived. Please unarchive the project first.");
-        }
+            return TypedResults.BadRequest(
+                "Cannot unarchive a ticket when its project is archived. Please unarchive the project first.");
 
         var success = await ticketService.ToggleArchiveTicket(ticketId, currentUser.Member!.Id);
         if (!success) return TypedResults.NotFound();
@@ -55,4 +55,3 @@ public class ArchiveTicket : IEndpoint
         return TypedResults.NoContent();
     }
 }
-

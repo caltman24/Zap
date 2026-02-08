@@ -11,19 +11,11 @@ namespace Zap.Api.Features.Authentication.Endpoints;
 
 public class RefreshTokens : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/refresh", Handle)
             .AllowAnonymous()
             .WithRequestValidation<Request>();
-
-    public record Request(string RefreshToken);
-
-    public class RequestValidator : AbstractValidator<Request>
-    {
-        public RequestValidator()
-        {
-            RuleFor(x => x.RefreshToken).NotEmpty().NotNull();
-        }
     }
 
     private static async Task<Results<ChallengeHttpResult, SignInHttpResult>> Handle(
@@ -79,6 +71,16 @@ public class RefreshTokens : IEndpoint
         {
             logger.LogError(ex, "Error processing refresh token");
             return TypedResults.Challenge();
+        }
+    }
+
+    public record Request(string RefreshToken);
+
+    public class RequestValidator : AbstractValidator<Request>
+    {
+        public RequestValidator()
+        {
+            RuleFor(x => x.RefreshToken).NotEmpty().NotNull();
         }
     }
 }

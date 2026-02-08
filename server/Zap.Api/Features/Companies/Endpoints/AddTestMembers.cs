@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
-using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 
@@ -13,16 +12,18 @@ namespace Zap.Api.Features.Companies.Endpoints;
 
 public class AddTestMembers : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/testmembers", Handle)
             .WithCompanyMember();
+    }
 
     private static async Task<Results<NotFound<string>, NoContent>> Handle(
-            [FromQuery] int count,
-            UserManager<AppUser> userManager,
-            AppDbContext db,
-            CurrentUser currentUser,
-            [FromQuery] string? role = null)
+        [FromQuery] int count,
+        UserManager<AppUser> userManager,
+        AppDbContext db,
+        CurrentUser currentUser,
+        [FromQuery] string? role = null)
     {
         var company = await db.Companies
             .Where(c => c.Id == currentUser.CompanyId)
@@ -39,7 +40,7 @@ public class AddTestMembers : IEndpoint
             .RuleFor(u => u.UserName, (f, u) => u.Email)
             .Generate(count);
 
-        List<CompanyRole> roles = await db.CompanyRoles.ToListAsync();
+        var roles = await db.CompanyRoles.ToListAsync();
 
         foreach (var user in newUsers)
         {
@@ -50,8 +51,8 @@ public class AddTestMembers : IEndpoint
                 {
                     UserId = user.Id,
                     CompanyId = currentUser.CompanyId,
-                    RoleId = roles.FirstOrDefault(r => r.Name == role)?.Id ?? roles[Random.Shared.Next(0, roles.Count() - 1)].Id
-
+                    RoleId = roles.FirstOrDefault(r => r.Name == role)?.Id ??
+                             roles[Random.Shared.Next(0, roles.Count() - 1)].Id
                 });
                 await db.SaveChangesAsync();
             }

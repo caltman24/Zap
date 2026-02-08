@@ -13,13 +13,28 @@ namespace Zap.Api.Features.Tickets;
 
 public class UpdateStatus : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPut("/{ticketId}/status", Handle)
             .WithName("UpdateTicketStatus")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
+    }
+
+    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
+        [FromRoute] string ticketId,
+        Request request,
+        ITicketService ticketService,
+        CurrentUser currentUser
+    )
+    {
+        var success = await ticketService.UpdateStatusAsync(ticketId, request.Status, currentUser.Member!.Id);
+        if (!success) return TypedResults.Problem();
+
+        return TypedResults.NoContent();
+    }
 
     public record Request(string Status);
 
@@ -30,18 +45,4 @@ public class UpdateStatus : IEndpoint
             RuleFor(x => x.Status).ValidateTicketStatus();
         }
     }
-
-    private static async Task<Results<ForbidHttpResult, ProblemHttpResult, NoContent>> Handle(
-            [FromRoute] string ticketId,
-            Request request,
-            ITicketService ticketService,
-            CurrentUser currentUser
-            )
-    {
-        var success = await ticketService.UpdateStatusAsync(ticketId, request.Status, currentUser.Member!.Id);
-        if (!success) return TypedResults.Problem();
-
-        return TypedResults.NoContent();
-    }
 }
-

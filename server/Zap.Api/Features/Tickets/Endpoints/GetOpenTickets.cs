@@ -8,15 +8,17 @@ namespace Zap.Api.Features.Tickets;
 public class GetOpenTickets : IEndpoint
 {
     // FIXME: Figure out role permissions here
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/open", Handle)
             .WithName("OpenTickets")
             .WithCompanyMember();
+    }
 
     private static async Task<Ok<List<BasicTicketDto>>> Handle(
-            ITicketService ticketService,
-            CurrentUser currentUser
-            )
+        ITicketService ticketService,
+        CurrentUser currentUser
+    )
     {
         var tickets = await ticketService.GetOpenTicketsAsync(currentUser.CompanyId!);
 

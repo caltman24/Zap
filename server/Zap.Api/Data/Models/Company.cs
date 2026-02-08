@@ -10,8 +10,8 @@ public class Company : BaseEntity
     [StringLength(1000)] public required string Description { get; set; }
 
     [StringLength(500)] public string? LogoUrl { get; set; }
-    [StringLength(500)]
-    public string? LogoKey { get; set; }
+
+    [StringLength(500)] public string? LogoKey { get; set; }
 
     [StringLength(500)] public string? WebsiteUrl { get; set; }
 

@@ -8,7 +8,7 @@ public interface ITicketCommentsService
         string senderId,
         string ticketId,
         string message
-        );
+    );
 
     Task<List<CommentDto>> GetCommentsAsync(string ticketId);
     Task<bool> DeleteCommentAsync(string commentId, string requestingUserId);
@@ -16,10 +16,10 @@ public interface ITicketCommentsService
 }
 
 public record CommentDto(
-        string Id,
-        string TicketId,
-        string Message,
-        MemberInfoDto Sender,
-        DateTime CreatedAt,
-        DateTime? UpdatedAt
+    string Id,
+    string TicketId,
+    string Message,
+    MemberInfoDto Sender,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt
 );

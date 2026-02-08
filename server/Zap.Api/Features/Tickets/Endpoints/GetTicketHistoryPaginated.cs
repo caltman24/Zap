@@ -9,11 +9,13 @@ namespace Zap.Api.Features.Tickets;
 
 public class GetTicketHistoryPaginated : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/{ticketId}/history-pag", Handle)
             .WithName("GetTicketHistoryPaginated")
             .WithCompanyMember()
             .WithTicketCompanyValidation();
+    }
 
     private static async Task<Ok<PaginatedResponse<TicketHistoryDto>>> Handle(
         [FromRoute] string ticketId,

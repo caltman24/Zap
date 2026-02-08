@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Zap.Api.Common.Enums;
 
 namespace Zap.Api.Data.Models;
@@ -20,4 +19,3 @@ public class TicketHistory : BaseEntity
 
     public TicketHistoryTypes Type { get; set; } = default!;
 }
-

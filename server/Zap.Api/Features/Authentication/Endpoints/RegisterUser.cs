@@ -10,21 +10,10 @@ namespace Zap.Api.Features.Authentication.Endpoints;
 
 public class RegisterUser : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/register", Handle)
             .WithRequestValidation<Request>();
-
-    public record Request(string Email, string Password, string FirstName, string LastName);
-
-    public class RequestValidator : AbstractValidator<Request>
-    {
-        public RequestValidator()
-        {
-            RuleFor(x => x.Email).EmailAddress().NotEmpty().NotNull();
-            RuleFor(x => x.Password).NotEmpty().NotNull().MinimumLength(6);
-            RuleFor(x => x.FirstName).NotNull();
-            RuleFor(x => x.LastName).NotNull();
-        }
     }
 
 
@@ -60,5 +49,18 @@ public class RegisterUser : IEndpoint
         var principal = await signInManager.CreateUserPrincipalAsync(newUser);
 
         return TypedResults.SignIn(principal, authenticationScheme: IdentityConstants.BearerScheme);
+    }
+
+    public record Request(string Email, string Password, string FirstName, string LastName);
+
+    public class RequestValidator : AbstractValidator<Request>
+    {
+        public RequestValidator()
+        {
+            RuleFor(x => x.Email).EmailAddress().NotEmpty().NotNull();
+            RuleFor(x => x.Password).NotEmpty().NotNull().MinimumLength(6);
+            RuleFor(x => x.FirstName).NotNull();
+            RuleFor(x => x.LastName).NotNull();
+        }
     }
 }

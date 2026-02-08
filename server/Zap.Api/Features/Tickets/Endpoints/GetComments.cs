@@ -9,19 +9,20 @@ namespace Zap.Api.Features.Tickets;
 
 public class GetComments : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/{ticketId}/comments", Handle)
             .WithCompanyMember()
             .WithTicketCompanyValidation();
+    }
 
-    private async static Task<Ok<List<CommentDto>>> Handle(
-            [FromRoute] string ticketId,
-            CurrentUser currentUser,
-            ITicketCommentsService commentsService
-            )
+    private static async Task<Ok<List<CommentDto>>> Handle(
+        [FromRoute] string ticketId,
+        CurrentUser currentUser,
+        ITicketCommentsService commentsService
+    )
     {
         var comments = await commentsService.GetCommentsAsync(ticketId);
         return TypedResults.Ok(comments);
     }
 }
-

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: zap_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - zap_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    # Prefer a central server/.env for compose-managed dev envs but
+    # keep the existing Zap.Api/.env as a fallback to avoid breaking
+    # current local setups. Compose will merge values, later files
+    # override earlier ones when duplicate keys exist.
+    env_file:
+      - ./server/.env
+      - ./server/Zap.Api/.env
+    environment:
+      # When running in compose, the DB host is the service name `db`.
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=zap_dev;Username=postgres;Password=postgres"
+      # Enable automatic migrations for first-run. Set to "false" for production.
+      APPLY_MIGRATIONS: "true"
+    ports:
+      - "5090:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  zap_pgdata:

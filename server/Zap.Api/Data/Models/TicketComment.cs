@@ -15,5 +15,4 @@ public class TicketComment
     [MaxLength(150)] public string Message { get; set; } = default!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
-
 }

@@ -1,4 +1,6 @@
-﻿using Amazon.S3;
+﻿using System.Net;
+using System.Security.Cryptography;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using Zap.Api.Features.FileUpload.Configuration;
@@ -7,10 +9,10 @@ namespace Zap.Api.Features.FileUpload.Services;
 
 public sealed class S3FileUploadService : IFileUploadService
 {
-    private readonly IAmazonS3 _s3Client;
-    private readonly ILogger<S3FileUploadService> _logger;
     private readonly string _bucketName;
+    private readonly ILogger<S3FileUploadService> _logger;
     private readonly string _region;
+    private readonly IAmazonS3 _s3Client;
 
     public S3FileUploadService(IAmazonS3 s3Client, IOptions<S3Options> s3Options, ILogger<S3FileUploadService> logger)
     {
@@ -22,7 +24,7 @@ public sealed class S3FileUploadService : IFileUploadService
 
 
     /// <summary>
-    /// Uploads a user avatar to S3
+    ///     Uploads a user avatar to S3
     /// </summary>
     /// <param name="file">File to upload</param>
     /// <param name="oldKey">Old object key to remove</param>
@@ -39,7 +41,7 @@ public sealed class S3FileUploadService : IFileUploadService
     }
 
     /// <summary>
-    /// Uploads a company logo to S3
+    ///     Uploads a company logo to S3
     /// </summary>
     /// <param name="file">File to upload</param>
     /// <param name="oldKey">Old object key to remove</param>
@@ -87,9 +89,7 @@ public sealed class S3FileUploadService : IFileUploadService
         var fileSizeBytes = file.Length;
 
         if (fileSizeBytes > maxSizeMb * 1024 * 1024) // To bytes
-        {
             throw new Exception($"File size exceeds {maxSizeMb}MB");
-        }
 
         // Validate file type
         ValidateFileType(file);
@@ -116,7 +116,7 @@ public sealed class S3FileUploadService : IFileUploadService
         try
         {
             var res = await _s3Client.PutObjectAsync(request);
-            if (res is not { HttpStatusCode: System.Net.HttpStatusCode.OK })
+            if (res is not { HttpStatusCode: HttpStatusCode.OK })
             {
                 _logger.LogError("Failed to upload file: {Key}", key);
                 throw new Exception("Failed to upload file");
@@ -152,7 +152,8 @@ public sealed class S3FileUploadService : IFileUploadService
 
         // Additional validation for file extension
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
+        var allowedExtensions = new[]
+            { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
 
         if (allowedExtensions.Contains(extension)) return;
         _logger.LogWarning("Invalid file extension attempted: {Extension}", extension);
@@ -161,7 +162,7 @@ public sealed class S3FileUploadService : IFileUploadService
 
     private string CalculateChecksum(Stream stream)
     {
-        using (var sha256 = System.Security.Cryptography.SHA256.Create())
+        using (var sha256 = SHA256.Create())
         {
             var hash = sha256.ComputeHash(stream);
             return Convert.ToBase64String(hash);

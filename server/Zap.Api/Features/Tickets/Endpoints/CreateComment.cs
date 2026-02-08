@@ -11,12 +11,29 @@ namespace Zap.Api.Features.Tickets;
 
 public class CreateComment : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/{ticketId}/comments", Handle)
             .WithCompanyMember()
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
+    }
+
+    private static async Task<NoContent> Handle(
+        [FromRoute] string ticketId,
+        CurrentUser currentUser,
+        ITicketCommentsService commentsService,
+        Request request
+    )
+    {
+        await commentsService.CreateCommentAsync(
+            currentUser.Member!.Id,
+            ticketId,
+            request.Message);
+
+        return TypedResults.NoContent();
+    }
 
     public record Request(string Message);
 
@@ -27,20 +44,4 @@ public class CreateComment : IEndpoint
             RuleFor(r => r.Message).NotEmpty().NotNull().MaximumLength(150);
         }
     }
-
-    private async static Task<NoContent> Handle(
-            [FromRoute] string ticketId,
-            CurrentUser currentUser,
-            ITicketCommentsService commentsService,
-            Request request
-            )
-    {
-        await commentsService.CreateCommentAsync(
-                currentUser.Member!.Id,
-                ticketId,
-                request.Message);
-
-        return TypedResults.NoContent();
-    }
 }
-

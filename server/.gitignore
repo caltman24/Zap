@@ -46,3 +46,4 @@ appsettings.*.json
 obj/**/*
 
 .env
+.env.local

@@ -6,20 +6,23 @@ namespace Zap.Api.Features.Tickets.Filters;
 internal static class TicketArchiveFiltersExtensions
 {
     /// <summary>
-    /// Validates that the ticket is not archived before allowing operations.
-    /// Only allows archive/unarchive and name/description updates on archived tickets.
+    ///     Validates that the ticket is not archived before allowing operations.
+    ///     Only allows archive/unarchive and name/description updates on archived tickets.
     /// </summary>
     /// <returns>
-    /// Returns <see cref="TypedResults.NotFound"/> if the resource is not found,
-    /// <see cref="TypedResults.BadRequest"/> if the ticket is archived and operation is not allowed,
-    /// or the result of <paramref name="next"/> if neither condition is met.
+    ///     Returns <see cref="TypedResults.NotFound" /> if the resource is not found,
+    ///     <see cref="TypedResults.BadRequest" /> if the ticket is archived and operation is not allowed,
+    ///     or the result of <paramref name="next" /> if neither condition is met.
     /// </returns>
-    internal static RouteHandlerBuilder WithTicketArchiveValidation(this RouteHandlerBuilder builder) =>
-        builder.AddEndpointFilter<TicketArchiveValidationFilter>();
+    internal static RouteHandlerBuilder WithTicketArchiveValidation(this RouteHandlerBuilder builder)
+    {
+        return builder.AddEndpointFilter<TicketArchiveValidationFilter>();
+    }
 
     private class TicketArchiveValidationFilter(AppDbContext db) : IEndpointFilter
     {
-        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
+            EndpointFilterDelegate next)
         {
             var ticketId = context.GetArgument<string>(0);
 
@@ -38,20 +41,16 @@ internal static class TicketArchiveFiltersExtensions
                 var endpointName = endpoint?.DisplayName ?? "";
 
                 // Allow archive/unarchive operations
-                if (endpointName.Contains("ArchiveTicket"))
-                {
-                    return await next(context);
-                }
+                if (endpointName.Contains("ArchiveTicket")) return await next(context);
 
                 // Allow name/description updates only (check if it's UpdateTicket with limited fields)
                 if (endpointName.Contains("UpdateTicket"))
-                {
                     // This will be handled by a modified UpdateTicket endpoint that checks for archived status
                     return await next(context);
-                }
 
                 // Block all other operations on archived tickets
-                return TypedResults.BadRequest("Cannot perform this operation on an archived ticket. Only unarchiving and editing name/description are allowed.");
+                return TypedResults.BadRequest(
+                    "Cannot perform this operation on an archived ticket. Only unarchiving and editing name/description are allowed.");
             }
 
             return await next(context);

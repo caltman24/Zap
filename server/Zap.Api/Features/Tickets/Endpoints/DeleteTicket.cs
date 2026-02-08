@@ -10,7 +10,8 @@ namespace Zap.Api.Features.Tickets;
 
 public class DeleteTicket : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapDelete("/{ticketId}", Handle)
             .WithName("DeleteTicket")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
@@ -18,11 +19,12 @@ public class DeleteTicket : IEndpoint
             // as the ticket. Only works on endpoints with exisiting ticket id
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation();
+    }
 
     private static async Task<NoContent> Handle(
-            [FromRoute] string ticketId,
-            ITicketService ticketService
-            )
+        [FromRoute] string ticketId,
+        ITicketService ticketService
+    )
     {
         await ticketService.DeleteTicketAsync(ticketId);
 

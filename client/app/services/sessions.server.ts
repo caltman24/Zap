@@ -10,7 +10,10 @@ const sessionStorage = createCookieSessionStorage({
     httpOnly: true,
     path: "/",
     sameSite: "lax",
-    secrets: ["s3cr3t"],
+    // Prefer using an environment-provided secret in production. SESSION_SECRET
+    // will be injected by Netlify/hosting environment and keeps session cookie
+    // encryption out of source control.
+    secrets: [process.env.SESSION_SECRET || "s3cr3t"],
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 14, // 14 days
   },

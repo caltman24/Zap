@@ -11,14 +11,14 @@ internal static class S3Helper
         try
         {
             var bucketName = EnvReader.GetStringValue("AWS_S3_BUCKET");
-            var objects = await s3Client.ListObjectsV2Async(new ListObjectsV2Request()
+            var objects = await s3Client.ListObjectsV2Async(new ListObjectsV2Request
             {
                 BucketName = bucketName
             });
 
             if (objects == null || objects.S3Objects.Count == 0) return;
 
-            var res = await s3Client.DeleteObjectsAsync(new DeleteObjectsRequest()
+            var res = await s3Client.DeleteObjectsAsync(new DeleteObjectsRequest
             {
                 BucketName = bucketName,
                 Objects = objects.S3Objects.Select(o => new KeyVersion { Key = o.Key }).ToList()

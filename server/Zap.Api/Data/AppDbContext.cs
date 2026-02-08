@@ -44,14 +44,10 @@ public class AppDbContext : IdentityUserContext<AppUser>
 
         // Set default value for CreatedAt on all entities that inherit from BaseEntity
         foreach (var entityType in builder.Model.GetEntityTypes())
-        {
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-            {
                 builder.Entity(entityType.ClrType)
                     .Property(nameof(BaseEntity.CreatedAt))
                     .HasDefaultValueSql("NOW()");
-            }
-        }
 
         builder.Entity<Company>()
             .HasOne(u => u.Owner)
@@ -164,16 +160,9 @@ public class AppDbContext : IdentityUserContext<AppUser>
 
         foreach (var entry in entries)
         {
-            if (entry.State == EntityState.Added)
-            {
-                ((BaseEntity)entry.Entity).CreatedAt = currentTime;
-            }
+            if (entry.State == EntityState.Added) ((BaseEntity)entry.Entity).CreatedAt = currentTime;
 
-            if (entry.State == EntityState.Modified)
-            {
-                ((BaseEntity)entry.Entity).UpdatedAt = currentTime;
-            }
+            if (entry.State == EntityState.Modified) ((BaseEntity)entry.Entity).UpdatedAt = currentTime;
         }
-
     }
 }

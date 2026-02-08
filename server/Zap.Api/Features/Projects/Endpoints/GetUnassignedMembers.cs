@@ -11,29 +11,25 @@ namespace Zap.Api.Features.Projects.Endpoints;
 
 public class GetUnassignedCompanyMembers : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/unassigned", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithProjectCompanyValidation();
+    }
 
     public static async Task<Results<
-        BadRequest<string>,
-        ForbidHttpResult,
-        Ok<SortedDictionary<string, List<MemberInfoDto>>>>>
+            BadRequest<string>,
+            ForbidHttpResult,
+            Ok<SortedDictionary<string, List<MemberInfoDto>>>>>
         Handle([FromRoute] string projectId, IProjectService projectService, CurrentUser currentUser)
     {
         var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
-        if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin)
-        {
-            return TypedResults.Forbid();
-        }
+        if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin) return TypedResults.Forbid();
 
         // Filter company members not assigned to projectId
         var members = await projectService.GetUnassignedMembersAsync(projectId, currentUser.Member!.Id);
-        if (members == null)
-        {
-            return TypedResults.BadRequest("Could not find company members.");
-        }
+        if (members == null) return TypedResults.BadRequest("Could not find company members.");
 
         return TypedResults.Ok(members);
     }

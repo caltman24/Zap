@@ -6,21 +6,24 @@ namespace Zap.Api.Features.Projects.Filters;
 
 internal static class ProjectFiltersExtensions
 {
-    ///<summary>
-    /// Gets the first argument of projectId to validate relationship with current user
-    ///</summary>
+    /// <summary>
+    ///     Gets the first argument of projectId to validate relationship with current user
+    /// </summary>
     /// <returns>
-    /// Returns <see cref="TypedResults.NotFound"/> if the resource is not found,
-    /// <see cref="TypedResults.Forbid"/> if the user is not authorized,
-    /// or the result of <paramref name="next"/> if neither condition is met.
+    ///     Returns <see cref="TypedResults.NotFound" /> if the resource is not found,
+    ///     <see cref="TypedResults.Forbid" /> if the user is not authorized,
+    ///     or the result of <paramref name="next" /> if neither condition is met.
     /// </returns>
-    internal static RouteHandlerBuilder WithProjectCompanyValidation(this RouteHandlerBuilder builder) =>
-        builder.AddEndpointFilter<ProjectCompanyValidationFilter>();
+    internal static RouteHandlerBuilder WithProjectCompanyValidation(this RouteHandlerBuilder builder)
+    {
+        return builder.AddEndpointFilter<ProjectCompanyValidationFilter>();
+    }
 
     private class ProjectCompanyValidationFilter(AppDbContext db, CurrentUser currentUser)
         : IEndpointFilter
     {
-        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
+            EndpointFilterDelegate next)
         {
             var projectId = context.GetArgument<string>(0);
 
@@ -31,14 +34,10 @@ internal static class ProjectFiltersExtensions
 
             if (projectCompanyId == null) return TypedResults.NotFound();
 
-            if (projectCompanyId != currentUser.Member!.CompanyId)
-            {
-                return TypedResults.Forbid();
-            }
+            if (projectCompanyId != currentUser.Member!.CompanyId) return TypedResults.Forbid();
 
 
             return await next(context);
         }
     }
 }
-

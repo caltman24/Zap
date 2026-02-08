@@ -7,10 +7,10 @@ namespace Zap.Api.Features.Authentication.Endpoints;
 
 public class SignInUser : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapPost("/signin", Handle);
-
-    public record Request(string Email, string Password);
+    }
 
     private static async Task<Results<BadRequest<string>, EmptyHttpResult>> Handle(Request request,
         SignInManager<AppUser> signInManager)
@@ -21,4 +21,6 @@ public class SignInUser : IEndpoint
 
         return TypedResults.Empty;
     }
+
+    public record Request(string Email, string Password);
 }

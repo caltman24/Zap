@@ -8,7 +8,6 @@ global using System.Net.Http.Json;
 global using Xunit;
 global using Microsoft.AspNetCore.DataProtection;
 global using Microsoft.Extensions.Hosting;
-global using Zap.Api;
 global using Zap.Api.Common.Constants;
 global using Zap.Api.Data;
 global using Zap.Api.Data.Models;

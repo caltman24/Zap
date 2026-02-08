@@ -9,12 +9,13 @@ namespace Zap.Api.Features.Projects.Endpoints;
 
 public class GetProject : IEndpoint
 {
-
-    public static void Map(IEndpointRouteBuilder app) =>
+    public static void Map(IEndpointRouteBuilder app)
+    {
         app.MapGet("/{projectId}", Handle)
-           .WithName("GetProject")
-           .WithCompanyMember()
-           .WithProjectCompanyValidation();
+            .WithName("GetProject")
+            .WithCompanyMember()
+            .WithProjectCompanyValidation();
+    }
 
     private static async Task<Results<NotFound<string>, Ok<ProjectDto>>> Handle(
         [FromRoute] string projectId, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
@@ -27,5 +28,4 @@ public class GetProject : IEndpoint
 
         return TypedResults.Ok(project);
     }
-
 }
