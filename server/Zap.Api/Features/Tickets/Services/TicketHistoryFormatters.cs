@@ -88,6 +88,6 @@ public class DeveloperRemovedFormatter : ITicketHistoryFormatter
 {
     public static string FormatHistoryEntry(TicketHistory entry)
     {
-        return $"Assigned developer {entry.Creator.User.FullName} removed by {entry.Creator.User.FullName}";
+        return $"Assigned developer {entry.RelatedEntityName} removed by {entry.Creator.User.FullName}";
     }
 }

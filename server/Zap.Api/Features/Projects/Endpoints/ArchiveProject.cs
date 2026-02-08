@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
@@ -24,7 +24,7 @@ public class ArchiveProject : IEndpoint
         if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin) return TypedResults.Forbid();
 
         var success = await service.ToggleArchiveProjectAsync(projectId);
-        if (!success) TypedResults.NotFound("Project not found");
+        if (!success) return TypedResults.NotFound("Project not found");
 
         return TypedResults.NoContent();
     }

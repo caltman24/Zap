@@ -37,7 +37,8 @@ services:
     ports:
       - "5090:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

@@ -15,4 +15,4 @@ Notes:
 - Railway should expose the container port 80 and map it to an external port.
 - Ensure the database is accessible to the service; use Railway Postgres add-on and set
   ConnectionStrings__DefaultConnection accordingly.
-- The app will attempt to run EF Core migrations on startup. Monitor logs for migration output.
+- EF Core migrations are applied on startup only when `APPLY_MIGRATIONS=true` (or by default in Development/Testing). In Production, set this variable or run migrations manually, and monitor logs for migration output.
