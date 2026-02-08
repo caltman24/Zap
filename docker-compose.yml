@@ -32,6 +32,9 @@ services:
     environment:
       # When running in compose, the DB host is the service name `db`.
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=zap_dev;Username=postgres;Password=postgres"
+      # Ensure the API runs in Development locally so development-only endpoints
+      # (like /auth/signin-test) are registered. Remove or change for prod.
+      ASPNETCORE_ENVIRONMENT: "Development"
       # Enable automatic migrations for first-run. Set to "false" for production.
       APPLY_MIGRATIONS: "true"
     ports:
