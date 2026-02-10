@@ -8,7 +8,7 @@ import roleNames, { type RoleName } from "~/data/roles";
 type ChatBoxProps = {
     className?: string,
     comments?: TicketComment[]
-    userId: string
+    userId: string | undefined
     userRole: RoleName
     isArchived: boolean
     loading: boolean
@@ -50,7 +50,7 @@ export default function ChatBox({ className, comments, userId, userRole, isArchi
         <>
             {comments && comments.length > 0 ? (
                 comments.map((c, index) => {
-                    const css = c.sender.id === userId ? "chat-end" : "chat-start";
+                    const css = userId && c.sender.id === userId ? "chat-end" : "chat-start";
                     const createdAtDate = new Date(c.createdAt);
                     const convertedCreatedAt = convertTo12HourTime(createdAtDate)
                     const formatedCreatedAt = `${convertedCreatedAt.hours}:${convertedCreatedAt.minutes} ${convertedCreatedAt.meridiem}`
@@ -97,10 +97,10 @@ export default function ChatBox({ className, comments, userId, userRole, isArchi
                                 </div>
                                 <div className="flex gap-2">
                                     {/* Check permissions before showing edit/delete icons */}
-                                    {(canEditComment(userRole, c.sender.id === userId, isArchived) || 
-                                      canDeleteComment(userRole, c.sender.id === userId, isArchived)) && (
+                                    {(canEditComment(userRole, !!userId && c.sender.id === userId, isArchived) || 
+                                      canDeleteComment(userRole, !!userId && c.sender.id === userId, isArchived)) && (
                                         <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transform duration-100 ease-in">
-                                            {canEditComment(userRole, c.sender.id === userId, isArchived) && (
+                                            {canEditComment(userRole, !!userId && c.sender.id === userId, isArchived) && (
                                                 <span
                                                     onClick={() => handleEditClick(c.id, c.message)}
                                                     className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
@@ -109,7 +109,7 @@ export default function ChatBox({ className, comments, userId, userRole, isArchi
                                                     edit
                                                 </span>
                                             )}
-                                            {canDeleteComment(userRole, c.sender.id === userId, isArchived) && (
+                                            {canDeleteComment(userRole, !!userId && c.sender.id === userId, isArchived) && (
                                                 <span
                                                     onClick={() => onDeleteComment(c.id)}
                                                     className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"

@@ -20,7 +20,7 @@ export type UserInfoResponse = {
   role: RoleName;
   avatarUrl: string;
   companyId?: string;
-  memberId: string;
+  memberId: string | undefined;
 };
 export type BasicUserInfo = {
   id: string;

@@ -171,7 +171,7 @@ export default function TicketDetailsRoute() {
         userId: userInfo.memberId,
         ticketSubmitterId: ticket.submitter.id,
         ticketAssignedDeveloperId: ticket.assignee?.id || null,
-        isProjectManager: ticket.projectManagerId === userInfo.memberId,
+        isProjectManager: userInfo.memberId ? ticket.projectManagerId === userInfo.memberId : false,
         isArchived: ticket.isArchived,
     };
 
@@ -576,7 +576,7 @@ export default function TicketDetailsRoute() {
                                     onEditComment={handleOnEditComment}
                                     comments={(getCommentsFetcher.data as any)?.data}
                                     loading={getCommentsFetcher.state === "loading"}
-                                    userId={userInfo.memberId}
+                                    userId={userInfo.memberId ?? ""}
                                     userRole={userInfo.role}
                                     isArchived={ticket.isArchived}
                                 />

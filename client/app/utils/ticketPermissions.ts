@@ -3,7 +3,7 @@ import roleNames, { type RoleName } from "~/data/roles";
 
 export interface TicketPermissionContext {
   role: RoleName;
-  userId: string;
+  userId: string | undefined;
   ticketSubmitterId: string;
   ticketAssignedDeveloperId: string | null;
   isProjectManager: boolean;
@@ -22,6 +22,9 @@ function hasPermission(role: RoleName, allowedRoles: RoleName[]): boolean {
  * Admin and PM can always edit. Submitters can edit their own tickets.
  */
 export function canEditTicketFields(context: TicketPermissionContext): boolean {
+  // Guard: Deny access if userId is missing
+  if (!context.userId) return false;
+
   if (context.isArchived) return false;
 
   // Admin and PM can edit any ticket
@@ -42,6 +45,9 @@ export function canEditTicketFields(context: TicketPermissionContext): boolean {
  * Developers can update status if assigned. Submitters can update their own.
  */
 export function canUpdateStatus(context: TicketPermissionContext): boolean {
+  // Guard: Deny access if userId is missing
+  if (!context.userId) return false;
+
   if (context.isArchived) return false;
 
   // Admin and PM can always update status
@@ -70,6 +76,9 @@ export function canUpdateStatus(context: TicketPermissionContext): boolean {
  * Only Admin, PM, and submitters (their own tickets) can update priority
  */
 export function canUpdatePriority(context: TicketPermissionContext): boolean {
+  // Guard: Deny access if userId is missing
+  if (!context.userId) return false;
+
   if (context.isArchived) return false;
 
   // Admin and PM can always update priority
@@ -89,6 +98,9 @@ export function canUpdatePriority(context: TicketPermissionContext): boolean {
  * Only Admin, PM, and submitters (their own tickets) can update type
  */
 export function canUpdateType(context: TicketPermissionContext): boolean {
+  // Guard: Deny access if userId is missing
+  if (!context.userId) return false;
+
   if (context.isArchived) return false;
 
   // Admin and PM can always update type
