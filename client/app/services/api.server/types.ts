@@ -1,3 +1,5 @@
+import { RoleName } from "~/data/roles";
+
 // Response types
 export type ValidateAccountResponse = {
   result: "company" | "user" | "none";
@@ -15,22 +17,22 @@ export type UserInfoResponse = {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: RoleName;
   avatarUrl: string;
   companyId?: string;
-  memberId?: string;
+  memberId: string;
 };
 export type BasicUserInfo = {
   id: string;
   name: string;
   avatarUrl: string;
-  role: string;
+  role: RoleName;
 };
 export type ProjectManagerInfo = {
   id: string;
   name: string;
   avatarUrl: string;
-  role: string;
+  role: RoleName;
   assigned: boolean;
 };
 
@@ -75,13 +77,13 @@ export type ProjectResponse = {
     id: string;
     name: string;
     avatarUrl: string;
-    role: string;
+    role: RoleName;
   } | null;
   members: {
     id: string;
     name: string;
     avatarUrl: string;
-    role: string;
+    role: RoleName;
   }[];
   tickets: BasicTicketInfo[];
 };

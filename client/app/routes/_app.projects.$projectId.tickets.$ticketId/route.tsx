@@ -8,7 +8,7 @@ import { getTicketById } from "./server.get-ticket";
 import BackButton from "~/components/BackButton";
 import { useEffect, useRef, useState } from "react";
 import DeveloperListModal from "./DeveloperListModal";
-import { BasicUserInfo } from "~/services/api.server/types";
+import { BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
 import { useEditMode } from "~/utils/editMode";
 import { EditModeForm } from "~/components/EditModeForm";
 import { validateRole } from "~/utils/validate";
@@ -67,7 +67,7 @@ export default function TicketDetailsRoute() {
     const { ticketId } = useParams();
     const actionData = useActionData() as ActionResponseParams
     const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
-    const { userInfo } = useOutletContext<any>();
+    const { userInfo } = useOutletContext<{ loaderData: any; userInfo: UserInfoResponse }>();
 
     const navigation = useNavigation()
 
