@@ -2,17 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import { Form } from "@remix-run/react";
 import { TicketComment } from "~/services/api.server/types";
 import { convertTo12HourTime, formatDateHeader, isSameDay, isToday } from "~/utils/dateTime";
+import { canEditComment, canDeleteComment } from "~/utils/ticketPermissions";
+import roleNames, { type RoleName } from "~/data/roles";
 
 type ChatBoxProps = {
     className?: string,
     comments?: TicketComment[]
     userId: string
+    userRole: RoleName
+    isArchived: boolean
     loading: boolean
     onDeleteComment: (commentId: string) => void
     onEditComment: (commentId: string, message: string) => void
 }
 
-export default function ChatBox({ className, comments, userId, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
+export default function ChatBox({ className, comments, userId, userRole, isArchived, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
     const scrollableChatContainerRef = useRef<HTMLDivElement>(null)
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
     const [editMessage, setEditMessage] = useState("")
@@ -92,22 +96,28 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
                                     <time className="text-xs opacity-50">{formatedCreatedAt}</time>
                                 </div>
                                 <div className="flex gap-2">
-                                    {c.sender.id === userId && (
+                                    {/* Check permissions before showing edit/delete icons */}
+                                    {(canEditComment(userRole, c.sender.id === userId, isArchived) || 
+                                      canDeleteComment(userRole, c.sender.id === userId, isArchived)) && (
                                         <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transform duration-100 ease-in">
-                                            <span
-                                                onClick={() => handleEditClick(c.id, c.message)}
-                                                className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
-                                                title="Edit comment"
-                                            >
-                                                edit
-                                            </span>
-                                            <span
-                                                onClick={() => onDeleteComment(c.id)}
-                                                className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"
-                                                title="Delete comment"
-                                            >
-                                                delete
-                                            </span>
+                                            {canEditComment(userRole, c.sender.id === userId, isArchived) && (
+                                                <span
+                                                    onClick={() => handleEditClick(c.id, c.message)}
+                                                    className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
+                                                    title="Edit comment"
+                                                >
+                                                    edit
+                                                </span>
+                                            )}
+                                            {canDeleteComment(userRole, c.sender.id === userId, isArchived) && (
+                                                <span
+                                                    onClick={() => onDeleteComment(c.id)}
+                                                    className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"
+                                                    title="Delete comment"
+                                                >
+                                                    delete
+                                                </span>
+                                            )}
                                         </div>
                                     )}
                                     {editingCommentId === c.id ? (

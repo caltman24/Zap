@@ -17,6 +17,18 @@ import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
+import {
+    canEditTicketFields,
+    canUpdateStatus,
+    canUpdatePriority,
+    canUpdateType,
+    canAssignDeveloper,
+    canDeleteTicket,
+    canArchiveTicket,
+    canUnarchiveTicket,
+    canCreateComment,
+    type TicketPermissionContext,
+} from "~/utils/ticketPermissions";
 
 import AttachmentSection from "./AttachmentSection";
 export const handle = {
@@ -86,6 +98,25 @@ export default function TicketDetailsRoute() {
         }
     }, [getCommentsFetcher.state, getCommentsFetcher.data])
 
+    // Show success feedback for status/priority/type updates
+    useEffect(() => {
+        if (updateStatusFetcher.state === "idle" && updateStatusFetcher.data) {
+            alert("Status updated successfully!");
+        }
+    }, [updateStatusFetcher.state, updateStatusFetcher.data]);
+
+    useEffect(() => {
+        if (updatePriorityFetcher.state === "idle" && updatePriorityFetcher.data) {
+            alert("Priority updated successfully!");
+        }
+    }, [updatePriorityFetcher.state, updatePriorityFetcher.data]);
+
+    useEffect(() => {
+        if (updateTypeFetcher.state === "idle" && updateTypeFetcher.data) {
+            alert("Type updated successfully!");
+        }
+    }, [updateTypeFetcher.state, updateTypeFetcher.data]);
+
     const developersModalRef = useRef<HTMLDialogElement>(null)
 
     const handleOnGetDevelopers = () => {
@@ -134,7 +165,35 @@ export default function TicketDetailsRoute() {
         // Otherwise, allow the form to submit normally
     };
 
-    // TODO: Update permissions
+    // Calculate permission context
+    const permissionContext: TicketPermissionContext = {
+        role: userInfo.role,
+        userId: userInfo.memberId,
+        ticketSubmitterId: ticket.submitter.id,
+        ticketAssignedDeveloperId: ticket.assignee?.id || null,
+        isProjectManager: ticket.projectManagerId === userInfo.memberId,
+        isArchived: ticket.isArchived,
+    };
+
+    // Permission checks
+    const canEdit = canEditTicketFields(permissionContext);
+    const canUpdateStatusField = canUpdateStatus(permissionContext);
+    const canUpdatePriorityField = canUpdatePriority(permissionContext);
+    const canUpdateTypeField = canUpdateType(permissionContext);
+    const canAssign = canAssignDeveloper(userInfo.role, ticket.isArchived);
+    const canDelete = canDeleteTicket(userInfo.role, ticket.isArchived);
+    const canArchive = canArchiveTicket(userInfo.role);
+    const canUnarchive = canUnarchiveTicket(userInfo.role, permissionContext.isProjectManager);
+    const canComment = canCreateComment(userInfo.role, ticket.isArchived);
+
+    // Handler for disabled field clicks
+    const handleDisabledFieldClick = (fieldName: string) => {
+        if (ticket.isArchived) {
+            alert(`Cannot edit ${fieldName} - this ticket is archived. Only admins and project managers can unarchive it.`);
+        } else {
+            alert(`You don't have permission to edit ${fieldName}`);
+        }
+    };
 
     // TODO: Add confirm modal on delete
 
@@ -163,35 +222,44 @@ export default function TicketDetailsRoute() {
                         </div>
                     </div>
                     <div className="flex gap-3 items-center flex-shrink-0 ml-6">
-                        <button
-                            onClick={handleEditToggle}
-                            className="btn btn-soft btn-sm gap-2 shadow-sm"
-                        >
-                            <span className="material-symbols-outlined text-sm">edit</span>
-                            Edit Details
-                        </button>
-                        <Form method="post" action={`/tickets/${ticketId}/archive`} onSubmit={handleArchiveClick}>
-                            <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
+                        {/* Only show edit button if user has edit permissions and ticket is not archived */}
+                        {canEdit && !ticket.isArchived && (
                             <button
-                                type="submit"
-                                name="intent"
-                                value={ticket.isArchived ? "unarchive" : "archive"}
-                                className={`btn btn-sm gap-2 shadow-sm ${ticket.isArchived ? 'btn-success' : 'btn-warning'}`}
+                                onClick={handleEditToggle}
+                                className="btn btn-soft btn-sm gap-2 shadow-sm"
                             >
-                                <span className="material-symbols-outlined text-sm">folder</span>
-                                {ticket.isArchived ? "Unarchive" : "Archive"}
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                                Edit Details
                             </button>
-                        </Form>
-                        <Form method="post" action={`/tickets/${ticketId}/delete`}>
-                            <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
-                            <button
-                                type="submit"
-                                className="btn btn-sm btn-error gap-2 shadow-sm"
-                            >
-                                <span className="material-symbols-outlined text-sm">delete</span>
-                                Delete
-                            </button>
-                        </Form>
+                        )}
+                        {/* Show archive/unarchive button based on permissions */}
+                        {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
+                            <Form method="post" action={`/tickets/${ticketId}/archive`} onSubmit={handleArchiveClick}>
+                                <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
+                                <button
+                                    type="submit"
+                                    name="intent"
+                                    value={ticket.isArchived ? "unarchive" : "archive"}
+                                    className={`btn btn-sm gap-2 shadow-sm ${ticket.isArchived ? 'btn-success' : 'btn-warning'}`}
+                                >
+                                    <span className="material-symbols-outlined text-sm">folder</span>
+                                    {ticket.isArchived ? "Unarchive" : "Archive"}
+                                </button>
+                            </Form>
+                        ) : null}
+                        {/* Only show delete button if user has delete permissions */}
+                        {canDelete && (
+                            <Form method="post" action={`/tickets/${ticketId}/delete`}>
+                                <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
+                                <button
+                                    type="submit"
+                                    className="btn btn-sm btn-error gap-2 shadow-sm"
+                                >
+                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                    Delete
+                                </button>
+                            </Form>
+                        )}
                     </div>
                 </div>
             </div>
@@ -249,8 +317,17 @@ export default function TicketDetailsRoute() {
                                             action: `/tickets/${ticketId}/update-priority`,
                                         })
                                     }}
+                                    onClick={(e) => {
+                                        if (!canUpdatePriorityField) {
+                                            e.preventDefault();
+                                            handleDisabledFieldClick("priority");
+                                        }
+                                    }}
                                     className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
-                                    value={ticket.priority}>
+                                    value={ticket.priority}
+                                    disabled={!canUpdatePriorityField}
+                                    title={!canUpdatePriorityField ? "You don't have permission to update priority" : ""}
+                                >
                                     <option value="Low">🟢 Low</option>
                                     <option value="Medium">🟡 Medium</option>
                                     <option value="High">🟠 High</option>
@@ -277,9 +354,18 @@ export default function TicketDetailsRoute() {
                                             action: `/tickets/${ticketId}/update-status`,
                                         })
                                     }}
+                                    onClick={(e) => {
+                                        if (!canUpdateStatusField) {
+                                            e.preventDefault();
+                                            handleDisabledFieldClick("status");
+                                        }
+                                    }}
                                     name="status"
                                     className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
-                                    value={ticket.status}>
+                                    value={ticket.status}
+                                    disabled={!canUpdateStatusField}
+                                    title={!canUpdateStatusField ? "You don't have permission to update status" : ""}
+                                >
                                     <option value="New">🆕 New</option>
                                     <option value="In Development">⚙️ In Development</option>
                                     <option value="Testing">🧪 Testing</option>
@@ -306,9 +392,18 @@ export default function TicketDetailsRoute() {
                                             action: `/tickets/${ticketId}/update-type`,
                                         })
                                     }}
+                                    onClick={(e) => {
+                                        if (!canUpdateTypeField) {
+                                            e.preventDefault();
+                                            handleDisabledFieldClick("type");
+                                        }
+                                    }}
                                     name="type"
                                     className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
-                                    value={ticket.type}>
+                                    value={ticket.type}
+                                    disabled={!canUpdateTypeField}
+                                    title={!canUpdateTypeField ? "You don't have permission to update type" : ""}
+                                >
                                     <option value="Defect">🐛 Defect</option>
                                     <option value="Feature">✨ Feature</option>
                                     <option value="General Task">📋 General Task</option>
@@ -326,26 +421,28 @@ export default function TicketDetailsRoute() {
             <div className="p-6 border-b border-base-300/30">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-base-content">Assigned Developer</h3>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => handleOnGetDevelopers()}
-                            className="btn btn-soft btn-sm gap-2 shadow-sm"
-                            title="Assign Developer"
-                        >
-                            <span className="material-symbols-outlined text-sm">person_add</span>
-                            Assign
-                        </button>
-                        {ticket.assignee && (
+                    {canAssign && (
+                        <div className="flex gap-2">
                             <button
-                                onClick={() => handleOnUnassignDeveloper()}
+                                onClick={() => handleOnGetDevelopers()}
                                 className="btn btn-soft btn-sm gap-2 shadow-sm"
-                                title="Unassign Developer"
+                                title="Assign Developer"
                             >
-                                <span className="material-symbols-outlined text-sm">person_remove</span>
-                                Unassign
+                                <span className="material-symbols-outlined text-sm">person_add</span>
+                                Assign
                             </button>
-                        )}
-                    </div>
+                            {ticket.assignee && (
+                                <button
+                                    onClick={() => handleOnUnassignDeveloper()}
+                                    className="btn btn-soft btn-sm gap-2 shadow-sm"
+                                    title="Unassign Developer"
+                                >
+                                    <span className="material-symbols-outlined text-sm">person_remove</span>
+                                    Unassign
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
                 {ticket.assignee ? (
                     <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
@@ -398,6 +495,7 @@ export default function TicketDetailsRoute() {
                                             defaultValue={ticket.name}
                                             required
                                             maxLength={50}
+                                            disabled={!canEdit}
                                         />
                                     </div>
 
@@ -412,6 +510,7 @@ export default function TicketDetailsRoute() {
                                             rows={4}
                                             required
                                             maxLength={1000}
+                                            disabled={!canEdit}
                                         ></textarea>
                                     </div>
 
@@ -421,7 +520,9 @@ export default function TicketDetailsRoute() {
                                             <select
                                                 name="priority"
                                                 className="select w-max"
-                                                defaultValue={ticket.priority}>
+                                                defaultValue={ticket.priority}
+                                                disabled={!canUpdatePriorityField}
+                                            >
                                                 <option value="Low">🟢 Low</option>
                                                 <option value="Medium">🟡 Medium</option>
                                                 <option value="High">🟠 High</option>
@@ -433,7 +534,9 @@ export default function TicketDetailsRoute() {
                                             <select
                                                 name="status"
                                                 className="select w-max"
-                                                defaultValue={ticket.status}>
+                                                defaultValue={ticket.status}
+                                                disabled={!canUpdateStatusField}
+                                            >
                                                 <option value="New">🆕 New</option>
                                                 <option value="In Development">⚙️ In Development</option>
                                                 <option value="Testing">🧪 Testing</option>
@@ -445,7 +548,9 @@ export default function TicketDetailsRoute() {
                                             <select
                                                 name="type"
                                                 className="select w-max"
-                                                defaultValue={ticket.type}>
+                                                defaultValue={ticket.type}
+                                                disabled={!canUpdateTypeField}
+                                            >
                                                 <option value="Defect">🐛 Defect</option>
                                                 <option value="Feature">✨ Feature</option>
                                                 <option value="General Task">📋 General Task</option>
@@ -471,7 +576,10 @@ export default function TicketDetailsRoute() {
                                     onEditComment={handleOnEditComment}
                                     comments={(getCommentsFetcher.data as any)?.data}
                                     loading={getCommentsFetcher.state === "loading"}
-                                    userId={userInfo.memberId} />
+                                    userId={userInfo.memberId}
+                                    userRole={userInfo.role}
+                                    isArchived={ticket.isArchived}
+                                />
 
                                 <Form
                                     className="mt-4"
@@ -481,11 +589,19 @@ export default function TicketDetailsRoute() {
                                     ref={commentsFormRef}
                                     action={`/tickets/${ticketId}/create-comment`}>
                                     <div className="flex gap-2">
-                                        <button type="submit" className="btn btn-primary">Send</button>
+                                        <button 
+                                            type="submit" 
+                                            className="btn btn-primary"
+                                            disabled={!canComment}
+                                        >
+                                            Send
+                                        </button>
                                         <textarea
-                                            placeholder="Message"
+                                            placeholder={canComment ? "Message" : "Cannot comment on archived tickets"}
                                             name="message"
-                                            className="textarea w-full resize-none field-sizing-content min-h-auto" />
+                                            className="textarea w-full resize-none field-sizing-content min-h-auto"
+                                            disabled={!canComment}
+                                        />
                                     </div>
                                 </Form>
                             </div>
