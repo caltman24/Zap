@@ -1,5 +1,11 @@
-import { Link, Outlet, redirect } from "@remix-run/react";
+import { Link, useLocation } from "@remix-run/react";
+
+function TicketsBreadcrumb() {
+    const location = useLocation();
+
+    return <Link to={{ pathname: "/tickets", search: location.search }}>Tickets</Link>;
+}
 
 export const handle = {
-    breadcrumb: () => <Link to="/tickets">Tickets</Link>,
+    breadcrumb: () => <TicketsBreadcrumb />,
 };

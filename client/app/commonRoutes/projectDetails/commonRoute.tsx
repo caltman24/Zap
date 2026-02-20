@@ -375,7 +375,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                         </div>
 
                         {/* Tickets Table */}
-                        <TicketTable tickets={project?.tickets} />
+                        <TicketTable tickets={project?.tickets} enableFiltering={false} />
                     </div>
                 </>
             }
