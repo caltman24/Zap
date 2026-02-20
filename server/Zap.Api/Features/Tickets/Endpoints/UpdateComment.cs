@@ -29,6 +29,7 @@ public class UpdateComment : IEndpoint
     )
     {
         var success = await commentsService.UpdateCommentAsync(
+            ticketId,
             commentId,
             request.Message,
             currentUser.Member!.Id);

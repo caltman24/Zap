@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation, useMatches, useNavigate, useNavigation } from "@remix-run/react";
+import { Link, NavLink, useLocation, useMatches } from "@remix-run/react";
 import { useState } from "react";
 import AppLogo from "~/components/AppLogo";
 import { MenuGroup, MenuRoutes } from "~/data/routes";
@@ -6,6 +6,7 @@ import { MenuGroup, MenuRoutes } from "~/data/routes";
 
 export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuRoutes }) {
     const matches = useMatches();
+    const location = useLocation();
     const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({
         "Company": true,
         "Projects": true,
@@ -38,10 +39,18 @@ export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuR
                 {isExpanded && (
                     <ul className="flex flex-col gap-1 pl-2 transition-all">
                         {item.links.map((link, index) => {
+                            const preserveTicketSearch =
+                                location.pathname.startsWith("/tickets") &&
+                                link.to.startsWith("/tickets") &&
+                                link.to !== "/tickets/new";
+
                             return (
                                 <li key={index}>
                                     <NavLink
-                                        to={link.to}
+                                        to={{
+                                            pathname: link.to,
+                                            search: preserveTicketSearch ? location.search : ""
+                                        }}
                                         end={!matches.some(m => m.id.endsWith("Id"))}
                                         className={({ isActive }) => {
                                             if (matches.some(

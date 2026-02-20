@@ -24,7 +24,7 @@ public class DeleteComment : IEndpoint
         ITicketCommentsService commentsService
     )
     {
-        var success = await commentsService.DeleteCommentAsync(commentId, currentUser.Member!.Id);
+        var success = await commentsService.DeleteCommentAsync(ticketId, commentId, currentUser.Member!.Id);
         if (!success) return TypedResults.NotFound();
 
         return TypedResults.NoContent();

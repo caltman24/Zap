@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData, useLocation } from "@remix-run/react";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
@@ -9,6 +9,12 @@ import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import TicketTable from "~/components/TicketTable";
 import { getArchivedTickets } from "./server.get-archived-tickets";
+
+function ArchivedTicketsBreadcrumb() {
+    const location = useLocation();
+
+    return <Link to={{ pathname: "/tickets/archived", search: location.search }}>Archived</Link>;
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
@@ -43,7 +49,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export const handle = {
-    breadcrumb: () => <Link to="/tickets/archived">Archived</Link>,
+    breadcrumb: () => <ArchivedTicketsBreadcrumb />,
 };
 
 export default function ArchivedTicketsRoute() {

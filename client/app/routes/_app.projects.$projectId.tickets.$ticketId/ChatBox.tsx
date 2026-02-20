@@ -2,17 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import { Form } from "@remix-run/react";
 import { TicketComment } from "~/services/api.server/types";
 import { convertTo12HourTime, formatDateHeader, isSameDay, isToday } from "~/utils/dateTime";
+import { canEditComment, canDeleteComment } from "~/utils/ticketPermissions";
+import roleNames, { type RoleName } from "~/data/roles";
 
 type ChatBoxProps = {
     className?: string,
     comments?: TicketComment[]
-    userId: string
+    userId: string | undefined
+    userRole: RoleName
+    isArchived: boolean
     loading: boolean
     onDeleteComment: (commentId: string) => void
     onEditComment: (commentId: string, message: string) => void
 }
 
-export default function ChatBox({ className, comments, userId, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
+export default function ChatBox({ className, comments, userId, userRole, isArchived, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
     const scrollableChatContainerRef = useRef<HTMLDivElement>(null)
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
     const [editMessage, setEditMessage] = useState("")
@@ -46,7 +50,7 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
         <>
             {comments && comments.length > 0 ? (
                 comments.map((c, index) => {
-                    const css = c.sender.id === userId ? "chat-end" : "chat-start";
+                    const css = userId && c.sender.id === userId ? "chat-end" : "chat-start";
                     const createdAtDate = new Date(c.createdAt);
                     const convertedCreatedAt = convertTo12HourTime(createdAtDate)
                     const formatedCreatedAt = `${convertedCreatedAt.hours}:${convertedCreatedAt.minutes} ${convertedCreatedAt.meridiem}`
@@ -92,22 +96,28 @@ export default function ChatBox({ className, comments, userId, loading, onDelete
                                     <time className="text-xs opacity-50">{formatedCreatedAt}</time>
                                 </div>
                                 <div className="flex gap-2">
-                                    {c.sender.id === userId && (
+                                    {/* Check permissions before showing edit/delete icons */}
+                                    {(canEditComment(userRole, !!userId && c.sender.id === userId, isArchived) || 
+                                      canDeleteComment(userRole, !!userId && c.sender.id === userId, isArchived)) && (
                                         <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transform duration-100 ease-in">
-                                            <span
-                                                onClick={() => handleEditClick(c.id, c.message)}
-                                                className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
-                                                title="Edit comment"
-                                            >
-                                                edit
-                                            </span>
-                                            <span
-                                                onClick={() => onDeleteComment(c.id)}
-                                                className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"
-                                                title="Delete comment"
-                                            >
-                                                delete
-                                            </span>
+                                            {canEditComment(userRole, !!userId && c.sender.id === userId, isArchived) && (
+                                                <span
+                                                    onClick={() => handleEditClick(c.id, c.message)}
+                                                    className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
+                                                    title="Edit comment"
+                                                >
+                                                    edit
+                                                </span>
+                                            )}
+                                            {canDeleteComment(userRole, !!userId && c.sender.id === userId, isArchived) && (
+                                                <span
+                                                    onClick={() => onDeleteComment(c.id)}
+                                                    className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"
+                                                    title="Delete comment"
+                                                >
+                                                    delete
+                                                </span>
+                                            )}
                                         </div>
                                     )}
                                     {editingCommentId === c.id ? (
