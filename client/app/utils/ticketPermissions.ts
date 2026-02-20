@@ -13,8 +13,15 @@ export interface TicketPermissionContext {
 /**
  * Check if user has a specific permission based on their role
  */
-function hasPermission(role: RoleName, allowedRoles: RoleName[]): boolean {
-  return allowedRoles.includes(role);
+function normalizeRole(role: string | null | undefined): string {
+  return (role ?? "").trim().toLowerCase();
+}
+
+function hasPermission(role: string, allowedRoles: RoleName[]): boolean {
+  const normalizedRole = normalizeRole(role);
+  return allowedRoles.some(
+    (allowedRole) => normalizeRole(allowedRole) === normalizedRole,
+  );
 }
 
 /**
@@ -22,18 +29,18 @@ function hasPermission(role: RoleName, allowedRoles: RoleName[]): boolean {
  * Admin and PM can always edit. Submitters can edit their own tickets.
  */
 export function canEditTicketFields(context: TicketPermissionContext): boolean {
-  // Guard: Deny access if userId is missing
-  if (!context.userId) return false;
+  const role = normalizeRole(context.role);
 
   if (context.isArchived) return false;
 
   // Admin and PM can edit any ticket
-  if (hasPermission(context.role, permissions.ticket.edit)) {
+  if (hasPermission(role, permissions.ticket.edit)) {
     return true;
   }
 
   // Submitters can edit their own tickets
-  if (context.role === roleNames.submitter) {
+  if (role === roleNames.submitter) {
+    if (!context.userId) return false;
     return context.userId === context.ticketSubmitterId;
   }
 
@@ -45,26 +52,27 @@ export function canEditTicketFields(context: TicketPermissionContext): boolean {
  * Developers can update status if assigned. Submitters can update their own.
  */
 export function canUpdateStatus(context: TicketPermissionContext): boolean {
-  // Guard: Deny access if userId is missing
-  if (!context.userId) return false;
+  const role = normalizeRole(context.role);
 
   if (context.isArchived) return false;
 
   // Admin and PM can always update status
   if (
-    context.role === roleNames.admin ||
-    context.role === roleNames.projectManager
+    role === roleNames.admin ||
+    role === roleNames.projectManager
   ) {
     return true;
   }
 
   // Developers can update status if assigned
-  if (context.role === roleNames.developer) {
+  if (role === roleNames.developer) {
+    if (!context.userId) return false;
     return context.ticketAssignedDeveloperId === context.userId;
   }
 
   // Submitters can update status of their own tickets
-  if (context.role === roleNames.submitter) {
+  if (role === roleNames.submitter) {
+    if (!context.userId) return false;
     return context.userId === context.ticketSubmitterId;
   }
 
@@ -76,15 +84,15 @@ export function canUpdateStatus(context: TicketPermissionContext): boolean {
  * Only Admin, PM, and submitters (their own tickets) can update priority
  */
 export function canUpdatePriority(context: TicketPermissionContext): boolean {
-  // Guard: Deny access if userId is missing
-  if (!context.userId) return false;
+  const role = normalizeRole(context.role);
 
   if (context.isArchived) return false;
 
   // Admin and PM can always update priority
-  if (hasPermission(context.role, permissions.ticket.editPriority)) {
+  if (hasPermission(role, permissions.ticket.editPriority)) {
     // Submitters need to be the ticket owner
-    if (context.role === roleNames.submitter) {
+    if (role === roleNames.submitter) {
+      if (!context.userId) return false;
       return context.userId === context.ticketSubmitterId;
     }
     return true;
@@ -98,15 +106,15 @@ export function canUpdatePriority(context: TicketPermissionContext): boolean {
  * Only Admin, PM, and submitters (their own tickets) can update type
  */
 export function canUpdateType(context: TicketPermissionContext): boolean {
-  // Guard: Deny access if userId is missing
-  if (!context.userId) return false;
+  const role = normalizeRole(context.role);
 
   if (context.isArchived) return false;
 
   // Admin and PM can always update type
-  if (hasPermission(context.role, permissions.ticket.editType)) {
+  if (hasPermission(role, permissions.ticket.editType)) {
     // Submitters need to be the ticket owner
-    if (context.role === roleNames.submitter) {
+    if (role === roleNames.submitter) {
+      if (!context.userId) return false;
       return context.userId === context.ticketSubmitterId;
     }
     return true;
@@ -149,8 +157,9 @@ export function canUnarchiveTicket(
   role: RoleName,
   isProjectManager: boolean,
 ): boolean {
-  if (role === roleNames.admin) return true;
-  if (role === roleNames.projectManager && isProjectManager) return true;
+  const normalizedRole = normalizeRole(role);
+  if (normalizedRole === roleNames.admin) return true;
+  if (normalizedRole === roleNames.projectManager && isProjectManager) return true;
   return false;
 }
 
@@ -190,9 +199,10 @@ export function canDeleteComment(
   isArchived: boolean,
 ): boolean {
   if (isArchived) return false;
+  const normalizedRole = normalizeRole(role);
   
   // Admins can delete any comment
-  if (role === roleNames.admin) return true;
+  if (normalizedRole === roleNames.admin) return true;
   
   // Users can delete their own comments
   if (!isCommentAuthor) return false;
@@ -206,21 +216,23 @@ export function canDeleteComment(
 export function canEditNameDescription(
   context: TicketPermissionContext,
 ): boolean {
+  const role = normalizeRole(context.role);
+
   if (context.isArchived) {
     // Only admin and PM can edit archived ticket name/description
     return (
-      context.role === roleNames.admin ||
-      context.role === roleNames.projectManager
+      role === roleNames.admin ||
+      role === roleNames.projectManager
     );
   }
 
   // Admin and PM can always edit
-  if (hasPermission(context.role, permissions.ticket.edit)) {
+  if (hasPermission(role, permissions.ticket.edit)) {
     return true;
   }
 
   // Submitters can edit their own tickets
-  if (context.role === roleNames.submitter) {
+  if (role === roleNames.submitter) {
     return context.userId === context.ticketSubmitterId;
   }
 

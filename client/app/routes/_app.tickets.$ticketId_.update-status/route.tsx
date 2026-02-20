@@ -14,7 +14,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const formData = await request.formData();
     const status = formData.get("status") as string;
 
-    if (!validateRole(userRole, permissions.ticket.create)) {
+    if (!validateRole(userRole, permissions.ticket.editStatus)) {
         return ForbiddenResponse()
     }
 

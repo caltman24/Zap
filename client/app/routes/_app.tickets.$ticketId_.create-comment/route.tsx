@@ -14,7 +14,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const formData = await request.formData();
     const message = formData.get("message") as string;
 
-    if (!validateRole(userRole, permissions.project.edit)) {
+    if (!validateRole(userRole, permissions.comment.create)) {
         return ForbiddenResponse()
     }
 

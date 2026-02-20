@@ -18,10 +18,13 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         await db.SaveChangesAsync();
     }
 
-    public async Task<bool> DeleteCommentAsync(string commentId, string requestingUserId)
+    public async Task<bool> DeleteCommentAsync(string ticketId, string commentId, string requestingUserId)
     {
         var comment = await db.TicketComments
-            .FirstOrDefaultAsync(c => c.Id == commentId && c.SenderId == requestingUserId);
+            .FirstOrDefaultAsync(c =>
+                c.TicketId == ticketId &&
+                c.Id == commentId &&
+                c.SenderId == requestingUserId);
 
         if (comment == null) return false;
 
@@ -30,10 +33,13 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         return true;
     }
 
-    public async Task<bool> UpdateCommentAsync(string commentId, string message, string requestingUserId)
+    public async Task<bool> UpdateCommentAsync(string ticketId, string commentId, string message, string requestingUserId)
     {
         var comment = await db.TicketComments
-            .FirstOrDefaultAsync(c => c.Id == commentId && c.SenderId == requestingUserId);
+            .FirstOrDefaultAsync(c =>
+                c.TicketId == ticketId &&
+                c.Id == commentId &&
+                c.SenderId == requestingUserId);
 
         if (comment == null) return false;
 
