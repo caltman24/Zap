@@ -47,7 +47,13 @@ public class TicketService : ITicketService
 
     public async Task DeleteTicketAsync(string ticketId)
     {
-        await _db.Tickets.Where(t => t.Id == ticketId).ExecuteDeleteAsync();
+        var ticket = await _db.Tickets
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
+
+        if (ticket == null) return;
+
+        _db.Tickets.Remove(ticket);
+        await _db.SaveChangesAsync();
     }
 
     public async Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId)
@@ -229,11 +235,10 @@ public class TicketService : ITicketService
 
         var oldAssigneeName = currentTicket.Assignee?.User.FullName;
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(t => t.AssigneeId, memberId)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        currentTicket.AssigneeId = memberId;
+        currentTicket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0)
         {
@@ -271,16 +276,23 @@ public class TicketService : ITicketService
     public async Task<bool> UpdatePriorityAsync(string ticketId, string priority, string updaterId)
     {
         // Get current priority for history
-        var oldPriority = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => t.Priority.Name)
-            .FirstOrDefaultAsync();
+        var currentTicket = await _db.Tickets
+            .Include(t => t.Priority)
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(t => t.PriorityId, _db.TicketPriorities.First(s => s.Name == priority).Id)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        if (currentTicket == null) return false;
+
+        var priorityEntity = await _db.TicketPriorities
+            .FirstOrDefaultAsync(p => p.Name == priority);
+
+        if (priorityEntity == null) return false;
+
+        var oldPriority = currentTicket.Priority.Name;
+
+        currentTicket.PriorityId = priorityEntity.Id;
+        currentTicket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0 && oldPriority != priority)
             await _historyService.CreateHistoryEntryAsync(
@@ -297,16 +309,23 @@ public class TicketService : ITicketService
     public async Task<bool> UpdateStatusAsync(string ticketId, string status, string updaterId)
     {
         // Get current status for history
-        var oldStatus = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => t.Status.Name)
-            .FirstOrDefaultAsync();
+        var currentTicket = await _db.Tickets
+            .Include(t => t.Status)
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(t => t.StatusId, _db.TicketStatuses.First(s => s.Name == status).Id)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        if (currentTicket == null) return false;
+
+        var statusEntity = await _db.TicketStatuses
+            .FirstOrDefaultAsync(s => s.Name == status);
+
+        if (statusEntity == null) return false;
+
+        var oldStatus = currentTicket.Status.Name;
+
+        currentTicket.StatusId = statusEntity.Id;
+        currentTicket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0 && oldStatus != status)
         {
@@ -334,50 +353,52 @@ public class TicketService : ITicketService
     {
         // Get current values for history tracking
         var currentTicket = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => new
-            {
-                t.Name,
-                t.Description,
-                Priority = t.Priority.Name,
-                Status = t.Status.Name,
-                Type = t.Type.Name
-            })
-            .FirstOrDefaultAsync();
+            .Include(t => t.Priority)
+            .Include(t => t.Status)
+            .Include(t => t.Type)
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
 
         if (currentTicket == null) return false;
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter
-                // INFO: We Should always have the correct tickect types names. Should validate before update. maybe
-                // pass the ids from validation to prevent multiple db calls.
-                // Calling First() should never fail
-                .SetProperty(t => t.StatusId, _db.TicketStatuses.First(s => s.Name == ticket.Status).Id)
-                .SetProperty(t => t.TypeId, _db.TicketTypes.First(s => s.Name == ticket.Type).Id)
-                .SetProperty(t => t.PriorityId, _db.TicketPriorities.First(s => s.Name == ticket.Priority).Id)
-                .SetProperty(t => t.Name, ticket.Name)
-                .SetProperty(t => t.Description, ticket.Description)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        var statusEntity = await _db.TicketStatuses.FirstOrDefaultAsync(s => s.Name == ticket.Status);
+        var typeEntity = await _db.TicketTypes.FirstOrDefaultAsync(t => t.Name == ticket.Type);
+        var priorityEntity = await _db.TicketPriorities.FirstOrDefaultAsync(p => p.Name == ticket.Priority);
+
+        if (statusEntity == null || typeEntity == null || priorityEntity == null) return false;
+
+        var oldName = currentTicket.Name;
+        var oldDescription = currentTicket.Description;
+        var oldPriority = currentTicket.Priority.Name;
+        var oldStatus = currentTicket.Status.Name;
+        var oldType = currentTicket.Type.Name;
+
+        currentTicket.StatusId = statusEntity.Id;
+        currentTicket.TypeId = typeEntity.Id;
+        currentTicket.PriorityId = priorityEntity.Id;
+        currentTicket.Name = ticket.Name;
+        currentTicket.Description = ticket.Description;
+        currentTicket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0)
         {
             // Track individual field changes
-            if (currentTicket.Name != ticket.Name)
+            if (oldName != ticket.Name)
                 await _historyService.CreateHistoryEntryAsync(
                     ticketId, updaterId, TicketHistoryTypes.UpdateName,
-                    currentTicket.Name, ticket.Name);
+                    oldName, ticket.Name);
 
-            if (currentTicket.Description != ticket.Description)
+            if (oldDescription != ticket.Description)
                 await _historyService.CreateHistoryEntryAsync(
                     ticketId, updaterId, TicketHistoryTypes.UpdateDescription);
 
-            if (currentTicket.Priority != ticket.Priority)
+            if (oldPriority != ticket.Priority)
                 await _historyService.CreateHistoryEntryAsync(
                     ticketId, updaterId, TicketHistoryTypes.UpdatePriority,
-                    currentTicket.Priority, ticket.Priority);
+                    oldPriority, ticket.Priority);
 
-            if (currentTicket.Status != ticket.Status)
+            if (oldStatus != ticket.Status)
             {
                 if (ticket.Status == TicketStatuses.Resolved)
                     await _historyService.CreateHistoryEntryAsync(
@@ -385,13 +406,13 @@ public class TicketService : ITicketService
                 else
                     await _historyService.CreateHistoryEntryAsync(
                         ticketId, updaterId, TicketHistoryTypes.UpdateStatus,
-                        currentTicket.Status, ticket.Status);
+                        oldStatus, ticket.Status);
             }
 
-            if (currentTicket.Type != ticket.Type)
+            if (oldType != ticket.Type)
                 await _historyService.CreateHistoryEntryAsync(
                     ticketId, updaterId, TicketHistoryTypes.UpdateType,
-                    currentTicket.Type, ticket.Type);
+                    oldType, ticket.Type);
         }
 
         return rowsChanged > 0;
@@ -400,16 +421,23 @@ public class TicketService : ITicketService
     public async Task<bool> UpdateTypeAsync(string ticketId, string type, string updaterId)
     {
         // Get current type for history
-        var oldType = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => t.Type.Name)
-            .FirstOrDefaultAsync();
+        var currentTicket = await _db.Tickets
+            .Include(t => t.Type)
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(t => t.TypeId, _db.TicketTypes.First(t => t.Name == type).Id)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        if (currentTicket == null) return false;
+
+        var typeEntity = await _db.TicketTypes
+            .FirstOrDefaultAsync(t => t.Name == type);
+
+        if (typeEntity == null) return false;
+
+        var oldType = currentTicket.Type.Name;
+
+        currentTicket.TypeId = typeEntity.Id;
+        currentTicket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0 && oldType != type)
             await _historyService.CreateHistoryEntryAsync(
@@ -487,17 +515,17 @@ public class TicketService : ITicketService
 
     public async Task<bool> ToggleArchiveTicket(string ticketId, string updaterId)
     {
-        // Get current archive status for history
-        var isCurrentlyArchived = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => t.IsArchived)
-            .FirstOrDefaultAsync();
+        var ticket = await _db.Tickets
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(t => t.IsArchived, t => !t.IsArchived)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        if (ticket == null) return false;
+
+        var isCurrentlyArchived = ticket.IsArchived;
+
+        ticket.IsArchived = !ticket.IsArchived;
+        ticket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0)
         {
@@ -520,28 +548,28 @@ public class TicketService : ITicketService
     {
         // Get current values for history tracking
         var currentTicket = await _db.Tickets
-            .Where(t => t.Id == ticketId && t.IsArchived)
-            .Select(t => new { t.Name, t.Description })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(t => t.Id == ticketId && t.IsArchived);
 
         if (currentTicket == null) return false;
 
-        var rowsChanged = await _db.Tickets
-            .Where(t => t.Id == ticketId && t.IsArchived)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(t => t.Name, name)
-                .SetProperty(t => t.Description, description)
-                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow));
+        var oldName = currentTicket.Name;
+        var oldDescription = currentTicket.Description;
+
+        currentTicket.Name = name;
+        currentTicket.Description = description;
+        currentTicket.UpdatedAt = DateTime.UtcNow;
+
+        var rowsChanged = await _db.SaveChangesAsync();
 
         if (rowsChanged > 0)
         {
             // Track individual field changes
-            if (currentTicket.Name != name)
+            if (oldName != name)
                 await _historyService.CreateHistoryEntryAsync(
                     ticketId, updaterId, TicketHistoryTypes.UpdateName,
-                    currentTicket.Name, name);
+                    oldName, name);
 
-            if (currentTicket.Description != description)
+            if (oldDescription != description)
                 await _historyService.CreateHistoryEntryAsync(
                     ticketId, updaterId, TicketHistoryTypes.UpdateDescription);
         }

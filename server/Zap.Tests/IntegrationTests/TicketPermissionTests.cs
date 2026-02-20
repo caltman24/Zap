@@ -296,7 +296,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdatePriority_AsDeveloper_ReturnsNotFound()
+    public async Task UpdatePriority_AsDeveloper_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -309,7 +309,7 @@ public class TicketPermissionTests : IAsyncDisposable
         );
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -373,7 +373,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateType_AsDeveloper_ReturnsNotFound()
+    public async Task UpdateType_AsDeveloper_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -386,7 +386,7 @@ public class TicketPermissionTests : IAsyncDisposable
         );
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -439,7 +439,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task DeleteTicket_AsDeveloper_ReturnsNotFound()
+    public async Task DeleteTicket_AsDeveloper_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -449,11 +449,11 @@ public class TicketPermissionTests : IAsyncDisposable
         var response = await client.DeleteAsync($"/tickets/{ticket.Id}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
-    public async Task DeleteTicket_AsSubmitter_ReturnsNotFound()
+    public async Task DeleteTicket_AsSubmitter_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -463,7 +463,7 @@ public class TicketPermissionTests : IAsyncDisposable
         var response = await client.DeleteAsync($"/tickets/{ticket.Id}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -503,6 +503,7 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
         // Verify ticket is archived
+        _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets.FindAsync(ticket.Id);
         Assert.NotNull(updatedTicket);
         Assert.True(updatedTicket.IsArchived);
@@ -523,7 +524,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task ArchiveTicket_AsDeveloper_ReturnsNotFound()
+    public async Task ArchiveTicket_AsDeveloper_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -533,7 +534,7 @@ public class TicketPermissionTests : IAsyncDisposable
         var response = await client.PutAsync($"/tickets/{ticket.Id}/archive", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -555,6 +556,7 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
         // Verify ticket is unarchived
+        _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets.FindAsync(ticket.Id);
         Assert.NotNull(updatedTicket);
         Assert.False(updatedTicket.IsArchived);
@@ -608,6 +610,7 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
         // Verify all fields updated
+        _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets
             .Include(t => t.Priority)
             .Include(t => t.Status)
@@ -621,7 +624,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateTicket_AsDeveloper_ReturnsNotFound()
+    public async Task UpdateTicket_AsDeveloper_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -641,7 +644,7 @@ public class TicketPermissionTests : IAsyncDisposable
         );
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -673,6 +676,7 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
         // Verify only name/description updated
+        _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets.FindAsync(ticket.Id);
         Assert.NotNull(updatedTicket);
         Assert.Equal("Updated Name", updatedTicket.Name);
@@ -764,7 +768,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateAssignee_AsDeveloper_ReturnsNotFound()
+    public async Task UpdateAssignee_AsDeveloper_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -774,11 +778,11 @@ public class TicketPermissionTests : IAsyncDisposable
         var response = await client.PutAsync($"/tickets/{ticket.Id}/developer", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
-    public async Task UpdateAssignee_AsSubmitter_ReturnsNotFound()
+    public async Task UpdateAssignee_AsSubmitter_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -788,7 +792,7 @@ public class TicketPermissionTests : IAsyncDisposable
         var response = await client.PutAsync($"/tickets/{ticket.Id}/developer", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     #endregion
