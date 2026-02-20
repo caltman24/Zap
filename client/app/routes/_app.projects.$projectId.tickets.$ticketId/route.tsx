@@ -31,6 +31,12 @@ import {
 } from "~/utils/ticketPermissions";
 
 import AttachmentSection from "./AttachmentSection";
+
+type InlineToast = {
+    message: string;
+    tone: "success" | "error" | "warning";
+};
+
 export const handle = {
     breadcrumb: (match: any) => {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
@@ -73,6 +79,8 @@ export default function TicketDetailsRoute() {
 
     // State for archive warning modal
     const [showArchiveWarning, setShowArchiveWarning] = useState(false);
+    const [toast, setToast] = useState<InlineToast | null>(null);
+    const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const updatePriorityFetcher = useFetcher({ key: "update-priority" })
     const updateStatusFetcher = useFetcher({ key: "update-status" })
@@ -88,10 +96,32 @@ export default function TicketDetailsRoute() {
     const getCommentsFetcher = useFetcher({ key: "get-comments" })
     const getHistoryFetcher = useFetcher({ key: "get-history" })
 
+    const showToast = (message: string, tone: InlineToast["tone"] = "success") => {
+        setToast({ message, tone });
+
+        if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+        }
+
+        toastTimeoutRef.current = setTimeout(() => {
+            setToast(null);
+            toastTimeoutRef.current = null;
+        }, 1800);
+    };
+
     useEffect(() => {
         getCommentsFetcher.load(`/tickets/${ticketId}/get-comments`)
         getHistoryFetcher.load(`/tickets/${ticketId}/get-history`)
     }, [])
+
+    useEffect(() => {
+        return () => {
+            if (toastTimeoutRef.current) {
+                clearTimeout(toastTimeoutRef.current);
+            }
+        };
+    }, []);
+
     useEffect(() => {
         if (getCommentsFetcher.state === "idle" && getCommentsFetcher.data) {
             commentsFormRef.current?.reset();
@@ -100,20 +130,35 @@ export default function TicketDetailsRoute() {
 
     // Show success feedback for status/priority/type updates
     useEffect(() => {
-        if (updateStatusFetcher.state === "idle" && updateStatusFetcher.data) {
-            alert("Status updated successfully!");
+        const response = updateStatusFetcher.data as ActionResponseParams | undefined;
+        if (updateStatusFetcher.state === "idle" && response) {
+            if (response.success) {
+                showToast("Status updated", "success");
+            } else if (response.error) {
+                showToast(response.error, "error");
+            }
         }
     }, [updateStatusFetcher.state, updateStatusFetcher.data]);
 
     useEffect(() => {
-        if (updatePriorityFetcher.state === "idle" && updatePriorityFetcher.data) {
-            alert("Priority updated successfully!");
+        const response = updatePriorityFetcher.data as ActionResponseParams | undefined;
+        if (updatePriorityFetcher.state === "idle" && response) {
+            if (response.success) {
+                showToast("Priority updated", "success");
+            } else if (response.error) {
+                showToast(response.error, "error");
+            }
         }
     }, [updatePriorityFetcher.state, updatePriorityFetcher.data]);
 
     useEffect(() => {
-        if (updateTypeFetcher.state === "idle" && updateTypeFetcher.data) {
-            alert("Type updated successfully!");
+        const response = updateTypeFetcher.data as ActionResponseParams | undefined;
+        if (updateTypeFetcher.state === "idle" && response) {
+            if (response.success) {
+                showToast("Type updated", "success");
+            } else if (response.error) {
+                showToast(response.error, "error");
+            }
         }
     }, [updateTypeFetcher.state, updateTypeFetcher.data]);
 
@@ -189,9 +234,9 @@ export default function TicketDetailsRoute() {
     // Handler for disabled field clicks
     const handleDisabledFieldClick = (fieldName: string) => {
         if (ticket.isArchived) {
-            alert(`Cannot edit ${fieldName} - this ticket is archived. Only admins and project managers can unarchive it.`);
+            showToast(`Cannot edit ${fieldName} while ticket is archived`, "warning");
         } else {
-            alert(`You don't have permission to edit ${fieldName}`);
+            showToast(`You do not have permission to edit ${fieldName}`, "warning");
         }
     };
 
@@ -323,7 +368,7 @@ export default function TicketDetailsRoute() {
                                             handleDisabledFieldClick("priority");
                                         }
                                     }}
-                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
+                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none enabled:cursor-pointer disabled:cursor-not-allowed"
                                     value={ticket.priority}
                                     disabled={!canUpdatePriorityField}
                                     title={!canUpdatePriorityField ? "You don't have permission to update priority" : ""}
@@ -361,7 +406,7 @@ export default function TicketDetailsRoute() {
                                         }
                                     }}
                                     name="status"
-                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
+                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none enabled:cursor-pointer disabled:cursor-not-allowed"
                                     value={ticket.status}
                                     disabled={!canUpdateStatusField}
                                     title={!canUpdateStatusField ? "You don't have permission to update status" : ""}
@@ -399,7 +444,7 @@ export default function TicketDetailsRoute() {
                                         }
                                     }}
                                     name="type"
-                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none"
+                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none enabled:cursor-pointer disabled:cursor-not-allowed"
                                     value={ticket.type}
                                     disabled={!canUpdateTypeField}
                                     title={!canUpdateTypeField ? "You don't have permission to update type" : ""}
@@ -471,6 +516,13 @@ export default function TicketDetailsRoute() {
 
     return (
         <RouteLayout>
+            {toast && (
+                <div className="toast toast-top toast-center z-50 mt-4">
+                    <div className={`alert ${toast.tone === "success" ? "alert-success" : toast.tone === "error" ? "alert-error" : "alert-warning"} shadow-lg py-2 px-4 min-h-0`}>
+                        <span>{toast.message}</span>
+                    </div>
+                </div>
+            )}
             {ticket ? (
                 <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-center mb-2">
@@ -519,7 +571,7 @@ export default function TicketDetailsRoute() {
                                             <label className="label" htmlFor="priority">Priority</label>
                                             <select
                                                 name="priority"
-                                                className="select w-max"
+                                                className="select w-max enabled:cursor-pointer disabled:cursor-not-allowed"
                                                 defaultValue={ticket.priority}
                                                 disabled={!canUpdatePriorityField}
                                             >
@@ -533,7 +585,7 @@ export default function TicketDetailsRoute() {
                                             <label className="label" htmlFor="status">Status</label>
                                             <select
                                                 name="status"
-                                                className="select w-max"
+                                                className="select w-max enabled:cursor-pointer disabled:cursor-not-allowed"
                                                 defaultValue={ticket.status}
                                                 disabled={!canUpdateStatusField}
                                             >
@@ -547,7 +599,7 @@ export default function TicketDetailsRoute() {
                                             <label className="label" htmlFor="type">Type</label>
                                             <select
                                                 name="type"
-                                                className="select w-max"
+                                                className="select w-max enabled:cursor-pointer disabled:cursor-not-allowed"
                                                 defaultValue={ticket.type}
                                                 disabled={!canUpdateTypeField}
                                             >

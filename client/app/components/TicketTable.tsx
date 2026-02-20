@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from "@remix-run/react";
+import { useNavigate, useSearchParams } from "@remix-run/react";
+import type { KeyboardEvent } from "react";
 import { useMemo } from "react";
 import { BasicTicketInfo } from "~/services/api.server/types";
 import { formatDateTimeShort } from "~/utils/dateTime";
@@ -44,6 +45,7 @@ function getTicketLastUpdated(ticket: BasicTicketInfo): number {
 
 export default function TicketTable({ tickets, enableFiltering = true }: TicketTableProps) {
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     const searchQuery = searchParams.get(PARAMS.query) ?? DEFAULT_SEARCH_QUERY;
     const statusFilter = searchParams.get(PARAMS.status) ?? DEFAULT_FILTER;
@@ -154,6 +156,17 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
         });
     }, [allTickets, enableFiltering, priorityFilter, searchQuery, sortBy, sortDirection, statusFilter, typeFilter]);
 
+    function getTicketRoute(ticket: BasicTicketInfo): string {
+        return `/projects/${ticket.projectId}/tickets/${ticket.id}`;
+    }
+
+    function handleTicketRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, route: string): void {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigate(route);
+        }
+    }
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -233,7 +246,6 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
                 <table className="table table-zebra w-full">
                     <thead>
                         <tr>
-                            <th className="w-10"></th>
                             <th>Title</th>
                             <th>Status</th>
                             <th>Priority</th>
@@ -246,15 +258,16 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
                     <tbody>
                         {visibleTickets.length > 0 ? (
                             visibleTickets.map((ticket) => (
-                                <tr key={ticket.id}>
+                                <tr
+                                    key={ticket.id}
+                                    className="cursor-pointer transition-opacity duration-150 hover:opacity-70 focus-within:opacity-70"
+                                    tabIndex={0}
+                                    onClick={() => navigate(getTicketRoute(ticket))}
+                                    onKeyDown={(event) => handleTicketRowKeyDown(event, getTicketRoute(ticket))}
+                                >
                                     <td>
-                                        <div className="flex gap-1 items-center">
-                                            <Link to={`/projects/${ticket.projectId}/tickets/${ticket.id}`} className="btn btn-xs btn-ghost">
-                                                <span className="material-symbols-outlined">visibility</span>
-                                            </Link>
-                                        </div>
+                                        <span className="link link-hover">{ticket.name}</span>
                                     </td>
-                                    <td>{ticket.name}</td>
                                     <td>
                                         <div>
                                             {getStatusDisplay(ticket.status)}
@@ -309,7 +322,7 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={8} className="text-center py-4">
+                                <td colSpan={7} className="text-center py-4">
                                     No tickets found
                                 </td>
                             </tr>

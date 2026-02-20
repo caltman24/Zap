@@ -290,7 +290,7 @@ export default function DashboardRoute() {
                             {data.recentActivity.length > 0 ? data.recentActivity.map((ticket) => (
                                 <tr
                                     key={ticket.id}
-                                    className="cursor-pointer transition-colors duration-150 hover:bg-base-200 hover:shadow-sm focus-within:bg-base-200 focus-within:shadow-sm"
+                                    className="cursor-pointer transition-opacity duration-150 hover:opacity-70 focus-within:opacity-70"
                                     tabIndex={0}
                                     onClick={() => navigate(getTicketRoute(ticket))}
                                     onKeyDown={(event) => handleTicketRowKeyDown(event, getTicketRoute(ticket))}
@@ -328,7 +328,26 @@ export default function DashboardRoute() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
+            <div className="bg-base-100 p-6 rounded-box shadow mb-8">
+                <h2 className="text-xl font-semibold mb-8">Upcoming Deadlines</h2>
+                <ul className="space-y-4">
+                    {data.upcomingDeadlines.length > 0 ? data.upcomingDeadlines.map((deadline) => (
+                        <li key={deadline.id} className="flex items-center gap-6">
+                            <div className={`badge badge-lg ${getPriorityBadgeClass(deadline.priority)} w-28 whitespace-nowrap`}>
+                                {new Date(deadline.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            </div>
+                            <div className="flex w-full justify-between gap-4">
+                                <h3 className="font-medium">{deadline.name}</h3>
+                                <p className="text-sm opacity-70 whitespace-nowrap">{formatDeadlineDays(deadline.daysRemaining)}</p>
+                            </div>
+                        </li>
+                    )) : (
+                        <li className="text-base-content/60">No project deadlines found.</li>
+                    )}
+                </ul>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-3">
                 <div className="bg-base-100 p-6 rounded-box shadow">
                     <h2 className="text-xl font-semibold mb-4">Tickets Over Time</h2>
                     <div className="h-64 w-full bg-base-200 flex items-center justify-center">
@@ -342,28 +361,8 @@ export default function DashboardRoute() {
                         <p className="text-base-content/60">Chart Visualization Placeholder</p>
                     </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-                <div className="bg-base-100 p-6 rounded-box shadow lg:col-span-3">
-                    <h2 className="text-xl font-semibold mb-8">Upcoming Deadlines</h2>
-                    <ul className="space-y-4">
-                        {data.upcomingDeadlines.length > 0 ? data.upcomingDeadlines.map((deadline) => (
-                            <li key={deadline.id} className="flex items-center gap-6">
-                                <div className={`badge badge-lg ${getPriorityBadgeClass(deadline.priority)} w-28 whitespace-nowrap`}>
-                                    {new Date(deadline.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                                </div>
-                                <div className="flex w-full justify-between gap-4">
-                                    <h3 className="font-medium">{deadline.name}</h3>
-                                    <p className="text-sm opacity-70 whitespace-nowrap">{formatDeadlineDays(deadline.daysRemaining)}</p>
-                                </div>
-                            </li>
-                        )) : (
-                            <li className="text-base-content/60">No project deadlines found.</li>
-                        )}
-                    </ul>
-                </div>
-                <div className="bg-base-100 p-6 rounded-box shadow lg:col-span-2">
+                <div className="bg-base-100 p-6 rounded-box shadow">
                     <h2 className="text-xl font-semibold mb-4">Projects By Priority</h2>
                     <div className="h-64 w-full bg-base-200 flex items-center justify-center">
                         <p className="text-base-content/60">Chart Visualization Placeholder</p>

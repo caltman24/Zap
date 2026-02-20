@@ -87,6 +87,18 @@ function formatDate(dateString: string) {
     }
 }
 
+function removeCreatorNamePrefix(message: string, creatorName: string): string {
+    const escapedName = creatorName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const creatorNamePattern = new RegExp(escapedName, "gi");
+    const withoutName = message.replace(creatorNamePattern, "");
+
+    return withoutName
+        .replace(/^\s*[-:,.]?\s*/, "")
+        .replace(/\s+by\s*$/i, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+}
+
 export default function TicketTimeline({ history, loading = false }: TicketTimelineProps) {
     if (loading) {
         return (
@@ -132,7 +144,7 @@ export default function TicketTimeline({ history, loading = false }: TicketTimel
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-base-content leading-relaxed">
-                                        {entry.formattedMessage}
+                                        {removeCreatorNamePrefix(entry.formattedMessage, entry.creator.name)}
                                     </p>
                                     <div className="flex items-center gap-2 mt-2">
                                         <p className="text-xs text-base-content/60">
