@@ -75,13 +75,13 @@ export default function AppRoute() {
                 {/* contnet */}
                 <div className="w-full">
                     <DashboardNavbar avatarUrl={userData!.avatarUrl} />
-                    <div className="overflow-y-auto h-[calc(100vh-64px)]">
-                        {navigation.state === "loading"
-                            ? (<div className="w-full h-full grid place-items-center">
+                    <div className="relative overflow-y-auto h-[calc(100vh-64px)]">
+                        <Outlet context={userData!} />
+                        {navigation.state === "loading" && (
+                            <div className="absolute inset-0 grid place-items-center bg-base-300/35 pointer-events-none">
                                 <div className="loading loading-dots loading-xl"></div>
-                            </div>)
-                            : <Outlet context={userData!} />}
-
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

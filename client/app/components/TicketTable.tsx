@@ -82,7 +82,7 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
                 nextParams.set(key, value);
             }
             return nextParams;
-        }, { replace: true });
+        }, { replace: true, preventScrollReset: true });
     }
 
     function clearFiltersAndSorting(): void {
@@ -95,7 +95,7 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
             nextParams.delete(PARAMS.sortBy);
             nextParams.delete(PARAMS.sortDirection);
             return nextParams;
-        }, { replace: true });
+        }, { replace: true, preventScrollReset: true });
     }
 
     const visibleTickets = useMemo(() => {
