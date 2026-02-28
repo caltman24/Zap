@@ -37,7 +37,6 @@ export class AuthClient extends BaseApiClient {
     if (!tokens) {
       throw new AuthenticationError("Unauthorized");
     }
-    console.log(tokens.accessToken);
 
     const expiresAt = new Date(tokens.expiresIn).getTime() - this.refreshBuffer;
 
