@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for ASP.NET Core 9 API
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # copy csproj and restore as distinct layers
@@ -19,7 +19,7 @@ WORKDIR /src/Zap.Api
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 ENV ASPNETCORE_URLS=http://+:80
 WORKDIR /app
 COPY --from=build /app/publish ./
