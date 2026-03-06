@@ -1,50 +1,115 @@
-=== QUESTIONS ===
-- [ ] Project: What happens when the assigned member / PM is removed from the company?
-- [ ] Ticket: What happens when the assigned member / submitter is removed from the company?
-- [ ] Ticket: What happens when the assigned member / submitter is removed from the parent project?
-- [ ] Project: When a project is archived, are its tickets archived as well?
-- [ ] Dashboard: Does the dashboard change depending on role?
-- [ ] Dashboard: Is the dashboard intended only for admins? (probably not)
+=== ZAP TODO ===
+
+Goal: turn Zap into a polished, portfolio-quality internal business app that feels real, complete, and interview-ready.
 
 
-=== TODO ===
-- [ ] Implement permission-based features on the ticket details page
-- [ ] Add attachments to tickets
-- [x] Paginate ticket history
-- [ ] Display ticket history in a lazy-loaded list
-- [ ] Paginate ticket comments
+=== MUST HAVE ===
 
-- [See client/todo.txt and server/todo.txt for area-specific tasks.]
+- [ ] Real ticket attachments
+  - Upload attachments to the backend
+  - Store attachment metadata in the database
+  - Wire ticket attachments to S3/local storage
+  - List, download, and delete attachments from the ticket details page
+  - Add tests for upload/delete permissions and failures
+
+- [ ] Invitations and company onboarding
+  - Create a real invite flow for joining an existing company
+  - Add invite creation, invite acceptance, and invalid/expired invite handling
+  - Replace the current placeholder invite UI in setup/company pages
+  - Add tests for the invite lifecycle
+
+- [ ] Company role management
+  - Add backend endpoints to change a company member's role
+  - Build the missing "Manage Roles" page/UI
+  - Enforce role restrictions and protect against unsafe role changes
+  - Add tests for admins vs non-admins
+
+- [ ] Server-side ticket querying
+  - Add backend support for ticket search, filtering, sorting, and pagination
+  - Support project-level ticket queries, not just global lists
+  - Update ticket pages to use server-driven queries instead of client-only table filtering
+  - Add tests for query behavior
+
+- [ ] Account lifecycle features
+  - Implement email confirmation instead of forcing `EmailConfirmed = true`
+  - Implement password reset flow
+  - Add the required UI pages and token handling
+  - Add tests for both flows
 
 
-=== TESTS ===
-- [TEST] - [ ] Projects tests: Assigning PMs, editing details/archive, role validations, adding tickets
-- [TEST] - [ ] Tickets tests: assigning tickets, editing (name/priority/status/etc.), role validations
-- [TEST] - [x] comments
-- [TEST] - [ ] history
-- [TEST] - [ ] attachments
+=== SHOULD HAVE ===
 
-Note: Put detailed test plans in `client/todo.txt` or `server/todo.txt` as appropriate.
+- [ ] Finish the ticket audit/history system
+  - Track comment create/edit/delete
+  - Track attachment upload/delete
+  - Track ticket deletion and important project-side ticket changes
+  - Use the paginated history endpoint from the client
+
+- [ ] Fix ticket details page gaps
+  - Fix the comment loader permission bug
+  - Fix the `projectManagerId` DTO mismatch used by the client
+  - Refresh comments/history after mutations
+  - Decide whether archived tickets should allow name/description edits in the UI
+
+- [ ] Clean up API access on the client
+  - Stop using hardcoded `http://localhost:5090`
+  - Standardize on the shared server API client pattern
+  - Remove duplicate fetch helper patterns where possible
+
+- [ ] Improve production/security hygiene
+  - Remove tracked env files from the repo
+  - Require a real `SESSION_SECRET`
+  - Make CORS/environment config production-safe
+  - Review auth/session/logout behavior
+
+- [ ] Fix stale docs and repo polish
+  - Update the root README to match the real codebase
+  - Update server/client docs so they stop overstating incomplete features
+  - Remove placeholder/default docs content
+  - Clean up dead links, stale TODO references, and naming typos
 
 
-=== DONE ===
-- [x] Server: Figure out ticket-member delete behaviors on DB
-- [x] Client: Finish "My tickets" route
-- [x] Client: Filter tickets table to show resolved tickets
-- [x] Create new ticket
-- [x] Ticket assigned-member validation
-- [x] Priority / Status / Type validation (middleware / filter)
-- [x] Assign to ticket
-- [x] Add ticket to project
-- [x] Change priority & status
-- [x] Archive ticket
-- [x] Server: Role validation (member.companyId vs resource.companyId)
-- [x] On remove developer from project: remove them from assigned tickets
-- [x] Client: Archive ticket UI
-- [x] Edit owned comments
-- [x] Add history to ticket
-- [x] Add comments to ticket
-- [x] Server & Client: Archive tickets when project is archived
-- [x] Client: Open Tickets route (filters out resolved tickets)
-- [x] Client: Finished Resolved Tickets route
+=== NICE TO HAVE ===
 
+- [ ] Add CI
+  - Run server tests
+  - Run client lint/typecheck
+  - Add a basic smoke check for builds
+
+- [ ] Add frontend tests
+  - Cover critical routes/components
+  - Start with auth/session and ticket details behavior
+
+- [ ] Strengthen backend test realism
+  - Add some Postgres-backed integration coverage instead of relying only on EF InMemory
+  - Cover attachments, history, invites, and role management
+
+- [ ] Improve dashboard quality
+  - Replace placeholder charts/cards with real data or remove them
+  - Make dashboard content more role-aware if that is the intended product direction
+
+- [ ] User settings/profile page
+  - Profile editing
+  - Avatar/preferences if still desired
+
+- [ ] Notifications
+  - Only after the core business workflows are finished
+
+
+=== KNOWN CLEANUP / SMALLER BUGS ===
+
+- [ ] Fix route/path inconsistencies in navigation
+- [ ] Clean up empty/typo files and naming mistakes
+- [ ] Review migration/schema issues like shadow `TicketId1` relationships
+- [ ] Revisit delete behaviors and document business rules for member removal
+
+
+=== DONE WHEN ===
+
+- [ ] Attachments are real
+- [ ] Invites + role management are real
+- [ ] Ticket querying is server-driven
+- [ ] Email confirmation + password reset exist
+- [ ] Docs are accurate
+- [ ] Security/config issues are cleaned up
+- [ ] Tests and CI make the repo feel reliable
