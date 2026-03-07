@@ -1,7 +1,7 @@
 import { ApiError, AuthenticationError } from "~/services/api.server/errors";
 import tryCatch from "./tryCatch";
 
-export const DEV_URL = "http://localhost:5090";
+export const DEV_URL = process.env.API_URL;
 
 export function expiresInToIso(expiresIn: number): string {
   return new Date(Date.now() + expiresIn * 1000).toISOString();
@@ -11,7 +11,7 @@ export function expiresInToIso(expiresIn: number): string {
 export async function requestJson<T>(
   endpoint: string,
   options?: RequestInit,
-  token?: string,
+  token?: string
 ): Promise<T> {
   const url = `${DEV_URL}${endpoint}`;
   const headers: any = {
@@ -34,7 +34,7 @@ export async function requestJson<T>(
 export async function handleResponse(
   response: Response | null,
   error: Error | null,
-  method: string,
+  method: string
 ): Promise<Response> {
   // Error from fetch
   if (error) {
@@ -63,7 +63,7 @@ export async function handleResponse(
 export async function handleJsonResponse<T>(
   response: Response | null,
   error: Error | null,
-  method: string,
+  method: string
 ): Promise<T> {
   if (error) {
     console.error(error);
