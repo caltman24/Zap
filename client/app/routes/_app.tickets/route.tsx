@@ -8,4 +8,5 @@ function TicketsBreadcrumb() {
 
 export const handle = {
     breadcrumb: () => <TicketsBreadcrumb />,
+    breadcrumbLabel: "Tickets",
 };

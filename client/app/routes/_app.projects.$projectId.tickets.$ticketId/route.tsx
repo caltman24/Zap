@@ -43,6 +43,7 @@ export const handle = {
         const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
         return <Link to={`/tickets/mytickets/${ticketId}`}>{ticketName}</Link>;
     },
+    breadcrumbLabel: (match: any) => match.data?.data?.name || "Ticket Details",
 };
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(request);

@@ -17,6 +17,7 @@ import MembersListTable from "~/components/MembersListTable";
 
 export const handle = {
     breadcrumb: () => <Link to="/company">Company</Link>,
+    breadcrumbLabel: "Company",
 };
 
 // TODO: Handle when user gets kicked from company

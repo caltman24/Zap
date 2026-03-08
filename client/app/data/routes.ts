@@ -76,7 +76,7 @@ export const menuRoutes: MenuRoutes = [
     name: "Tickets",
     links: [
       {
-        name: "All Tickets",
+        name: "Open Tickets",
         to: "/tickets",
         matchId: "routes/_app.tickets._index",
         materialIcon: "assignment",

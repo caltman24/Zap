@@ -201,7 +201,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export const handle = {
-    breadcrumb: () => <Link to="/dashboard">Dashboard</Link>
+    breadcrumb: () => <Link to="/dashboard">Dashboard</Link>,
+    breadcrumbLabel: "Dashboard"
 };
 
 export default function DashboardRoute() {

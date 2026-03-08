@@ -16,6 +16,7 @@ import { useState, useEffect, useRef } from "react";
 
 export const handle = {
     breadcrumb: () => <Link to="/tickets/new">New</Link>,
+    breadcrumbLabel: "New",
 };
 
 

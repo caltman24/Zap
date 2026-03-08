@@ -12,6 +12,7 @@ import BackButton from "~/components/BackButton";
 
 export const handle = {
     breadcrumb: () => <Link to="/projects/new">New</Link>,
+    breadcrumbLabel: "New",
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {

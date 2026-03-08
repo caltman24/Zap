@@ -1,23 +1,51 @@
 import { Form, useMatches } from "@remix-run/react";
+import type { UIMatch } from "@remix-run/react";
+import type { ReactNode } from "react";
 
+type BreadcrumbMatch = UIMatch<unknown, {
+    breadcrumb?: (match: UIMatch) => ReactNode;
+    breadcrumbLabel?: string | ((match: UIMatch) => string);
+}>;
+
+function normalizeBreadcrumbLabel(label: string | null) {
+    return label?.trim().toLowerCase() ?? null;
+}
+
+function getBreadcrumbLabel(match: BreadcrumbMatch) {
+    const breadcrumbLabel = match.handle?.breadcrumbLabel;
+
+    if (typeof breadcrumbLabel === "function") {
+        return breadcrumbLabel(match);
+    }
+
+    return breadcrumbLabel ?? match.pathname;
+}
 
 
 export default function DashboardNavbar({ avatarUrl }: { avatarUrl: string }) {
-    const matches = useMatches();
+    const matches = useMatches() as BreadcrumbMatch[];
+    const breadcrumbMatches = matches
+        .filter(
+            (match) =>
+                match.handle && match.handle.breadcrumb
+        )
+        .filter((match, index, allMatches) => {
+            if (index === 0) {
+                return true;
+            }
+
+            return normalizeBreadcrumbLabel(getBreadcrumbLabel(match)) !== normalizeBreadcrumbLabel(getBreadcrumbLabel(allMatches[index - 1]));
+        });
 
     return (
         <div className="bg-base-200 shadow-sm sticky left-0 w-full z-20">
             <nav className="relative left-0 navbar px-10">
                 <div className="flex-1 breadcrumbs">
                     <ul>
-                        {matches
-                            .filter(
-                                (match) =>
-                                    match.handle && (match.handle as any).breadcrumb
-                            )
+                        {breadcrumbMatches
                             .map((match, index) => (
-                                <li key={index} className={`${index === 0 ? "font-medium" : ""}`}>
-                                    {(match.handle as any).breadcrumb(match)}
+                                <li key={`${match.id}-${getBreadcrumbLabel(match)}`} className={`${index === 0 ? "font-medium" : ""}`}>
+                                    {match.handle?.breadcrumb?.(match)}
                                 </li>
                             ))}
                     </ul>

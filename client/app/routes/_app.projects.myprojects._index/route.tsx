@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import ProjectCard from "~/components/ProjectCard";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
@@ -11,10 +11,6 @@ import getMyProjects from "./server.get-myprojects";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
 import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
-
-export const handle = {
-    breadcrumb: () => <Link to="/projects/myprojects">My Projects</Link>,
-};
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);

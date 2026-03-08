@@ -50,6 +50,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export const handle = {
     breadcrumb: () => <ArchivedTicketsBreadcrumb />,
+    breadcrumbLabel: "Archived",
 };
 
 export default function ArchivedTicketsRoute() {

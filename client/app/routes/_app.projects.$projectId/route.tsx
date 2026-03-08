@@ -9,6 +9,7 @@ export const handle = {
         const projectName = match.data?.data?.name || "Project Details";
         return <Link to={`/projects/${projectId}`}>{projectName}</Link>;
     },
+    breadcrumbLabel: (match: any) => match.data?.data?.name || "Project Details",
 };
 
 export async function loader(loaderParams: LoaderFunctionArgs) {
