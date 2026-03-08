@@ -62,7 +62,10 @@ export default function ResolvedTicketsRoute() {
     return (
         <RouteLayout>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Resolved Tickets</h1>
+                <div>
+                    <h1 className="text-3xl font-bold">Resolved Tickets</h1>
+                    <p className="text-base-content/65 mt-1">Resolved tickets currently visible to you.</p>
+                </div>
             </div>
 
             <div className="bg-base-100 rounded-lg shadow-lg p-6">

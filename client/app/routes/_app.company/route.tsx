@@ -24,6 +24,11 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    const userRole = session.get("user").role;
+
+    if (!validateRole(userRole, permissions.company.edit)) {
+        return redirect("/dashboard");
+    }
 
     const {
         data: tokenResponse,
@@ -130,7 +135,6 @@ export default function CompanyRoute() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const companyInfo = data as CompanyInfoResponse | null;
-    console.log(companyInfo?.members)
     const memberList = Object.entries(companyInfo?.members ?? {}).map(([role, members]) => {
         return (
             <div key={role} className="my-4 bg-base-300 p-4 rounded-sm">
@@ -186,9 +190,6 @@ export default function CompanyRoute() {
                                     <button onClick={() => { toggleEditMode(); }} className="btn btn-soft btn-sm">
                                         <span className="material-symbols-outlined text-primary">edit</span> Edit Company
                                     </button>
-                                    <Link to="/company/invites" className="btn btn-soft btn-sm">
-                                        <span className="material-symbols-outlined text-accent">settings</span>Manage Roles
-                                    </Link>
                                 </div>
                             )}
 
@@ -291,9 +292,6 @@ export default function CompanyRoute() {
                                 </div>
                             </>
                             )}
-                        </div>
-                        <div className="bg-base-100 rounded shadow p-8 mt-4">
-                            <h2 className="text-xl font-bold mb-4">Invites</h2>
                         </div>
                     </div>
                 )

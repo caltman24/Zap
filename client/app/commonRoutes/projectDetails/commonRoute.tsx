@@ -44,17 +44,9 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
     // State for form fields
     const [priority, setPriority] = useState<string>(project?.priority || "");
 
-    let isAssignedPM = false
-    project?.members.forEach(m => {
-        if (m.id === userInfo.memberId &&
-            m.role.toLowerCase() == roleNames.projectManager &&
-            m.role.toLowerCase() == userInfo.role.toLowerCase()) {
-            isAssignedPM = true
-            return
-        }
-    })
     const isAdmin = userRole === roleNames.admin
-    const canEdit = isAdmin || isAssignedPM
+    const isManagedProject = project?.projectManager?.id === userInfo.memberId
+    const canManageProject = isAdmin || isManagedProject
 
     // Reset priority when toggling edit mode
     const handleEditToggle = () => {
@@ -180,7 +172,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                             </div>
                                         </div>
                                         <div className="flex gap-3 items-center flex-shrink-0 ml-6">
-                                            {canEdit && (
+                                            {canManageProject && (
                                                 <button
                                                     onClick={handleEditToggle}
                                                     className="btn btn-soft btn-sm gap-2 shadow-sm"
@@ -189,7 +181,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                                     Edit Details
                                                 </button>
                                             )}
-                                            {isAdmin && (
+                                            {canManageProject && (
                                                 <Form method="post" action={`/projects/${project.id}/archive`}>
                                                     <button
                                                         type="submit"
@@ -314,7 +306,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Assigned Members</h2>
                             {/* Add members */}
-                            {(canEdit && !project.isArchived) && (
+                            {(canManageProject && !project.isArchived) && (
                                 <>
                                     <div className="flex gap-2">
                                         <button className="btn btn-soft btn-sm gap-2 shadow-sm" onClick={() => handleOnGetMembersList()}>
@@ -365,7 +357,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Tickets</h2>
                             {
-                                !project.isArchived && (
+                                !project.isArchived && [roleNames.admin, roleNames.projectManager, roleNames.submitter].includes(userInfo.role) && (
                                     <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm gap-2 shadow-sm">
                                         <span className="material-symbols-outlined text-success text-sm">add_circle</span>
                                         New Ticket
@@ -398,6 +390,4 @@ function getPriorityDisplay(priority: string): string {
             return priority;
     }
 }
-
-
 

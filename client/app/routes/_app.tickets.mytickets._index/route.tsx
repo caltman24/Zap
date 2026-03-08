@@ -49,16 +49,18 @@ export default function MyTicketsRoute() {
     return <p className="text-error">{error}</p>;
   }
 
-  return (
-    <RouteLayout>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">My Tickets</h1>
-      </div>
+    return (
+      <RouteLayout>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">My Tickets</h1>
+            <p className="text-base-content/65 mt-1">Tickets you submitted or are assigned to.</p>
+          </div>
+        </div>
 
-      <div className="bg-base-100 rounded-lg shadow-lg p-6">
-        <TicketTable tickets={tickets} />
-      </div>
+        <div className="bg-base-100 rounded-lg shadow-lg p-6">
+          <TicketTable tickets={tickets} />
+        </div>
     </RouteLayout>
   );
 }
-

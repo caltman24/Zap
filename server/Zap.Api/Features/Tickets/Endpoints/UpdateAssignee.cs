@@ -23,9 +23,13 @@ public class UpdateAssignee : IEndpoint
         [FromRoute] string ticketId,
         Request? request,
         ITicketService ticketService,
-        CurrentUser currentUser
+        CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
+        if (!await ticketAuthorizationService.CanAssignDeveloperAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         var memberId = request?.MemberId ?? request?.DeveloperId;
 
         if (memberId != null)

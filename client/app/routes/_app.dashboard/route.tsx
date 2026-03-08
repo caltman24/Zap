@@ -1,14 +1,15 @@
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Link, useLoaderData, useNavigate } from "@remix-run/react";
+import { Link, useLoaderData, useNavigate, useOutletContext } from "@remix-run/react";
 import type { KeyboardEvent } from "react";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import { BasicTicketInfo, CompanyProjectsResponse } from "~/services/api.server/types";
+import { BasicTicketInfo, CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { requestJson } from "~/utils/api";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
+import roleNames from "~/data/roles";
 
 type DashboardDeadline = {
     id: string;
@@ -205,7 +206,12 @@ export const handle = {
 
 export default function DashboardRoute() {
     const { data, error } = useLoaderData<JsonResponseResult<DashboardData>>();
+    const userInfo = useOutletContext<UserInfoResponse>();
     const navigate = useNavigate();
+    const normalizedRole = userInfo.role.toLowerCase();
+    const projectLabel = normalizedRole === roleNames.admin ? "Total Projects" : "Visible Projects";
+    const ticketLabel = normalizedRole === roleNames.admin ? "Total Tickets" : "Visible Tickets";
+    const deadlineLabel = normalizedRole === roleNames.admin ? "Upcoming Deadlines" : "Upcoming Deadlines In Your Scope";
 
     function getTicketRoute(ticket: BasicTicketInfo): string {
         return `/projects/${ticket.projectId}/tickets/${ticket.id}`;
@@ -228,12 +234,18 @@ export default function DashboardRoute() {
 
     return (
         <RouteLayout>
+            <div className="mb-6">
+                <h1 className="text-3xl font-bold">Dashboard</h1>
+                <p className="text-base-content/65 mt-1">
+                    Overview of projects and tickets currently visible to your role.
+                </p>
+            </div>
             <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
                 <div className="stat bg-base-100 shadow rounded-box">
                     <div className="stat-figure text-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    <div className="stat-title">Total Projects</div>
+                    <div className="stat-title">{projectLabel}</div>
                     <div className="stat-value text-primary">{data.totalProjects}</div>
                 </div>
 
@@ -241,7 +253,7 @@ export default function DashboardRoute() {
                     <div className="stat-figure text-secondary">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     </div>
-                    <div className="stat-title">Total Tickets</div>
+                    <div className="stat-title">{ticketLabel}</div>
                     <div className="stat-value text-secondary">{data.totalTickets}</div>
                 </div>
 
@@ -329,7 +341,7 @@ export default function DashboardRoute() {
             </div>
 
             <div className="bg-base-100 p-6 rounded-box shadow mb-8">
-                <h2 className="text-xl font-semibold mb-8">Upcoming Deadlines</h2>
+                <h2 className="text-xl font-semibold mb-8">{deadlineLabel}</h2>
                 <ul className="space-y-4">
                     {data.upcomingDeadlines.length > 0 ? data.upcomingDeadlines.map((deadline) => (
                         <li key={deadline.id} className="flex items-center gap-6">
@@ -347,28 +359,6 @@ export default function DashboardRoute() {
                 </ul>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-3">
-                <div className="bg-base-100 p-6 rounded-box shadow">
-                    <h2 className="text-xl font-semibold mb-4">Tickets Over Time</h2>
-                    <div className="h-64 w-full bg-base-200 flex items-center justify-center">
-                        <p className="text-base-content/60">Chart Visualization Placeholder</p>
-                    </div>
-                </div>
-
-                <div className="bg-base-100 p-6 rounded-box shadow">
-                    <h2 className="text-xl font-semibold mb-4">Tickets By Priority</h2>
-                    <div className="h-64 w-full bg-base-200 flex items-center justify-center">
-                        <p className="text-base-content/60">Chart Visualization Placeholder</p>
-                    </div>
-                </div>
-
-                <div className="bg-base-100 p-6 rounded-box shadow">
-                    <h2 className="text-xl font-semibold mb-4">Projects By Priority</h2>
-                    <div className="h-64 w-full bg-base-200 flex items-center justify-center">
-                        <p className="text-base-content/60">Chart Visualization Placeholder</p>
-                    </div>
-                </div>
-            </div>
         </RouteLayout>
     );
 }

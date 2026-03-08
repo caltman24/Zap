@@ -1,6 +1,18 @@
 # Zap
 
-Zap is a project management and bug tracking application (think simplified Jira/Linear). It helps companies manage projects, assign team members, track tickets (bugs, features, tasks), and collaborate via comments and file attachments.
+Zap is a full-stack Jira/Linear-style project management app I built as a hiring project.
+
+Its job is simple: prove I can design and ship a non-trivial product with real authorization rules, server-enforced data scoping, clean full-stack boundaries, and maintainable architecture.
+
+Companies can manage projects, assign members, track tickets, and collaborate through comments and attachments.
+
+## Highlights
+
+- Server-first authorization: the API decides what each role can see and do, and the UI mirrors that behavior
+- Scoped data access: developers and submitters only receive projects and tickets they are actually allowed to access
+- Full-stack architecture: Remix SSR frontend, ASP.NET Core Minimal API backend, PostgreSQL persistence, S3-ready attachment path
+- Maintainable backend design: vertical slice structure, thin endpoints, focused services, integration-tested permission logic
+- Product-minded implementation: role-aware navigation, route gating, ticket workflows, comments, project views, and audit history
 
 ---
 
@@ -14,13 +26,43 @@ Browser
   v
 Remix SSR (Netlify)
   -- HTTP/JSON -->
-.NET 9 Minimal API (Railway)
+.NET 10 Minimal API (Railway)
   |
   +--> PostgreSQL
   +--> AWS S3 (attachments)
 ```
 
-Notes: the client is a Remix v2 + Vite app that runs server-side. All API calls are proxied through Remix loaders/actions — the browser never talks directly to the .NET backend. The backend is an ASP.NET Core 9 Minimal API using a vertical-slice architecture.
+Notes: the client is a Remix v2 + Vite app that runs server-side. All API calls are proxied through Remix loaders/actions — the browser never talks directly to the .NET backend. The backend is an ASP.NET Core 10 Minimal API using a vertical-slice architecture.
+
+---
+
+## What This Demonstrates
+
+- Full-stack product development with a Remix SSR frontend and ASP.NET Core Minimal API backend
+- Role-based authorization enforced on both the API and UI
+- Vertical slice backend architecture with thin endpoints and service-based business logic
+- Session-based auth in the web app with token refresh handling
+- Scoped data access so users only receive the projects and tickets relevant to their role
+- Integration-tested backend behavior for permission-sensitive flows
+
+---
+
+## Why I Built This
+
+I built Zap to be a strong hiring project rather than a tutorial app. The goal was to show that I can build software with:
+
+- clear domain modeling
+- real authorization rules instead of superficial role labels
+- server-enforced data scoping
+- a clean SSR client/backend boundary
+- maintainable patterns that can grow over time
+
+If you are reviewing this as part of an interview or application, the best places to look are:
+
+- `client/app/data/permissions.ts` and `client/app/utils/ticketPermissions.ts`
+- `server/Zap.Api/Features/Tickets/Services/TicketAuthorizationService.cs`
+- `server/Zap.Api/Features/Projects/Services/ProjectAuthorizationService.cs`
+- `server/Zap.Tests/IntegrationTests/`
 
 ---
 
@@ -30,7 +72,7 @@ zap/
   AGENTS.md          # Agent coding guide
   todo.txt           # Project task list
   client/            # Remix + Vite TypeScript frontend
-  server/            # .NET 9 API backend
+  server/            # .NET 10 API backend
 
 Key client files and locations:
 - `client/app/routes/_landing.*` — public pages (home, login, register)
@@ -59,7 +101,7 @@ Key server files and locations:
 ## Tech Stack
 
 - Client: React 18, Remix 2, Vite 6, TypeScript 5, Tailwind CSS 4, DaisyUI 5, pnpm
-- Server: .NET 9, ASP.NET Core Minimal API, EF Core 9 (Npgsql/PostgreSQL), ASP.NET Identity (Bearer tokens)
+- Server: .NET 10, ASP.NET Core Minimal API, EF Core 10 (Npgsql/PostgreSQL), ASP.NET Identity (Bearer tokens)
 - Infrastructure: PostgreSQL, AWS S3 (for attachments), Serilog, Bogus (test data)
 
 ---
@@ -86,18 +128,64 @@ Key server files and locations:
 
 ---
 
+## Role Matrix
+
+The API is the source of truth for permissions. The Remix client mirrors those rules by hiding irrelevant routes, buttons, and actions.
+
+### Admin
+
+- Full company visibility and management
+- Can view all company projects and tickets
+- Can create, edit, archive, and delete projects and tickets
+- Can assign project managers, manage project membership, and manage ticket workflow fields
+- Can view and edit company details
+
+### Project Manager
+
+- Scoped to projects they manage
+- Can view managed projects and tickets in those projects
+- Can create, edit, archive, and delete tickets in managed projects
+- Can change ticket status, priority, type, and assignee in managed projects
+- Can manage membership and details for managed projects
+
+### Developer
+
+- Scoped to projects they are assigned to
+- Can view assigned projects and tickets in those projects
+- Can view tickets directly assigned to them through `My Tickets`
+- Can comment on visible tickets
+- Can update ticket status only when directly assigned to that ticket
+- Cannot manage projects, assign tickets, or change priority/type/archive/delete ticket state
+
+### Submitter
+
+- Scoped to projects they are assigned to
+- Can view assigned projects and tickets in those projects
+- Can create tickets in assigned projects
+- Can comment on visible tickets
+- Can edit their own ticket title and description only while the ticket is `New`
+- Cannot change status, priority, type, assignee, archive, or delete ticket state
+
+This was intentionally implemented server-first: the API scopes the data and permissions, and the client follows by hiding irrelevant navigation, routes, and controls.
+
+---
+
 ## Key Routes / Features
 
 | Feature | URL | Roles |
 |---------|-----|-------|
 | Dashboard | `/dashboard` | All |
-| Company Details | `/company` | All (edit: Admin) |
-| All Projects | `/projects` | All |
+| Company Details | `/company` | Admin |
+| All Projects | `/projects` | Admin, PM |
 | My Projects | `/projects/myprojects` | PM, Dev, Submitter |
 | Create Project | `/projects/new` | Admin, PM |
-| Project Detail | `/projects/:id` | All |
-| Ticket Detail | `/projects/:id/tickets/:ticketId` | All (restrictions apply) |
+| Archived Projects | `/projects/archived` | Admin, PM |
+| Project Detail | `/projects/:id` | Scoped by project access |
+| Ticket Detail | `/projects/:id/tickets/:ticketId` | Scoped by ticket access |
 | All Tickets | `/tickets` | All |
+| My Tickets | `/tickets/mytickets` | All |
+| Resolved Tickets | `/tickets/resolved` | All |
+| Archived Tickets | `/tickets/archived` | All |
 | Create Ticket | `/tickets/new` | Admin, PM, Submitter |
 
 ---
@@ -107,7 +195,7 @@ Key server files and locations:
 Prerequisites
 - Node 20+ (client)
 - pnpm (preferred package manager)
-- .NET 9 SDK (server)
+- .NET 10 SDK (server)
 - PostgreSQL running (default assumed at `localhost:5432`)
 - AWS S3 credentials for file uploads (used by `server/Features/FileUpload`)
 
@@ -140,22 +228,4 @@ Applying EF migrations
 - No CI/CD pipeline (no GitHub Actions or similar configured)
 - No client tests configured (no test runner present)
 - Incomplete features (see `todo.txt`): user settings/profile, admin tools, invite system, realtime notifications
-- Stubs / TODOs in code: `DeleteCompany` throws `NotImplementedException`, `TicketAttachmentsService` is empty
 
----
-
-## Contributing
-
-1. Follow the conventions in `AGENTS.md` for edits and new features.
-2. Keep changes small and focused; run `pnpm lint` and `pnpm typecheck` for client changes and `dotnet test` for server tests.
-3. When introducing new packages to the client, use `pnpm` and document any new scripts in `client/package.json`.
-
----
-
-## License
-
-This repository does not include an explicit license file. Add a `LICENSE` file if you intend to make the project open source.
-
----
-
-If anything in this README needs more detail (example env values, migration commands, or startup troubleshooting), tell me which area to expand and I will update `README.md`.

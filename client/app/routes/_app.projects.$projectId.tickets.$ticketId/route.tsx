@@ -27,6 +27,7 @@ import {
     canArchiveTicket,
     canUnarchiveTicket,
     canCreateComment,
+    canEditNameDescription,
     type TicketPermissionContext,
 } from "~/utils/ticketPermissions";
 
@@ -236,6 +237,7 @@ export default function TicketDetailsRoute() {
         ticketAssignedDeveloperId: ticket.assignee?.id || null,
         isProjectManager: userInfo.memberId ? ticket.projectManagerId === userInfo.memberId : false,
         isArchived: ticket.isArchived,
+        status: ticket.status,
     };
 
     // Permission checks
@@ -243,11 +245,12 @@ export default function TicketDetailsRoute() {
     const canUpdateStatusField = canUpdateStatus(permissionContext);
     const canUpdatePriorityField = canUpdatePriority(permissionContext);
     const canUpdateTypeField = canUpdateType(permissionContext);
-    const canAssign = canAssignDeveloper(userInfo.role, ticket.isArchived);
-    const canDelete = canDeleteTicket(userInfo.role, ticket.isArchived);
-    const canArchive = canArchiveTicket(userInfo.role);
+    const canAssign = canAssignDeveloper(userInfo.role, ticket.isArchived, permissionContext.isProjectManager);
+    const canDelete = canDeleteTicket(userInfo.role, ticket.isArchived, permissionContext.isProjectManager);
+    const canArchive = canArchiveTicket(userInfo.role, permissionContext.isProjectManager);
     const canUnarchive = canUnarchiveTicket(userInfo.role, permissionContext.isProjectManager);
     const canComment = canCreateComment(userInfo.role, ticket.isArchived);
+    const canEditNameDescriptionField = canEditNameDescription(permissionContext);
 
     // Handler for disabled field clicks
     const handleDisabledFieldClick = (fieldName: string) => {
@@ -281,8 +284,7 @@ export default function TicketDetailsRoute() {
                         </div>
                     </div>
                     <div className="flex gap-3 items-center flex-shrink-0 ml-6">
-                        {/* Only show edit button if user has edit permissions and ticket is not archived */}
-                        {canEdit && !ticket.isArchived && (
+                        {canEdit && (
                             <button
                                 onClick={handleEditToggle}
                                 className="btn btn-soft btn-sm gap-2 shadow-sm"
@@ -561,7 +563,7 @@ export default function TicketDetailsRoute() {
                                             defaultValue={ticket.name}
                                             required
                                             maxLength={50}
-                                            disabled={!canEdit}
+                                            disabled={!canEditNameDescriptionField}
                                         />
                                     </div>
 
@@ -576,7 +578,7 @@ export default function TicketDetailsRoute() {
                                             rows={4}
                                             required
                                             maxLength={1000}
-                                            disabled={!canEdit}
+                                            disabled={!canEditNameDescriptionField}
                                         ></textarea>
                                     </div>
 
@@ -730,7 +732,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const session = await getSession(request);
     const userRole = session.get("user").role;
 
-    if (!validateRole(userRole, permissions.ticket.create)) {
+    if (!validateRole(userRole, permissions.ticket.editDetails)) {
         return ForbiddenResponse();
     }
     const { data: tokenResponse, error: tokenError } = await tryCatch(

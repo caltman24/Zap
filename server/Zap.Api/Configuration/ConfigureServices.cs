@@ -48,7 +48,9 @@ public static class ConfigureServices
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<IDemoEnvironmentService, DemoEnvironmentService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
         services.AddScoped<ITicketService, TicketService>();
+        services.AddScoped<ITicketAuthorizationService, TicketAuthorizationService>();
         services.AddScoped<ITicketHistoryService, TicketHistoryService>();
 
         services.AddScoped<ITicketCommentsService, TicketCommentsService>();

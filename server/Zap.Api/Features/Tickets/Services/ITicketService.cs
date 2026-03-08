@@ -7,9 +7,9 @@ public interface ITicketService
     public Task<CreateTicketResult> CreateTicketAsync(CreateTicketDto ticket, string creatorId);
     public Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId);
     public Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId);
-    public Task<List<BasicTicketDto>> GetOpenTicketsAsync(string companyId);
-    public Task<List<BasicTicketDto>> GetArchivedTicketsAsync(string companyId);
-    public Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string companyId);
+    public Task<List<BasicTicketDto>> GetOpenTicketsAsync(string memberId, string roleName, string companyId);
+    public Task<List<BasicTicketDto>> GetArchivedTicketsAsync(string memberId, string roleName, string companyId);
+    public Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string memberId, string roleName, string companyId);
     public Task DeleteTicketAsync(string ticketId);
 
     /// <summary>

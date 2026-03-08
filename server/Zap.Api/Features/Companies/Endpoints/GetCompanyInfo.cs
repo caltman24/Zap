@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
+using Zap.Api.Common.Constants;
 using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Companies.Endpoints;
@@ -10,7 +11,7 @@ public class GetCompanyInfo : IEndpoint
     public static void Map(IEndpointRouteBuilder app)
     {
         app.MapGet("/info", Handle)
-            .WithCompanyMember();
+            .WithCompanyMember(RoleNames.Admin);
     }
 
     private static async Task<Results<BadRequest<string>, Ok<CompanyInfoDto>>> Handle(

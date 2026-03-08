@@ -30,9 +30,13 @@ public class UpdateTicket : IEndpoint
             Request request,
             ITicketService ticketService,
             CurrentUser currentUser,
-            AppDbContext db
+            AppDbContext db,
+            ITicketAuthorizationService ticketAuthorizationService
         )
     {
+        if (!await ticketAuthorizationService.CanEditTicketDetailsAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         // Check if ticket is archived
         var ticket = await db.Tickets
             .Where(t => t.Id == ticketId)
@@ -66,6 +70,24 @@ public class UpdateTicket : IEndpoint
                 currentUser.Member!.Id);
 
             if (!success) return TypedResults.Problem();
+            return TypedResults.NoContent();
+        }
+
+        if (currentUser.Member!.Role.Name == RoleNames.Submitter)
+        {
+            if (request.Priority != ticket.PriorityName ||
+                request.Status != ticket.StatusName ||
+                request.Type != ticket.TypeName)
+                return TypedResults.BadRequest("Submitters can only update ticket name and description.");
+
+            var submitterUpdateSuccess = await ticketService.UpdateTicketAsync(ticketId, new UpdateTicketDto(
+                request.Name,
+                request.Description,
+                ticket.PriorityName,
+                ticket.StatusName,
+                ticket.TypeName), currentUser.Member!.Id);
+            if (!submitterUpdateSuccess) return TypedResults.Problem();
+
             return TypedResults.NoContent();
         }
 

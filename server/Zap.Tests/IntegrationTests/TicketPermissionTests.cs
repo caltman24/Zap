@@ -5,6 +5,7 @@ using Zap.Api.Data.Models;
 using Zap.Tests.IntegrationTests;
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Constants;
+using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Tests.IntegrationTests;
 
@@ -131,6 +132,111 @@ public class TicketPermissionTests : IAsyncDisposable
 
     #endregion
 
+    #region Read Ticket Tests
+
+    [Fact]
+    public async Task GetTicket_AsDeveloperAssignedToProject_ReturnsSuccess()
+    {
+        var (_, _, ticket, _, _, developer, _) = await SetupTestScenario();
+        var client = _app.CreateClient(developer.UserId, RoleNames.Developer);
+
+        var response = await client.GetAsync($"/tickets/{ticket.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetTicket_AsSubmitterAssignedToProject_ReturnsSuccess()
+    {
+        var (company, project, ticket, _, _, _, _) = await SetupTestScenario();
+
+        var otherSubmitterUserId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(otherSubmitterUserId);
+        var otherSubmitter = new CompanyMember
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = otherSubmitterUserId,
+            CompanyId = company.Id,
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Submitter).Select(r => r.Id).FirstAsync()
+        };
+        otherSubmitter.AssignedProjects.Add(project);
+        _db.CompanyMembers.Add(otherSubmitter);
+        await _db.SaveChangesAsync();
+
+        var client = _app.CreateClient(otherSubmitterUserId, RoleNames.Submitter);
+
+        var response = await client.GetAsync($"/tickets/{ticket.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetTicket_AsDeveloperOutsideProject_ReturnsForbidden()
+    {
+        var (company, _, ticket, _, _, _, _) = await SetupTestScenario();
+
+        var otherDevUserId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(otherDevUserId);
+        _db.CompanyMembers.Add(new CompanyMember
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = otherDevUserId,
+            CompanyId = company.Id,
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Developer).Select(r => r.Id).FirstAsync()
+        });
+        await _db.SaveChangesAsync();
+
+        var client = _app.CreateClient(otherDevUserId, RoleNames.Developer);
+
+        var response = await client.GetAsync($"/tickets/{ticket.Id}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetOpenTickets_AsDeveloperAssignedToProject_ReturnsProjectTicketsOnly()
+    {
+        var (company, project, ticket, _, _, developer, submitter) = await SetupTestScenario();
+
+        var otherProject = new Project
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = "Other Project",
+            Description = "Other Project Description",
+            Priority = "High",
+            CompanyId = company.Id,
+            DueDate = DateTime.UtcNow.AddDays(7),
+            IsArchived = false
+        };
+        _db.Projects.Add(otherProject);
+
+        var otherTicket = new Ticket
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = "Other Ticket",
+            Description = "Other Description",
+            ProjectId = otherProject.Id,
+            SubmitterId = submitter.Id,
+            PriorityId = await _db.TicketPriorities.Where(p => p.Name == "Low").Select(p => p.Id).FirstAsync(),
+            StatusId = await _db.TicketStatuses.Where(s => s.Name == "New").Select(s => s.Id).FirstAsync(),
+            TypeId = await _db.TicketTypes.Where(t => t.Name == "Defect").Select(t => t.Id).FirstAsync(),
+            IsArchived = false
+        };
+        _db.Tickets.Add(otherTicket);
+        await _db.SaveChangesAsync();
+
+        var client = _app.CreateClient(developer.UserId, RoleNames.Developer);
+
+        var response = await client.GetFromJsonAsync<List<BasicTicketDto>>("/tickets/open");
+
+        Assert.NotNull(response);
+        Assert.Single(response);
+        Assert.Equal(ticket.Id, response[0].Id);
+        Assert.Equal(project.Id, response[0].ProjectId);
+    }
+
+    #endregion
+
     #region Update Status Tests
 
     [Fact]
@@ -219,7 +325,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateStatus_AsSubmitter_WhenOwner_ReturnsSuccess()
+    public async Task UpdateStatus_AsSubmitter_WhenOwner_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -232,7 +338,7 @@ public class TicketPermissionTests : IAsyncDisposable
         );
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -313,7 +419,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdatePriority_AsSubmitter_WhenOwner_ReturnsSuccess()
+    public async Task UpdatePriority_AsSubmitter_WhenOwner_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -326,7 +432,7 @@ public class TicketPermissionTests : IAsyncDisposable
         );
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -390,7 +496,7 @@ public class TicketPermissionTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task UpdateType_AsSubmitter_WhenOwner_ReturnsSuccess()
+    public async Task UpdateType_AsSubmitter_WhenOwner_ReturnsForbidden()
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
@@ -403,7 +509,7 @@ public class TicketPermissionTests : IAsyncDisposable
         );
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     #endregion

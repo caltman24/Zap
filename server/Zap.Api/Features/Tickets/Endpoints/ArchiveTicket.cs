@@ -24,16 +24,12 @@ public class ArchiveTicket : IEndpoint
         [FromRoute] string ticketId,
         CurrentUser currentUser,
         ITicketService ticketService,
-        AppDbContext db
+        AppDbContext db,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
-        var userRole = currentUser.Member!.Role.Name;
-
-        if (userRole == RoleNames.ProjectManager)
-        {
-            var validPM = await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id);
-            if (!validPM) return TypedResults.Forbid();
-        }
+        if (!await ticketAuthorizationService.CanArchiveTicketAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
 
         // Check if we're trying to unarchive a ticket and if the project is archived
         var ticketInfo = await db.Tickets

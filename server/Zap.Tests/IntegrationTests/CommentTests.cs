@@ -128,6 +128,8 @@ public class CommentTests : IAsyncDisposable
             TypeId = (await _db.TicketTypes.FirstAsync()).Id
         };
 
+        otherMember.AssignedProjects.Add(project);
+
         var comment = new TicketComment
         {
             Id = Guid.NewGuid().ToString(),
@@ -263,6 +265,8 @@ public class CommentTests : IAsyncDisposable
             StatusId = (await _db.TicketStatuses.FirstAsync()).Id,
             TypeId = (await _db.TicketTypes.FirstAsync()).Id
         };
+
+        otherMember.AssignedProjects.Add(project);
 
         var comment = new TicketComment
         {

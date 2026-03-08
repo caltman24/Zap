@@ -21,11 +21,16 @@ public class DeleteTicket : IEndpoint
             .WithTicketArchiveValidation();
     }
 
-    private static async Task<NoContent> Handle(
+    private static async Task<Results<ForbidHttpResult, NoContent>> Handle(
         [FromRoute] string ticketId,
-        ITicketService ticketService
+        ITicketService ticketService,
+        CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
+        if (!await ticketAuthorizationService.CanDeleteTicketAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         await ticketService.DeleteTicketAsync(ticketId);
 
         return TypedResults.NoContent();

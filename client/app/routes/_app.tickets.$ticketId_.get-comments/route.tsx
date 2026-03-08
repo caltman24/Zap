@@ -13,7 +13,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(request);
     const userRole = session.get("user").role
 
-    if (!validateRole(userRole, permissions.project.edit)) {
+    if (!validateRole(userRole, permissions.ticket.read)) {
         return ForbiddenResponse()
     }
 

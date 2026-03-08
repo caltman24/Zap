@@ -17,20 +17,18 @@ const permissions: ActionPermissions = {
     delete: [roleNames.admin],
   },
   ticket: {
-    create: [roleNames.admin, roleNames.projectManager, roleNames.submitter],
-    edit: [roleNames.admin, roleNames.projectManager],
-    editStatus: [
+    read: [
       roleNames.admin,
       roleNames.projectManager,
       roleNames.developer,
       roleNames.submitter,
     ],
-    editPriority: [
-      roleNames.admin,
-      roleNames.projectManager,
-      roleNames.submitter,
-    ],
-    editType: [roleNames.admin, roleNames.projectManager, roleNames.submitter],
+    create: [roleNames.admin, roleNames.projectManager, roleNames.submitter],
+    edit: [roleNames.admin, roleNames.projectManager],
+    editDetails: [roleNames.admin, roleNames.projectManager, roleNames.submitter],
+    editStatus: [roleNames.admin, roleNames.projectManager, roleNames.developer],
+    editPriority: [roleNames.admin, roleNames.projectManager],
+    editType: [roleNames.admin, roleNames.projectManager],
     delete: [roleNames.admin, roleNames.projectManager],
     archive: [roleNames.admin, roleNames.projectManager],
     assign: [roleNames.admin, roleNames.projectManager],
@@ -70,8 +68,10 @@ export type ActionPermissions = {
     delete: RoleName[];
   };
   ticket: {
+    read: RoleName[];
     create: RoleName[];
     edit: RoleName[];
+    editDetails: RoleName[];
     editStatus: RoleName[];
     editPriority: RoleName[];
     editType: RoleName[];

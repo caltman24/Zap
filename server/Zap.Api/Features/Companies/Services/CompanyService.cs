@@ -88,24 +88,50 @@ public sealed class CompanyService : ICompanyService
 
     public async Task<List<CompanyProjectDto>> GetCompanyProjectsAsync(string companyId, bool isArchived)
     {
-        var result = await _db.Projects
+        var result = await ProjectSummaryQuery(_db.Projects
             .Where(p => p.CompanyId == companyId)
-            .Where(p => p.IsArchived == isArchived)
-            .Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Priority,
-                p.DueDate,
-                p.IsArchived,
-                MemberCount = p.ProjectManagerId != null
-                    ? p.AssignedMembers.Count() + 1
-                    : p.AssignedMembers.Count(),
-                AvatarUrls = p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList(),
-                ProjectManagerAvatar = p.ProjectManager != null ? p.ProjectManager.User.AvatarUrl : null
-            })
+            .Where(p => p.IsArchived == isArchived))
             .ToListAsync();
 
+        return ProjectSummaryResult(result);
+    }
+
+    public async Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(
+        string companyId,
+        string memberId,
+        string roleName,
+        bool? isArchived)
+    {
+        var query = _db.Projects.Where(p => p.CompanyId == companyId);
+
+        if (isArchived.HasValue)
+            query = query.Where(p => p.IsArchived == isArchived.Value);
+
+        query = roleName switch
+        {
+            RoleNames.Admin => query,
+            RoleNames.ProjectManager => query.Where(p => p.ProjectManagerId == memberId),
+            RoleNames.Developer => query.Where(p => p.AssignedMembers.Any(m => m.Id == memberId)),
+            RoleNames.Submitter => query.Where(p => p.AssignedMembers.Any(m => m.Id == memberId)),
+            _ => query.Where(_ => false)
+        };
+
+        var result = await ProjectSummaryQuery(query).ToListAsync();
+
+        return ProjectSummaryResult(result);
+    }
+
+    public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId)
+    {
+        var result = await ProjectSummaryQuery(_db.Projects
+            .Where(p => p.CompanyId == companyId))
+            .ToListAsync();
+
+        return ProjectSummaryResult(result);
+    }
+
+    private static List<CompanyProjectDto> ProjectSummaryResult(IEnumerable<ProjectSummaryRow> result)
+    {
         return result.Select(p =>
         {
             if (p.ProjectManagerAvatar != null) p.AvatarUrls.Add(p.ProjectManagerAvatar);
@@ -122,22 +148,42 @@ public sealed class CompanyService : ICompanyService
         }).ToList();
     }
 
-    public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId)
+    private static IQueryable<ProjectSummaryRow> ProjectSummaryQuery(IQueryable<Project> query)
     {
-        return await _db.Projects
-            .Where(p => p.CompanyId == companyId)
-            .Select(p => new CompanyProjectDto(
+        return query
+            .Select(p => new
+            {
                 p.Id,
                 p.Name,
                 p.Priority,
                 p.DueDate,
                 p.IsArchived,
-                p.ProjectManagerId != null
+                MemberCount = p.ProjectManagerId != null
                     ? p.AssignedMembers.Count() + 1
                     : p.AssignedMembers.Count(),
-                p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList()))
-            .ToListAsync();
+                AvatarUrls = p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList(),
+                ProjectManagerAvatar = p.ProjectManager != null ? p.ProjectManager.User.AvatarUrl : null
+            })
+            .Select(p => new ProjectSummaryRow(
+                p.Id,
+                p.Name,
+                p.Priority,
+                p.DueDate,
+                p.IsArchived,
+                p.MemberCount,
+                p.AvatarUrls,
+                p.ProjectManagerAvatar));
     }
+
+    private sealed record ProjectSummaryRow(
+        string Id,
+        string Name,
+        string Priority,
+        DateTime DueDate,
+        bool IsArchived,
+        int MemberCount,
+        List<string> AvatarUrls,
+        string? ProjectManagerAvatar);
 
     public async Task CreateCompanyAsync(CreateCompanyDto company)
     {

@@ -19,7 +19,10 @@ public class GetResolvedTickets : IEndpoint
         CurrentUser currentUser
     )
     {
-        var tickets = await ticketService.GetResolvedTicketsAsync(currentUser.CompanyId!);
+        var tickets = await ticketService.GetResolvedTicketsAsync(
+            currentUser.Member!.Id,
+            currentUser.Member.Role.Name,
+            currentUser.CompanyId!);
 
         return TypedResults.Ok(tickets);
     }

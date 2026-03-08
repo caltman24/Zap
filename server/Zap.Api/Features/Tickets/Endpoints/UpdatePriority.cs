@@ -17,7 +17,7 @@ public class UpdatePriority : IEndpoint
     {
         app.MapPut("/{ticketId}/priority", Handle)
             .WithName("UpdateTicketPriority")
-            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
@@ -27,9 +27,13 @@ public class UpdatePriority : IEndpoint
         [FromRoute] string ticketId,
         Request request,
         ITicketService ticketService,
-        CurrentUser currentUser
+        CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
+        if (!await ticketAuthorizationService.CanUpdatePriorityAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         var success = await ticketService.UpdatePriorityAsync(ticketId, request.Priority, currentUser.Member!.Id);
         if (!success) return TypedResults.Problem();
 

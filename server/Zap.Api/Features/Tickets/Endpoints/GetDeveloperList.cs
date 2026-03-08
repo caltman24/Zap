@@ -18,12 +18,16 @@ public class GetDeveloperList : IEndpoint
             .WithTicketCompanyValidation();
     }
 
-    private static async Task<Ok<List<MemberInfoDto>>> Handle(
+    private static async Task<Results<ForbidHttpResult, Ok<List<MemberInfoDto>>>> Handle(
         [FromRoute] string ticketId,
         CurrentUser currentUser,
-        ITicketService ticketService
+        ITicketService ticketService,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
+        if (!await ticketAuthorizationService.CanAssignDeveloperAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         var projects = await ticketService.GetProjectDevelopersAsync(ticketId);
 
         return TypedResults.Ok(projects);

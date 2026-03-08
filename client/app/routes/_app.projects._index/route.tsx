@@ -4,6 +4,7 @@ import { Link, redirect, useLoaderData, useOutletContext } from "@remix-run/reac
 import { useMemo } from "react";
 import ProjectCard from "~/components/ProjectCard";
 import { getRolesByRouteName } from "~/data/routes";
+import roleNames from "~/data/roles";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
@@ -15,6 +16,13 @@ import tryCatch from "~/utils/tryCatch";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    const userInfo = session.get("user") as UserInfoResponse;
+    const normalizedRole = userInfo.role.toLowerCase();
+
+    if (([roleNames.developer, roleNames.submitter] as string[]).includes(normalizedRole)) {
+        return redirect("/projects/myprojects");
+    }
+
     const {
         data: tokenResponse,
         error: tokenError
@@ -48,6 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function ProjectsRoute() {
     const { data, error } = useLoaderData<JsonResponseResult<CompanyProjectsResponse[]>>()
     const userInfo = useOutletContext<UserInfoResponse>();
+    const isProjectManager = userInfo.role.toLowerCase() === roleNames.projectManager;
     const createProjectRoles = useMemo(() =>
         getRolesByRouteName("Create Project"),
         []);
@@ -59,7 +68,12 @@ export default function ProjectsRoute() {
     return (
         <RouteLayout>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">All Projects</h1>
+                <div>
+                    <h1 className="text-3xl font-bold">{isProjectManager ? "Managed Projects" : "All Projects"}</h1>
+                    <p className="text-base-content/65 mt-1">
+                        {isProjectManager ? "Projects where you are the assigned project manager." : "All active projects in your company."}
+                    </p>
+                </div>
                 {createProjectRoles.includes(userInfo.role.toLowerCase()) && (
                     <Link to="/projects/new" className="btn btn-soft">
                         <span className="material-symbols-outlined text-success">add_circle</span>
@@ -76,9 +90,10 @@ export default function ProjectsRoute() {
                         showArchived={false}
                         collection="projects" />
                 ))}
+                {!data?.length && (
+                    <p className="text-base-content/60">No projects match your current scope.</p>
+                )}
             </div>
         </RouteLayout>
     );
 }
-
-

@@ -18,9 +18,11 @@ public class GetCompanyProjects : IEndpoint
         ICompanyService companyService, CurrentUser currentUser, ILogger<Program> logger,
         [FromQuery] bool? isArchived = null)
     {
-        var projects = isArchived == null
-            ? await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId!)
-            : await companyService.GetCompanyProjectsAsync(currentUser.CompanyId!, isArchived.Value);
+        var projects = await companyService.GetVisibleProjectsAsync(
+            currentUser.CompanyId!,
+            currentUser.Member!.Id,
+            currentUser.Member.Role.Name,
+            isArchived);
 
         return TypedResults.Ok(projects);
     }

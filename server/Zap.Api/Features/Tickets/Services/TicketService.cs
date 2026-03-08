@@ -58,172 +58,37 @@ public class TicketService : ITicketService
 
     public async Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId)
     {
-        return await _db.Tickets
+        return await ProjectBasicTickets(_db.Tickets
             .Where(t => t.AssigneeId == memberId || t.SubmitterId == memberId)
-            .Select(t => new BasicTicketDto(
-                t.Id,
-                t.Name,
-                t.Description,
-                t.Priority.Name,
-                t.Status.Name,
-                t.Type.Name,
-                t.ProjectId,
-                t.Project.ProjectManagerId,
-                t.IsArchived,
-                t.Project.IsArchived,
-                t.CreatedAt,
-                t.UpdatedAt,
-                new MemberInfoDto(
-                    t.Submitter.Id,
-                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
-                    t.Submitter.User.AvatarUrl,
-                    t.Submitter.Role.Name),
-                t.Assignee == null
-                    ? null
-                    : new MemberInfoDto(
-                        t.Assignee.Id,
-                        $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
-                        t.Assignee.User.AvatarUrl,
-                        t.Assignee.Role.Name)
-            ))
+            )
             .ToListAsync();
     }
 
-    public async Task<List<BasicTicketDto>> GetOpenTicketsAsync(string companyId)
+    public async Task<List<BasicTicketDto>> GetOpenTicketsAsync(string memberId, string roleName, string companyId)
     {
-        return await _db.Tickets
-            .Where(t => t.Project.CompanyId == companyId &&
-                        !t.IsArchived &&
-                        !t.Project.IsArchived &&
-                        t.Status.Name != TicketStatuses.Resolved)
-            .Select(t => new BasicTicketDto(
-                t.Id,
-                t.Name,
-                t.Description,
-                t.Priority.Name,
-                t.Status.Name,
-                t.Type.Name,
-                t.ProjectId,
-                t.Project.ProjectManagerId,
-                t.IsArchived,
-                t.Project.IsArchived,
-                t.CreatedAt,
-                t.UpdatedAt,
-                new MemberInfoDto(
-                    t.Submitter.Id,
-                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
-                    t.Submitter.User.AvatarUrl,
-                    t.Submitter.Role.Name),
-                t.Assignee == null
-                    ? null
-                    : new MemberInfoDto(
-                        t.Assignee.Id,
-                        $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
-                        t.Assignee.User.AvatarUrl,
-                        t.Assignee.Role.Name)
-            ))
+        return await ProjectBasicTickets(GetVisibleTicketsQuery(memberId, roleName, companyId)
+            .Where(t => !t.IsArchived && !t.Project.IsArchived && t.Status.Name != TicketStatuses.Resolved))
             .ToListAsync();
     }
 
-    public async Task<List<BasicTicketDto>> GetArchivedTicketsAsync(string companyId)
+    public async Task<List<BasicTicketDto>> GetArchivedTicketsAsync(string memberId, string roleName, string companyId)
     {
-        return await _db.Tickets
-            .Where(t => t.Project.CompanyId == companyId && t.IsArchived)
-            .Select(t => new BasicTicketDto(
-                t.Id,
-                t.Name,
-                t.Description,
-                t.Priority.Name,
-                t.Status.Name,
-                t.Type.Name,
-                t.ProjectId,
-                t.Project.ProjectManagerId,
-                t.IsArchived,
-                t.Project.IsArchived,
-                t.CreatedAt,
-                t.UpdatedAt,
-                new MemberInfoDto(
-                    t.Submitter.Id,
-                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
-                    t.Submitter.User.AvatarUrl,
-                    t.Submitter.Role.Name),
-                t.Assignee == null
-                    ? null
-                    : new MemberInfoDto(
-                        t.Assignee.Id,
-                        $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
-                        t.Assignee.User.AvatarUrl,
-                        t.Assignee.Role.Name)
-            ))
+        return await ProjectBasicTickets(GetVisibleTicketsQuery(memberId, roleName, companyId)
+            .Where(t => t.IsArchived))
             .ToListAsync();
     }
 
-    public async Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string companyId)
+    public async Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string memberId, string roleName, string companyId)
     {
-        return await _db.Tickets
-            .Where(t => t.Project.CompanyId == companyId &&
-                        !t.IsArchived &&
-                        !t.Project.IsArchived &&
-                        t.Status.Name == TicketStatuses.Resolved)
-            .Select(t => new BasicTicketDto(
-                t.Id,
-                t.Name,
-                t.Description,
-                t.Priority.Name,
-                t.Status.Name,
-                t.Type.Name,
-                t.ProjectId,
-                t.Project.ProjectManagerId,
-                t.IsArchived,
-                t.Project.IsArchived,
-                t.CreatedAt,
-                t.UpdatedAt,
-                new MemberInfoDto(
-                    t.Submitter.Id,
-                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
-                    t.Submitter.User.AvatarUrl,
-                    t.Submitter.Role.Name),
-                t.Assignee == null
-                    ? null
-                    : new MemberInfoDto(
-                        t.Assignee.Id,
-                        $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
-                        t.Assignee.User.AvatarUrl,
-                        t.Assignee.Role.Name)
-            ))
+        return await ProjectBasicTickets(GetVisibleTicketsQuery(memberId, roleName, companyId)
+            .Where(t => !t.IsArchived && !t.Project.IsArchived && t.Status.Name == TicketStatuses.Resolved))
             .ToListAsync();
     }
 
     public async Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId)
     {
-        return await _db.Tickets
-            .Where(t => t.Id == ticketId)
-            .Select(t => new BasicTicketDto(
-                t.Id,
-                t.Name,
-                t.Description,
-                t.Priority.Name,
-                t.Status.Name,
-                t.Type.Name,
-                t.ProjectId,
-                t.Project.ProjectManagerId,
-                t.IsArchived,
-                t.Project.IsArchived,
-                t.CreatedAt,
-                t.UpdatedAt,
-                new MemberInfoDto(
-                    t.Submitter.Id,
-                    $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
-                    t.Submitter.User.AvatarUrl,
-                    t.Submitter.Role.Name),
-                t.Assignee == null
-                    ? null
-                    : new MemberInfoDto(
-                        t.Assignee.Id,
-                        $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
-                        t.Assignee.User.AvatarUrl,
-                        t.Assignee.Role.Name)
-            ))
+        return await ProjectBasicTickets(_db.Tickets
+            .Where(t => t.Id == ticketId))
             .FirstOrDefaultAsync();
     }
 
@@ -580,5 +445,50 @@ public class TicketService : ITicketService
         }
 
         return rowsChanged > 0;
+    }
+
+    private IQueryable<Ticket> GetVisibleTicketsQuery(string memberId, string roleName, string companyId)
+    {
+        var query = _db.Tickets.Where(t => t.Project.CompanyId == companyId);
+
+        return roleName switch
+        {
+            RoleNames.Admin => query,
+            RoleNames.ProjectManager => query.Where(t => t.Project.ProjectManagerId == memberId),
+            RoleNames.Developer => query.Where(t => t.Project.AssignedMembers.Any(m => m.Id == memberId)),
+            RoleNames.Submitter => query.Where(t =>
+                t.Project.AssignedMembers.Any(m => m.Id == memberId) || t.SubmitterId == memberId),
+            _ => query.Where(_ => false)
+        };
+    }
+
+    private static IQueryable<BasicTicketDto> ProjectBasicTickets(IQueryable<Ticket> query)
+    {
+        return query.Select(t => new BasicTicketDto(
+            t.Id,
+            t.Name,
+            t.Description,
+            t.Priority.Name,
+            t.Status.Name,
+            t.Type.Name,
+            t.ProjectId,
+            t.Project.ProjectManagerId,
+            t.IsArchived,
+            t.Project.IsArchived,
+            t.CreatedAt,
+            t.UpdatedAt,
+            new MemberInfoDto(
+                t.Submitter.Id,
+                $"{t.Submitter.User.FirstName} {t.Submitter.User.LastName}",
+                t.Submitter.User.AvatarUrl,
+                t.Submitter.Role.Name),
+            t.Assignee == null
+                ? null
+                : new MemberInfoDto(
+                    t.Assignee.Id,
+                    $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
+                    t.Assignee.User.AvatarUrl,
+                    t.Assignee.Role.Name)
+        ));
     }
 }

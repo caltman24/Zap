@@ -17,7 +17,7 @@ public class UpdateStatus : IEndpoint
     {
         app.MapPut("/{ticketId}/status", Handle)
             .WithName("UpdateTicketStatus")
-            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Developer, RoleNames.Submitter)
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Developer)
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
@@ -27,9 +27,13 @@ public class UpdateStatus : IEndpoint
         [FromRoute] string ticketId,
         Request request,
         ITicketService ticketService,
-        CurrentUser currentUser
+        CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
+        if (!await ticketAuthorizationService.CanUpdateStatusAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         var success = await ticketService.UpdateStatusAsync(ticketId, request.Status, currentUser.Member!.Id);
         if (!success) return TypedResults.Problem();
 

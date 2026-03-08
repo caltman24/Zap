@@ -17,7 +17,7 @@ public class UpdateType : IEndpoint
     {
         app.MapPut("/{ticketId}/type", Handle)
             .WithName("UpdateTicketType")
-            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketCompanyValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
@@ -27,9 +27,13 @@ public class UpdateType : IEndpoint
         [FromRoute] string ticketId,
         Request request,
         ITicketService ticketService,
-        CurrentUser currentUser
+        CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService
     )
     {
+        if (!await ticketAuthorizationService.CanUpdateTypeAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         var success = await ticketService.UpdateTypeAsync(ticketId, request.Type, currentUser.Member!.Id);
         if (!success) return TypedResults.Problem();
 

@@ -16,7 +16,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const intent = formData.get("intent") as "archive" | "unarchive";
     const projectId = formData.get("projectId") as string
 
-    if (!validateRole(userRole, permissions.project.edit)) {
+    if (!validateRole(userRole, permissions.ticket.archive)) {
         return ForbiddenResponse()
     }
 

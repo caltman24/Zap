@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Authorization;
-using Zap.Api.Common.Constants;
 using Zap.Api.Data;
 using Zap.Api.Features.Tickets.Services;
 
@@ -21,7 +20,10 @@ internal static class TicketFiltersExtensions
         return builder.AddEndpointFilter<TicketCompanyValidationFilter>();
     }
 
-    private class TicketCompanyValidationFilter(AppDbContext db, CurrentUser currentUser, ITicketService ticketService)
+    private class TicketCompanyValidationFilter(
+        AppDbContext db,
+        CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService)
         : IEndpointFilter
     {
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
@@ -29,27 +31,11 @@ internal static class TicketFiltersExtensions
         {
             var ticketId = context.GetArgument<string>(0);
 
-            var ticketCompanyId = await db.Tickets
-                .Where(t => t.Id == ticketId)
-                .Select(t => t.Project.CompanyId)
-                .FirstOrDefaultAsync();
+            var exists = await db.Tickets.AnyAsync(t => t.Id == ticketId);
+            if (!exists) return TypedResults.NotFound();
 
-            if (ticketCompanyId == null) return TypedResults.NotFound();
-
-
-            if (ticketCompanyId != currentUser.Member!.CompanyId) return TypedResults.Forbid();
-
-
-            var validMember = currentUser.Member!.Role.Name switch
-            {
-                RoleNames.Admin => true,
-                RoleNames.ProjectManager =>
-                    await ticketService.ValidateProjectManagerAsync(ticketId, currentUser.Member!.Id),
-                _ =>
-                    await ticketService.ValidateAssignedMemberAsync(ticketId, currentUser.Member!.Id)
-            };
-
-            if (!validMember) return TypedResults.Forbid();
+            if (!await ticketAuthorizationService.CanReadTicketAsync(ticketId, currentUser))
+                return TypedResults.Forbid();
 
             return await next(context);
         }

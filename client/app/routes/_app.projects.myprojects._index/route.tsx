@@ -5,7 +5,7 @@ import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server";
-import { ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
+import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import getMyProjects from "./server.get-myprojects";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
@@ -13,7 +13,7 @@ import { validateRole } from "~/utils/validate";
 import permissions from "~/data/permissions";
 
 export const handle = {
-    breadcrumb: () => <Link to="/myprojects">My Projects</Link>,
+    breadcrumb: () => <Link to="/projects/myprojects">My Projects</Link>,
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -57,12 +57,18 @@ export default function MyProjectsRoute() {
     const { data, error } = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
     return (
         <RouteLayout>
-            <h1 className="text-3xl font-bold mb-6">My Projects</h1>
+            <div className="mb-6">
+                <h1 className="text-3xl font-bold">My Projects</h1>
+                <p className="text-base-content/65 mt-1">Projects you are assigned to and can actively work in.</p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data?.map((project, index) => (
                     <ProjectCard key={index} project={project} collection="myprojects" />
                 ))}
+                {!data?.length && (
+                    <p className="text-base-content/60">You do not have any assigned projects yet.</p>
+                )}
             </div>
         </RouteLayout>
     );

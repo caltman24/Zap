@@ -19,7 +19,10 @@ public class GetArchivedTickets : IEndpoint
         CurrentUser currentUser
     )
     {
-        var tickets = await ticketService.GetArchivedTicketsAsync(currentUser.CompanyId!);
+        var tickets = await ticketService.GetArchivedTicketsAsync(
+            currentUser.Member!.Id,
+            currentUser.Member.Role.Name,
+            currentUser.CompanyId!);
 
         return TypedResults.Ok(tickets);
     }

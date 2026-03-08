@@ -66,6 +66,22 @@ public class CompaniesTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task Get_Company_Info_As_Developer_Returns_Forbidden()
+    {
+        var userId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
+        Assert.NotNull(user);
+
+        await CreateTestCompany(_db, userId, user, role: RoleNames.Developer);
+        var client = _app.CreateClient(userId, RoleNames.Developer);
+
+        var res = await client.GetAsync("/company/info");
+
+        Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
+    }
+
+    [Fact]
     public async Task Get_Company_Info_Unauthorized_Returns_401_Unauthorized()
     {
         var client = _app.CreateClient();
@@ -214,6 +230,123 @@ public class CompaniesTests : IAsyncDisposable
         Assert.NotNull(res);
         Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
         Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId2 && !x.IsArchived));
+    }
+
+    [Fact]
+    public async Task Get_Company_Projects_As_Developer_Returns_Assigned_Projects_Only()
+    {
+        var adminUserId = Guid.NewGuid().ToString();
+        var developerUserId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(adminUserId);
+        await _app.CreateUserAsync(developerUserId);
+
+        var adminUser = await _db.Users.FindAsync(adminUserId);
+        Assert.NotNull(adminUser);
+
+        var companyId = Guid.NewGuid().ToString();
+        var assignedProjectId = Guid.NewGuid().ToString();
+        var hiddenProjectId = Guid.NewGuid().ToString();
+
+        await CreateTestCompany(_db, adminUserId, adminUser, [
+            new Project
+            {
+                Id = assignedProjectId,
+                Name = "Assigned Project",
+                Description = "Assigned Project",
+                Priority = "Urgent",
+                CompanyId = companyId,
+                DueDate = DateTime.Now.AddDays(1),
+                IsArchived = false
+            },
+            new Project
+            {
+                Id = hiddenProjectId,
+                Name = "Hidden Project",
+                Description = "Hidden Project",
+                Priority = "Urgent",
+                CompanyId = companyId,
+                DueDate = DateTime.Now.AddDays(1),
+                IsArchived = false
+            }
+        ], companyId);
+
+        var developerMember = new CompanyMember
+        {
+            UserId = developerUserId,
+            CompanyId = companyId,
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Developer).Select(r => r.Id).FirstAsync()
+        };
+
+        var assignedProject = await _db.Projects.FirstAsync(p => p.Id == assignedProjectId);
+        developerMember.AssignedProjects.Add(assignedProject);
+        _db.CompanyMembers.Add(developerMember);
+        await _db.SaveChangesAsync();
+
+        var client = _app.CreateClient(developerUserId, RoleNames.Developer);
+        var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>("/company/projects?isArchived=false");
+
+        Assert.NotNull(res);
+        Assert.Single(res);
+        Assert.Equal(assignedProjectId, res[0].Id);
+    }
+
+    [Fact]
+    public async Task Get_Project_As_Developer_Outside_Project_Returns_Forbidden()
+    {
+        var adminUserId = Guid.NewGuid().ToString();
+        var developerUserId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(adminUserId);
+        await _app.CreateUserAsync(developerUserId);
+
+        var adminUser = await _db.Users.FindAsync(adminUserId);
+        Assert.NotNull(adminUser);
+
+        var companyId = Guid.NewGuid().ToString();
+        var visibleProjectId = Guid.NewGuid().ToString();
+        var hiddenProjectId = Guid.NewGuid().ToString();
+
+        await CreateTestCompany(_db, adminUserId, adminUser, [
+            new Project
+            {
+                Id = visibleProjectId,
+                Name = "Visible Project",
+                Description = "Visible Project",
+                Priority = "Urgent",
+                CompanyId = companyId,
+                DueDate = DateTime.Now.AddDays(1),
+                IsArchived = false
+            },
+            new Project
+            {
+                Id = hiddenProjectId,
+                Name = "Hidden Project",
+                Description = "Hidden Project",
+                Priority = "Urgent",
+                CompanyId = companyId,
+                DueDate = DateTime.Now.AddDays(1),
+                IsArchived = false
+            }
+        ], companyId);
+
+        var developerMember = new CompanyMember
+        {
+            UserId = developerUserId,
+            CompanyId = companyId,
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Developer).Select(r => r.Id).FirstAsync()
+        };
+
+        var visibleProject = await _db.Projects.FirstAsync(p => p.Id == visibleProjectId);
+        developerMember.AssignedProjects.Add(visibleProject);
+        _db.CompanyMembers.Add(developerMember);
+        await _db.SaveChangesAsync();
+
+        var client = _app.CreateClient(developerUserId, RoleNames.Developer);
+
+        var visibleResponse = await client.GetAsync($"/projects/{visibleProjectId}");
+        var hiddenResponse = await client.GetAsync($"/projects/{hiddenProjectId}");
+
+        Assert.Equal(HttpStatusCode.OK, visibleResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, hiddenResponse.StatusCode);
     }
 
     [Fact]

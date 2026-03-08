@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Data;
+using Zap.Api.Features.Projects.Services;
 
 namespace Zap.Api.Features.Projects.Filters;
 
@@ -19,7 +20,10 @@ internal static class ProjectFiltersExtensions
         return builder.AddEndpointFilter<ProjectCompanyValidationFilter>();
     }
 
-    private class ProjectCompanyValidationFilter(AppDbContext db, CurrentUser currentUser)
+    private class ProjectCompanyValidationFilter(
+        AppDbContext db,
+        CurrentUser currentUser,
+        IProjectAuthorizationService projectAuthorizationService)
         : IEndpointFilter
     {
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
@@ -27,15 +31,11 @@ internal static class ProjectFiltersExtensions
         {
             var projectId = context.GetArgument<string>(0);
 
-            var projectCompanyId = await db.Projects
-                .Where(p => p.Id == projectId)
-                .Select(p => p.CompanyId)
-                .FirstOrDefaultAsync();
+            var exists = await db.Projects.AnyAsync(p => p.Id == projectId);
+            if (!exists) return TypedResults.NotFound();
 
-            if (projectCompanyId == null) return TypedResults.NotFound();
-
-            if (projectCompanyId != currentUser.Member!.CompanyId) return TypedResults.Forbid();
-
+            if (!await projectAuthorizationService.CanReadProjectAsync(projectId, currentUser))
+                return TypedResults.Forbid();
 
             return await next(context);
         }
