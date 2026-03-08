@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
@@ -34,14 +34,14 @@
         <None Update="test-image.jpg">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Include="bin\Debug\net9.0\test-image.jpg"/>
+        <None Include="bin\Debug\net10.0\test-image.jpg"/>
     </ItemGroup>
 
     <ItemGroup>
         <None Update=".env">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Include="bin\Debug\net9.0\.env"/>
+        <None Include="bin\Debug\net10.0\.env"/>
     </ItemGroup>
 
 

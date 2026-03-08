@@ -1,6 +1,7 @@
 ﻿using Zap.Api.Common;
 using Zap.Api.Features.Authentication.Endpoints;
 using Zap.Api.Features.Companies.Endpoints;
+using Zap.Api.Features.Demo.Endpoints;
 using Zap.Api.Features.Members.Endpoints;
 using Zap.Api.Features.Projects.Endpoints;
 using Zap.Api.Features.Tickets;
@@ -15,6 +16,7 @@ public static class Endpoints
         app.MapAuthenticationEndpoints(app.Environment);
 
         app.MapCompaniesEndpoints(app.Environment)
+            .MapDemoEndpoints()
             .MapProjectsEndpoints()
             .MapTicketsEndpoints()
             .MapMembersEndpoints()
@@ -31,7 +33,19 @@ public static class Endpoints
 
         publicGroup.MapEndpoint<RegisterUser>()
             .MapEndpoint<SignInUser>()
+            .MapEndpoint<SignInDemoUser>()
             .MapEndpoint<RefreshTokens>();
+
+        return app;
+    }
+
+    private static IEndpointRouteBuilder MapDemoEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/demo")
+            .AllowAnonymous()
+            .WithTags("Demo");
+
+        group.MapEndpoint<ResetDemoEnvironment>();
 
         return app;
     }

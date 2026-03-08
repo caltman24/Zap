@@ -47,6 +47,7 @@ public sealed class ProjectService : IProjectService
                     t.Status.Name,
                     t.Type.Name,
                     t.ProjectId,
+                    p.ProjectManagerId,
                     t.IsArchived,
                     p.IsArchived,
                     p.CreatedAt,

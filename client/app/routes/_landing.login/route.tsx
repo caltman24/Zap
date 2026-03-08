@@ -19,7 +19,19 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (intent?.toString().startsWith("demo:")) {
-        return await DemoUserLoginHandler()
+        const roleMap = {
+            "demo:admin": "admin",
+            "demo:pm": "projectManager",
+            "demo:dev": "developer",
+            "demo:submitter": "submitter"
+        } as const;
+
+        const role = roleMap[intent.toString() as keyof typeof roleMap];
+        if (!role) {
+            return Response.json({ message: "Invalid demo role selected." }, { status: 400 });
+        }
+
+        return await DemoUserLoginHandler(request, role)
     }
 }
 

@@ -11,6 +11,7 @@ using Zap.Api.Common.Authorization;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
+using Zap.Api.Features.Demo.Services;
 using Zap.Api.Features.FileUpload.Configuration;
 using Zap.Api.Features.FileUpload.Services;
 using Zap.Api.Features.Projects.Services;
@@ -45,6 +46,7 @@ public static class ConfigureServices
 
 
         services.AddScoped<ICompanyService, CompanyService>();
+        services.AddScoped<IDemoEnvironmentService, DemoEnvironmentService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketHistoryService, TicketHistoryService>();

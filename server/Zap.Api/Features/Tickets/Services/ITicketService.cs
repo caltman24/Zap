@@ -44,6 +44,7 @@ public record BasicTicketDto(
     string Status,
     string Type,
     string ProjectId,
+    string? ProjectManagerId,
     bool isArchived,
     bool ProjectIsArchived,
     DateTime CreatedAt,

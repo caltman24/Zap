@@ -10,6 +10,7 @@ public class AppUser : IdentityUser
     [StringLength(50)] public required string LastName { get; set; }
     [StringLength(500)] public string AvatarUrl { get; set; } = "https://gravatar.com/avatar/HASH?d=mp";
     [StringLength(500)] public string? AvatarKey { get; set; } = null!;
+    public bool IsDemo { get; set; }
 
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
 

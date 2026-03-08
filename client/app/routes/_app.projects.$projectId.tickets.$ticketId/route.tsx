@@ -1,14 +1,14 @@
 
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigation, useOutletContext, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
-import apiClient from "~/services/api.server/apiClient"; import { AuthenticationError } from "~/services/api.server/errors";
+import apiClient from "~/services/api.server/apiClient"; import { ApiError, AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server"; import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { getTicketById } from "./server.get-ticket";
 import BackButton from "~/components/BackButton";
 import { useEffect, useRef, useState } from "react";
 import DeveloperListModal from "./DeveloperListModal";
-import { BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
+import { BasicTicketInfo, BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
 import { useEditMode } from "~/utils/editMode";
 import { EditModeForm } from "~/components/EditModeForm";
 import { validateRole } from "~/utils/validate";
@@ -61,6 +61,19 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         if (error instanceof AuthenticationError) {
             return redirect("/logout");
         }
+        if (error instanceof ApiError) {
+            const message = error.status === 403
+                ? "You do not have permission to view this ticket."
+                : error.status === 404
+                    ? "Ticket not found."
+                    : error.message;
+
+            return JsonResponse({
+                data: null,
+                error: message,
+                headers: tokenResponse.headers
+            });
+        }
         return JsonResponse({
             data: null,
             error: error.message, headers: tokenResponse.headers
@@ -69,7 +82,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function TicketDetailsRoute() {
-    const { data: ticket, error } = useLoaderData<JsonResponseResult<any>>();
+    const { data: ticket, error } = useLoaderData<JsonResponseResult<BasicTicketInfo>>();
     const { ticketId } = useParams();
     const actionData = useActionData() as ActionResponseParams
     const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
@@ -200,14 +213,19 @@ export default function TicketDetailsRoute() {
         toggleEditMode();
     };
 
+    if (error) {
+        return <p className="text-error">{error}</p>;
+    }
+
+    if (!ticket) {
+        return <p className="text-error">Ticket details could not be loaded.</p>;
+    }
+
     const handleArchiveClick = (e: React.FormEvent) => {
-        // If trying to unarchive a ticket and the project is archived, show warning
         if (ticket.isArchived && ticket.projectIsArchived) {
             e.preventDefault();
             setShowArchiveWarning(true);
-            return;
         }
-        // Otherwise, allow the form to submit normally
     };
 
     // Calculate permission context
@@ -241,10 +259,6 @@ export default function TicketDetailsRoute() {
     };
 
     // TODO: Add confirm modal on delete
-
-    if (error) {
-        return <p className="text-error">{error}</p>;
-    }
 
     const TicketDetails = (
         <>
@@ -313,7 +327,7 @@ export default function TicketDetailsRoute() {
             <DeveloperListModal
                 modalRef={developersModalRef}
                 members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
-                currentMember={ticket.assignee}
+                currentMember={ticket.assignee ?? undefined}
                 actionFetcher={assignDeveloperFetcher}
                 actionFetcherSubmit={(formData) => {
                     assignDeveloperFetcher.submit(formData, {
@@ -763,5 +777,3 @@ export async function action({ request, params }: ActionFunctionArgs) {
         error: null,
     });
 }
-
-

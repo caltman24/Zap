@@ -23,6 +23,16 @@ export class AuthClient extends BaseApiClient {
     return fetch(`${this.baseUrl}/auth/signin-test`, { method: "POST" });
   }
 
+  public async signInDemoUser(
+    role: "admin" | "projectManager" | "developer" | "submitter"
+  ): Promise<Response> {
+    return fetch(`${this.baseUrl}/auth/signin-demo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+  }
+
   public async registerAccount(data: RegisterUserRequest): Promise<Response> {
     return fetch(`${this.baseUrl}/auth/register`, {
       method: "POST",

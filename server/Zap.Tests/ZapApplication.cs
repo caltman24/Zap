@@ -1,10 +1,18 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using dotenv.net;
+using Microsoft.Extensions.Configuration;
 
 namespace Zap.Tests;
 
 public class ZapApplication : WebApplicationFactory<Program>
 {
+    private readonly Dictionary<string, string?> _configurationOverrides;
+
+    public ZapApplication(Dictionary<string, string?>? configurationOverrides = null)
+    {
+        _configurationOverrides = configurationOverrides ?? new Dictionary<string, string?>();
+    }
+
     public AppDbContext CreateAppDbContext()
     {
         var db = Services.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
@@ -37,6 +45,11 @@ public class ZapApplication : WebApplicationFactory<Program>
         Assert.True(result.Succeeded);
     }
 
+    public new HttpClient CreateClient()
+    {
+        return base.CreateClient();
+    }
+
     public HttpClient CreateClient(string id, string role = RoleNames.Admin)
     {
         return CreateDefaultClient(new AuthHandler(Services, id, role));
@@ -45,6 +58,11 @@ public class ZapApplication : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        if (_configurationOverrides.Count > 0)
+        {
+            builder.ConfigureAppConfiguration((_, config) => { config.AddInMemoryCollection(_configurationOverrides); });
+        }
 
         base.ConfigureWebHost(builder);
     }

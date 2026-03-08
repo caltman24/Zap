@@ -6,6 +6,7 @@ public class Company : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     [StringLength(75)] public required string Name { get; set; }
+    public bool IsDemo { get; set; }
 
     [StringLength(1000)] public required string Description { get; set; }
 
