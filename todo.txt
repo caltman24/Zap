@@ -39,6 +39,12 @@ Goal: turn Zap into a polished, portfolio-quality internal business app that fee
 
 === SHOULD HAVE ===
 
+- [] API should tell the client what permissions the user has rather than 
+     the client figuring it out and hardcoded based off the user data. If the
+     api makes a change to permissions, that will automatically be reflected on
+     the client rather than making the permission changes on both client and
+     server. API is the source of truth
+
 - [ ] Finish the ticket audit/history system
   - Track comment create/edit/delete
   - Track attachment upload/delete
