@@ -19,3 +19,49 @@ Use this file as project-specific implementation context.
 
 - Prefer existing patterns over introducing new abstractions.
 - Keep changes aligned with the current system design.
+
+Make small, reviewable changes only.
+
+Follow these constraints strictly:
+
+1. LIMIT FILE CHANGES
+Do not modify more than 5–8 files in a single implementation step.
+
+If a change requires more files, split the work into multiple steps and stop after the first step.
+
+2. ONE CONCERN PER STEP
+Each implementation step should solve only one concern.
+
+Examples:
+- update server authorization
+- update database query filtering
+- update API endpoint behavior
+- update client UI
+- add tests
+
+Do not combine multiple concerns in a single change.
+
+3. DO NOT TOUCH UNRELATED CODE
+Only modify files directly required for the change.
+Do not refactor, rename, or reorganize unrelated files.
+
+4. FOLLOW EXISTING ARCHITECTURE
+Reuse existing patterns, services, helpers, and structure.
+Do not introduce new patterns unless explicitly instructed.
+
+5. AVOID DUPLICATED LOGIC
+Before adding new logic, search the repository for similar functionality and reuse existing code when possible.
+
+6. NO LARGE REFACTORING
+Do not perform sweeping refactors while implementing features.
+If refactoring is needed, propose it separately.
+
+7. STOP AFTER IMPLEMENTATION
+After completing the implementation step, stop and summarize:
+- files changed
+- what logic was introduced
+- potential follow-up steps
+
+Do not automatically proceed to additional steps unless asked.
+
+Your priority is safe, incremental changes that are easy to review.
