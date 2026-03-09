@@ -89,6 +89,8 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
         };
     }
 
+
+    // HACK: These are coupled to the above permissions checks since they follow same permissions. 
     public async Task<bool> CanUpdateTypeAsync(string ticketId, CurrentUser currentUser)
     {
         return await CanUpdatePriorityAsync(ticketId, currentUser);

@@ -5,6 +5,10 @@ using Zap.Api.Data;
 
 namespace Zap.Api.Features.Projects.Services;
 
+/// <summary>
+///     Evaluates project read access for company members using role-based rules and project
+///     assignment relationships.
+/// </summary>
 public sealed class ProjectAuthorizationService(AppDbContext db) : IProjectAuthorizationService
 {
     public async Task<bool> CanReadProjectAsync(string projectId, CurrentUser currentUser)
