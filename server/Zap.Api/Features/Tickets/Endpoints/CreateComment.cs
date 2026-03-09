@@ -15,7 +15,7 @@ public class CreateComment : IEndpoint
     {
         app.MapPost("/{ticketId}/comments", Handle)
             .WithCompanyMember()
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }

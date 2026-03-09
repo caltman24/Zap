@@ -14,7 +14,7 @@ public class GetProject : IEndpoint
         app.MapGet("/{projectId}", Handle)
             .WithName("GetProject")
             .WithCompanyMember()
-            .WithProjectCompanyValidation();
+            .WithProjectAccessValidation();
     }
 
     private static async Task<Results<NotFound<string>, Ok<ProjectDto>>> Handle(

@@ -15,7 +15,7 @@ public class UpdateAssignee : IEndpoint
         app.MapPut("/{ticketId}/developer", Handle)
             .WithName("UpdateDeveloper")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation();
     }
 

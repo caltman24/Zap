@@ -15,7 +15,7 @@ public class GetDeveloperList : IEndpoint
     {
         app.MapGet("/{ticketId}/developer-list", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithTicketCompanyValidation();
+            .WithTicketAccessValidation();
     }
 
     private static async Task<Results<ForbidHttpResult, Ok<List<MemberInfoDto>>>> Handle(

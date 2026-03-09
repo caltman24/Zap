@@ -20,7 +20,7 @@ public class UpdateTicket : IEndpoint
         app.MapPut("/{ticketId}", Handle)
             .WithName("UpdateTicket")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Submitter)
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithRequestValidation<Request>();
     }
 

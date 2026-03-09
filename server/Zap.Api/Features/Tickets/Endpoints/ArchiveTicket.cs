@@ -16,7 +16,7 @@ public class ArchiveTicket : IEndpoint
     {
         app.MapPut("/{ticketId}/archive", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithTicketCompanyValidation();
+            .WithTicketAccessValidation();
     }
 
 

@@ -15,7 +15,7 @@ public class UpdateComment : IEndpoint
     {
         app.MapPut("/{ticketId}/comments/{commentId}", Handle)
             .WithCompanyMember()
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }

@@ -18,7 +18,7 @@ public class UpdateType : IEndpoint
         app.MapPut("/{ticketId}/type", Handle)
             .WithName("UpdateTicketType")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }

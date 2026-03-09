@@ -14,7 +14,7 @@ public class ArchiveProject : IEndpoint
     {
         app.MapPut("/{projectId}/archive", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithProjectCompanyValidation();
+            .WithProjectAccessValidation();
     }
 
     private static async Task<Results<NotFound<string>, ForbidHttpResult, NoContent>> Handle(string projectId,

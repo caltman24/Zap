@@ -18,7 +18,7 @@ public class UpdateStatus : IEndpoint
         app.MapPut("/{ticketId}/status", Handle)
             .WithName("UpdateTicketStatus")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Developer)
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }

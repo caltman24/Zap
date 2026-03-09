@@ -15,12 +15,12 @@ internal static class TicketFiltersExtensions
     ///     <see cref="TypedResults.Forbid" /> if the user is not authorized,
     ///     or the result of <paramref name="next" /> if neither condition is met.
     /// </returns>
-    internal static RouteHandlerBuilder WithTicketCompanyValidation(this RouteHandlerBuilder builder)
+    internal static RouteHandlerBuilder WithTicketAccessValidation(this RouteHandlerBuilder builder)
     {
-        return builder.AddEndpointFilter<TicketCompanyValidationFilter>();
+        return builder.AddEndpointFilter<TicketAccessValidationFilter>();
     }
 
-    private class TicketCompanyValidationFilter(
+    private class TicketAccessValidationFilter(
         AppDbContext db,
         CurrentUser currentUser,
         ITicketAuthorizationService ticketAuthorizationService)

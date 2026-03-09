@@ -13,7 +13,7 @@ public class DeleteComment : IEndpoint
     {
         app.MapDelete("/{ticketId}/comments/{commentId}", Handle)
             .WithCompanyMember()
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation();
     }
 

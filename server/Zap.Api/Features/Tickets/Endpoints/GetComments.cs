@@ -13,7 +13,7 @@ public class GetComments : IEndpoint
     {
         app.MapGet("/{ticketId}/comments", Handle)
             .WithCompanyMember()
-            .WithTicketCompanyValidation();
+            .WithTicketAccessValidation();
     }
 
     private static async Task<Ok<List<CommentDto>>> Handle(

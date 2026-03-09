@@ -14,7 +14,7 @@ public class GetTicketHistoryPaginated : IEndpoint
         app.MapGet("/{ticketId}/history-pag", Handle)
             .WithName("GetTicketHistoryPaginated")
             .WithCompanyMember()
-            .WithTicketCompanyValidation();
+            .WithTicketAccessValidation();
     }
 
     private static async Task<Ok<PaginatedResponse<TicketHistoryDto>>> Handle(

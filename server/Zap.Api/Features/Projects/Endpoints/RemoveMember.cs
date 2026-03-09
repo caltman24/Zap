@@ -14,7 +14,7 @@ public class RemoveMember : IEndpoint
     {
         app.MapDelete("/{memberId}", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithProjectCompanyValidation()
+            .WithProjectAccessValidation()
             .WithProjectArchiveValidation();
     }
 

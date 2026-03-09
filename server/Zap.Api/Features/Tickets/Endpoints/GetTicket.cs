@@ -14,7 +14,7 @@ public class GetTicket : IEndpoint
         app.MapGet("/{ticketId}", Handle)
             .WithName("GetTicket")
             .WithCompanyMember()
-            .WithTicketCompanyValidation();
+            .WithTicketAccessValidation();
     }
 
     private static async Task<Results<NotFound, Ok<BasicTicketDto>>> Handle(

@@ -18,7 +18,7 @@ public class UpdateProject : IEndpoint
         app.MapPut("/{projectId}", Handle)
             .Accepts<Request>("application/json")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithProjectCompanyValidation();
+            .WithProjectAccessValidation();
     }
 
     private static async Task<Results<NoContent, ForbidHttpResult, NotFound<string>, BadRequest<string>>> Handle(

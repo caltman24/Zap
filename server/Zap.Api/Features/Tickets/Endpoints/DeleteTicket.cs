@@ -17,7 +17,7 @@ public class DeleteTicket : IEndpoint
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             // This endpoint filter checks the ticketId parm, to validate if the requesting user is in the same company
             // as the ticket. Only works on endpoints with exisiting ticket id
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation();
     }
 

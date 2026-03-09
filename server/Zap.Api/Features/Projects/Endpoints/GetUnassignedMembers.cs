@@ -15,7 +15,7 @@ public class GetUnassignedCompanyMembers : IEndpoint
     {
         app.MapGet("/unassigned", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithProjectCompanyValidation();
+            .WithProjectAccessValidation();
     }
 
     public static async Task<Results<

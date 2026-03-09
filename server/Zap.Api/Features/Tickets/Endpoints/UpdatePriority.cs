@@ -18,7 +18,7 @@ public class UpdatePriority : IEndpoint
         app.MapPut("/{ticketId}/priority", Handle)
             .WithName("UpdateTicketPriority")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
-            .WithTicketCompanyValidation()
+            .WithTicketAccessValidation()
             .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }

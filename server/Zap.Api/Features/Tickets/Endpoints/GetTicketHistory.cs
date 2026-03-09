@@ -14,7 +14,7 @@ public class GetTicketHistory : IEndpoint
         app.MapGet("/{ticketId}/history", Handle)
             .WithName("GetTicketHistory")
             .WithCompanyMember()
-            .WithTicketCompanyValidation();
+            .WithTicketAccessValidation();
     }
 
     private static async Task<Ok<List<TicketHistoryDto>>> Handle(
