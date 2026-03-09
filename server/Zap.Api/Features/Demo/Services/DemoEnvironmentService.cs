@@ -90,7 +90,7 @@ public sealed class DemoEnvironmentService(
             .Select(u => u.Id)
             .ToListAsync();
 
-        if (!demoCompanyIds.Any() && !demoUserIds.Any()) return;
+        if (demoCompanyIds.Count == 0 && demoUserIds.Count == 0) return;
 
         var projectIds = await db.Projects
             .Where(p => demoCompanyIds.Contains(p.CompanyId))
@@ -102,7 +102,7 @@ public sealed class DemoEnvironmentService(
             .Select(t => t.Id)
             .ToListAsync();
 
-        if (ticketIds.Any())
+        if (ticketIds.Count != 0)
         {
             db.TicketComments.RemoveRange(await db.TicketComments.Where(c => ticketIds.Contains(c.TicketId)).ToListAsync());
             db.TicketAttachments.RemoveRange(await db.TicketAttachments.Where(a => ticketIds.Contains(a.TicketId)).ToListAsync());
@@ -110,7 +110,7 @@ public sealed class DemoEnvironmentService(
             db.Tickets.RemoveRange(await db.Tickets.Where(t => ticketIds.Contains(t.Id)).ToListAsync());
         }
 
-        if (projectIds.Any())
+        if (projectIds.Count != 0)
         {
             var projects = await db.Projects
                 .Include(p => p.AssignedMembers)
@@ -122,7 +122,7 @@ public sealed class DemoEnvironmentService(
             db.Projects.RemoveRange(projects);
         }
 
-        if (demoCompanyIds.Any())
+        if (demoCompanyIds.Count != 0)
         {
             db.CompanyMembers.RemoveRange(await db.CompanyMembers.Where(m => demoCompanyIds.Contains(m.CompanyId!)).ToListAsync());
             db.Companies.RemoveRange(await db.Companies.Where(c => demoCompanyIds.Contains(c.Id)).ToListAsync());
@@ -130,7 +130,7 @@ public sealed class DemoEnvironmentService(
 
         await db.SaveChangesAsync();
 
-        if (!demoUserIds.Any()) return;
+        if (demoUserIds.Count == 0) return;
 
         var demoUsers = await db.Users.Where(u => demoUserIds.Contains(u.Id)).ToListAsync();
         foreach (var user in demoUsers)

@@ -309,7 +309,7 @@ public static class TestDataSeeder
 
             // Get members assigned to this project
             var projectMembers = project.AssignedMembers.ToList();
-            if (!projectMembers.Any()) continue;
+            if (projectMembers.Count == 0) continue;
 
             var submitter = GetRandom(projectMembers);
             var assignee = random.Next(100) > 30 ? GetRandom(projectMembers) : null; // 70% assigned

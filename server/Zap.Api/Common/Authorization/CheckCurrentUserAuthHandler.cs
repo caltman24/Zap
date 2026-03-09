@@ -26,7 +26,7 @@ internal static class AuthorizationHandlerExtensions
             .AddRequirements(new CheckCurrentUserRequirement())
             .AddRequirements(new CheckCurrentMemberRequirement());
 
-        if (roles.Any()) builder.AddRequirements(new CompanyRolesAuthorizationRequirement(roles));
+        if (roles.Length != 0) builder.AddRequirements(new CompanyRolesAuthorizationRequirement(roles));
 
         return builder;
     }

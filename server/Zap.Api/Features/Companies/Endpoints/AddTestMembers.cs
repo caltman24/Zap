@@ -52,7 +52,7 @@ public class AddTestMembers : IEndpoint
                     UserId = user.Id,
                     CompanyId = currentUser.CompanyId,
                     RoleId = roles.FirstOrDefault(r => r.Name == role)?.Id ??
-                             roles[Random.Shared.Next(0, roles.Count() - 1)].Id
+                             roles[Random.Shared.Next(0, roles.Count - 1)].Id
                 });
                 await db.SaveChangesAsync();
             }
