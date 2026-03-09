@@ -9,7 +9,6 @@ namespace Zap.Api.Features.Projects.Services;
 
 public sealed class ProjectService : IProjectService
 {
-    private readonly ICompanyService _companyService;
     private readonly AppDbContext _db;
     private readonly ILogger<ProjectService> _logger;
 
@@ -17,7 +16,6 @@ public sealed class ProjectService : IProjectService
     {
         _db = db;
         _logger = logger;
-        _companyService = companyService;
     }
 
     public async Task<ProjectDto?> GetProjectByIdAsync(string projectId)
@@ -84,7 +82,7 @@ public sealed class ProjectService : IProjectService
             Priority = project.Priority,
             DueDate = project.DueDate,
             CompanyId = project.Member.CompanyId!,
-            AssignedMembers = new List<CompanyMember>()
+            AssignedMembers = []
         };
 
         var addResult = await _db.Projects.AddAsync(addProject);
@@ -107,7 +105,7 @@ public sealed class ProjectService : IProjectService
                     newProject.ProjectManager.Role.Name),
             newProject.IsArchived,
             newProject.DueDate,
-            new List<BasicTicketDto>(),
+            [],
             newProject.AssignedMembers.Select(m =>
                 new MemberInfoDto(
                     m.Id,

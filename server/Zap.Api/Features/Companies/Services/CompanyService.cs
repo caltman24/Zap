@@ -49,7 +49,7 @@ public sealed class CompanyService : ICompanyService
             _logger.LogInformation("User removing company logo {LogoKey}", company.LogoKey);
             try
             {
-                await _fileUploadService.DeleteFileAsync(company.LogoKey!);
+                await _fileUploadService.DeleteFileAsync(company.LogoKey);
                 company.LogoUrl = null;
                 company.LogoKey = null;
                 _logger.LogInformation("User successfully removed company logo {LogoKey}",
@@ -132,7 +132,7 @@ public sealed class CompanyService : ICompanyService
 
     private static List<CompanyProjectDto> ProjectSummaryResult(IEnumerable<ProjectSummaryRow> result)
     {
-        return result.Select(p =>
+        return [.. result.Select(p =>
         {
             if (p.ProjectManagerAvatar != null) p.AvatarUrls.Add(p.ProjectManagerAvatar);
 
@@ -145,7 +145,7 @@ public sealed class CompanyService : ICompanyService
                 p.MemberCount,
                 p.AvatarUrls
             );
-        }).ToList();
+        })];
     }
 
     private static IQueryable<ProjectSummaryRow> ProjectSummaryQuery(IQueryable<Project> query)
@@ -224,7 +224,7 @@ public sealed class CompanyService : ICompanyService
 
         foreach (var member in companyMembers)
         {
-            var roleName = member.Role!.Name;
+            var roleName = member.Role.Name;
             if (!membersByRole.TryGetValue(roleName, out var memberList))
             {
                 memberList = [];
