@@ -111,6 +111,38 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
         return await CanUpdatePriorityAsync(ticketId, currentUser);
     }
 
+    public TicketCapabilitiesDto GetCapabilities(BasicTicketDto ticket, CurrentUser currentUser)
+    {
+        if (currentUser.Member == null)
+        {
+            return new TicketCapabilitiesDto(false, false, false, false, false, false, false, false, false, false);
+        }
+
+        var member = currentUser.Member;
+        var isAdmin = member.Role.Name == RoleNames.Admin;
+        var isProjectManager = ticket.ProjectManagerId == member.Id;
+        var isSubmitter = ticket.Submitter.Id == member.Id;
+        var isAssignedDeveloper = ticket.Assignee?.Id == member.Id;
+        var canManageTicket = isAdmin || isProjectManager;
+        var canEditNameDescription = isAdmin || isProjectManager ||
+            !ticket.isArchived && isSubmitter && ticket.Status == TicketStatuses.New;
+        var canUpdatePriority = !ticket.isArchived && canManageTicket;
+        var canUpdateStatus = !ticket.isArchived &&
+            (canManageTicket || member.Role.Name == RoleNames.Developer && isAssignedDeveloper);
+
+        return new TicketCapabilitiesDto(
+            CanEditDetails: canEditNameDescription || canUpdatePriority || canUpdateStatus,
+            CanEditNameDescription: canEditNameDescription,
+            CanUpdatePriority: canUpdatePriority,
+            CanUpdateStatus: canUpdateStatus,
+            CanUpdateType: canUpdatePriority,
+            CanAssignDeveloper: !ticket.isArchived && canManageTicket,
+            CanArchive: canManageTicket,
+            CanUnarchive: canManageTicket,
+            CanDelete: !ticket.isArchived && canManageTicket,
+            CanComment: !ticket.isArchived);
+    }
+
     private async Task<TicketAccessContext?> GetTicketAccessContextAsync(string ticketId)
     {
         return await db.Tickets

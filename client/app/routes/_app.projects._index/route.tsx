@@ -1,14 +1,13 @@
 import RouteLayout from "~/layouts/RouteLayout";
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { Link, redirect, useLoaderData, useOutletContext } from "@remix-run/react";
-import { useMemo } from "react";
 import ProjectCard from "~/components/ProjectCard";
-import { getRolesByRouteName } from "~/data/routes";
 import roleNames from "~/data/roles";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
+import { hasPermission } from "~/utils/permissions";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
@@ -17,9 +16,8 @@ import tryCatch from "~/utils/tryCatch";
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
     const userInfo = session.get("user") as UserInfoResponse;
-    const normalizedRole = userInfo.role.toLowerCase();
 
-    if (([roleNames.developer, roleNames.submitter] as string[]).includes(normalizedRole)) {
+    if (!hasPermission(userInfo.permissions, "project.viewAll")) {
         return redirect("/projects/myprojects");
     }
 
@@ -57,9 +55,6 @@ export default function ProjectsRoute() {
     const { data, error } = useLoaderData<JsonResponseResult<CompanyProjectsResponse[]>>()
     const userInfo = useOutletContext<UserInfoResponse>();
     const isProjectManager = userInfo.role.toLowerCase() === roleNames.projectManager;
-    const createProjectRoles = useMemo(() =>
-        getRolesByRouteName("Create Project"),
-        []);
 
     if (error) {
         return <p className="text-error">{error}</p>;
@@ -74,7 +69,7 @@ export default function ProjectsRoute() {
                         {isProjectManager ? "Projects where you are the assigned project manager." : "All active projects in your company."}
                     </p>
                 </div>
-                {createProjectRoles.includes(userInfo.role.toLowerCase()) && (
+                {hasPermission(userInfo.permissions, "project.create") && (
                     <Link to="/projects/new" className="btn btn-soft">
                         <span className="material-symbols-outlined text-success">add_circle</span>
                         New Project

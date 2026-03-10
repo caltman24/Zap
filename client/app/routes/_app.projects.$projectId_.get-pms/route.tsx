@@ -1,19 +1,19 @@
 import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
+import { UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { ForbiddenResponse } from "~/utils/response";
+import { hasPermission } from "~/utils/permissions";
 import tryCatch from "~/utils/tryCatch";
-import { validateRole } from "~/utils/validate";
 import { getAssignablePMs } from "./server.get-pms";
 
 // get project managers that isnt assigned to the project
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
-    const userRole = session.get("user").role
+    const user = session.get("user") as UserInfoResponse;
 
-    if (!validateRole(userRole, permissions.project.assignPM)) {
+    if (!hasPermission(user.permissions, "project.assignPm")) {
         return ForbiddenResponse()
     }
 

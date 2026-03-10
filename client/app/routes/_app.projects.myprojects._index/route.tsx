@@ -5,12 +5,11 @@ import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { getSession } from "~/services/sessions.server";
+import { hasPermission } from "~/utils/permissions";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import getMyProjects from "./server.get-myprojects";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
-import { validateRole } from "~/utils/validate";
-import permissions from "~/data/permissions";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
@@ -24,7 +23,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/logout");
     }
 
-    if (!validateRole(userInfo.role, permissions.project.myprojects)) {
+    if (!hasPermission(userInfo.permissions, "project.viewAssigned")) {
         return redirect("/projects")
     }
 

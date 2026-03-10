@@ -1,11 +1,9 @@
-import roleNames from "./roles";
-
 export type MenuLink = {
   name: string;
   to: string;
   matchId: string;
   materialIcon?: string;
-  roles: string[];
+  requiredPermission?: string;
 };
 
 export type MenuGroup = {
@@ -24,14 +22,13 @@ export const menuRoutes: MenuRoutes = [
         to: "/dashboard",
         matchId: "routes/_app.dashboard",
         materialIcon: "dashboard",
-        roles: [],
       },
       {
         name: "Company Details",
         to: "/company",
         matchId: "routes/_app.company",
         materialIcon: "domain",
-        roles: [roleNames.admin],
+        requiredPermission: "company.edit",
       },
     ],
   },
@@ -43,32 +40,28 @@ export const menuRoutes: MenuRoutes = [
         to: "/projects",
         matchId: "routes/_app.projects._index",
         materialIcon: "folder",
-        roles: [roleNames.admin, roleNames.projectManager],
+        requiredPermission: "project.viewAll",
       },
       {
         name: "My Projects",
         to: "/projects/myprojects",
         matchId: "routes/_app.projects.myprojects._index",
         materialIcon: "folder_shared",
-        roles: [
-          roleNames.submitter,
-          roleNames.developer,
-          roleNames.projectManager,
-        ],
+        requiredPermission: "project.viewAssigned",
       },
       {
         name: "Archived Projects",
         to: "/projects/archived",
         matchId: "routes/_app.projects.archived._index",
         materialIcon: "folder_open",
-        roles: [roleNames.admin, roleNames.projectManager],
+        requiredPermission: "project.viewArchived",
       },
       {
         name: "Create Project",
         to: "/projects/new",
         matchId: "routes/_app.projects.new",
         materialIcon: "add_circle",
-        roles: [roleNames.admin, roleNames.projectManager],
+        requiredPermission: "project.create",
       },
     ],
   },
@@ -80,58 +73,44 @@ export const menuRoutes: MenuRoutes = [
         to: "/tickets",
         matchId: "routes/_app.tickets._index",
         materialIcon: "assignment",
-        roles: [],
       },
       {
         name: "My Tickets",
         to: "/tickets/mytickets",
         matchId: "routes/_app.tickets.mytickets",
         materialIcon: "assignment_ind",
-        roles: [],
       },
       {
         name: "Resolved Tickets",
         to: "/tickets/resolved",
         matchId: "routes/_app.tickets.resolved",
         materialIcon: "assignment_turned_in",
-        roles: [],
       },
       {
         name: "Archived Tickets",
         to: "/tickets/archived",
         matchId: "routes/_app.tickets.resolved",
         materialIcon: "assignment_returned",
-        roles: [],
       },
       {
         name: "Submit Ticket",
         to: "/tickets/new",
         matchId: "routes/_app.tickets.new",
         materialIcon: "assignment_late",
-        roles: [roleNames.admin, roleNames.projectManager, roleNames.submitter],
+        requiredPermission: "ticket.create",
       },
     ],
   },
 ];
 
-export function filterMenuRoutesByRoles(
+export function filterMenuRoutesByPermissions(
   menuRoutes: MenuRoutes,
-  roles: string[]
+  permissions: string[]
 ): MenuRoutes {
   return menuRoutes.map((menuGroup) => ({
     ...menuGroup,
     links: menuGroup.links.filter(
-      (link) =>
-        link.roles.some((role) => roles.includes(role)) ||
-        link.roles.length === 0
+      (link) => !link.requiredPermission || permissions.includes(link.requiredPermission)
     ),
   }));
-}
-
-export function getRolesByRouteName(routeName: string) {
-  return menuRoutes.flatMap((menuGroup) =>
-    menuGroup.links
-      .filter((link) => link.name === routeName)
-      .flatMap((link) => link.roles)
-  );
 }

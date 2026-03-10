@@ -1,18 +1,17 @@
 import { Form, Link, useLoaderData, useSearchParams, useNavigation, useActionData } from "@remix-run/react";
 import RouteLayout from "~/layouts/RouteLayout";
 import { ActionFunctionArgs, data, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
 import { getSession } from "~/services/sessions.server";
 import { ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import { validateRole } from "~/utils/validate";
 import { getNewTicketProjectList } from "./server.get-projects-list";
-import { BasicProjectResponse, CreateTicketRequest } from "~/services/api.server/types";
+import { BasicProjectResponse, CreateTicketRequest, UserInfoResponse } from "~/services/api.server/types";
 import { createNewTicket } from "./server.create-ticket";
 import { AuthenticationError } from "~/services/api.server/errors";
 import BackButton from "~/components/BackButton";
 import { useState, useEffect, useRef } from "react";
+import { hasPermission } from "~/utils/permissions";
 
 export const handle = {
     breadcrumb: () => <Link to="/tickets/new">New</Link>,
@@ -22,9 +21,9 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const userRole = session.get("user").role
+    const user = session.get("user") as UserInfoResponse;
 
-    if (!validateRole(userRole, permissions.ticket.create)) {
+    if (!hasPermission(user.permissions, "ticket.create")) {
         return ForbiddenResponse()
     }
 

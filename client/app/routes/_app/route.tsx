@@ -2,13 +2,12 @@ import { Link, Outlet, redirect, useLoaderData, useLocation, useNavigation } fro
 import SideMenu from "./SideMenu";
 import { useEffect, useMemo, useState } from "react";
 import DashboardNavbar from "./DashboardNavbar";
-import { filterMenuRoutesByRoles, menuRoutes } from "~/data/routes";
+import { filterMenuRoutesByPermissions, menuRoutes } from "~/data/routes";
 import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { commitSession, destroySession, getSession } from "~/services/sessions.server";
 import { UserInfoResponse } from "~/services/api.server/types";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import apiClient from "~/services/api.server/apiClient";
-import roleNames from "~/data/roles";
 import tryCatch from "~/utils/tryCatch";
 
 
@@ -69,7 +68,7 @@ export default function AppRoute() {
 
                 {/* sidebar - hidden on mobile unless toggled */}
                 <div className={`${mobileMenuOpen ? "block" : "hidden"} lg:block fixed min-w-64 lg:relative z-20 h-screen`}>
-                    <SideMenu menuRoutes={filterMenuRoutesByRoles(menuRoutes, [(userData?.role?.toLowerCase() || roleNames.submitter)])} />
+                    <SideMenu menuRoutes={filterMenuRoutesByPermissions(menuRoutes, userData?.permissions ?? [])} />
                 </div>
 
                 {/* contnet */}

@@ -35,6 +35,28 @@ public sealed class ProjectAuthorizationService(AppDbContext db) : IProjectAutho
         };
     }
 
+    public ProjectCapabilitiesDto GetCapabilities(ProjectDto project, CurrentUser currentUser)
+    {
+        if (currentUser.Member == null)
+        {
+            return new ProjectCapabilitiesDto(false, false, false, false, false);
+        }
+
+        var isAdmin = currentUser.Member.Role.Name == RoleNames.Admin;
+        var isProjectManager = project.ProjectManager?.Id == currentUser.Member.Id;
+        var isAssignedMember = project.Members.Any(m => m.Id == currentUser.Member.Id);
+
+        var canManageProject = isAdmin || isProjectManager;
+
+        return new ProjectCapabilitiesDto(
+            CanEdit: canManageProject,
+            CanArchive: canManageProject,
+            CanAssignProjectManager: isAdmin && !project.IsArchived,
+            CanManageMembers: canManageProject && !project.IsArchived,
+            CanCreateTicket: !project.IsArchived && (isAdmin || isProjectManager ||
+                currentUser.Member.Role.Name == RoleNames.Submitter && isAssignedMember));
+    }
+
     private sealed record ProjectAccessContext(
         string CompanyId,
         string? ProjectManagerId,

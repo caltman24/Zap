@@ -1,11 +1,11 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useState, useRef } from "react";
-import { getRolesByRouteName } from "~/data/routes";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import { CreateProjectRequest } from "~/services/api.server/types";
+import { CreateProjectRequest, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
+import { hasPermission } from "~/utils/permissions";
 import tryCatch from "~/utils/tryCatch";
 import RouteLayout from "~/layouts/RouteLayout";
 import BackButton from "~/components/BackButton";
@@ -17,14 +17,13 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const user = session.get("user");
-    const allowedRoles = getRolesByRouteName("Create Project");
+    const user = session.get("user") as UserInfoResponse;
 
     if (!user) {
         return redirect("/logout");
     }
 
-    if (!allowedRoles.includes(user.role.toLowerCase())) {
+    if (!hasPermission(user.permissions, "project.create")) {
         throw Response.json("Unauthorized", { status: 401, statusText: "Unauthorized" });
     }
 

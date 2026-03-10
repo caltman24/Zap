@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Form } from "@remix-run/react";
 import { TicketComment } from "~/services/api.server/types";
 import { convertTo12HourTime, formatDateHeader, isSameDay, isToday } from "~/utils/dateTime";
-import { canEditComment, canDeleteComment } from "~/utils/ticketPermissions";
+import { canEditComment, canDeleteComment } from "~/utils/commentPermissions";
 import roleNames, { type RoleName } from "~/data/roles";
 
 type ChatBoxProps = {

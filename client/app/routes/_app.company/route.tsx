@@ -10,9 +10,7 @@ import { getSession } from "~/services/sessions.server";
 import { useEditMode } from "~/utils/editMode";
 import { ActionResponse, ActionResponseResult, ForbiddenResponse, JsonResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import { validateRole } from "~/utils/validate";
-import permissions from "~/data/permissions";
-import roleNames from "~/data/roles";
+import { hasPermission } from "~/utils/permissions";
 import MembersListTable from "~/components/MembersListTable";
 
 export const handle = {
@@ -25,9 +23,9 @@ export const handle = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const userRole = session.get("user").role;
+    const user = session.get("user") as UserInfoResponse;
 
-    if (!validateRole(userRole, permissions.company.edit)) {
+    if (!hasPermission(user.permissions, "company.edit")) {
         return redirect("/dashboard");
     }
 
@@ -66,9 +64,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
     const session = await getSession(request);
-    const userRole = session.get("user").role;
+    const user = session.get("user") as UserInfoResponse;
 
-    if (!validateRole(userRole, permissions.company.edit)) {
+    if (!hasPermission(user.permissions, "company.edit")) {
         return ForbiddenResponse()
     }
 
@@ -120,7 +118,7 @@ export default function CompanyRoute() {
     const userData = useOutletContext<UserInfoResponse>();
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
-    const canEdit = validateRole(userData.role, permissions.company.edit);
+    const canEdit = hasPermission(userData.permissions, "company.edit");
 
     // State for edit mode
     const {

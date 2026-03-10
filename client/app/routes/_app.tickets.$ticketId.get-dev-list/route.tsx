@@ -1,21 +1,14 @@
 import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
 import { getSession } from "~/services/sessions.server";
-import { ForbiddenResponse, JsonResponse } from "~/utils/response";
+import { JsonResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import { validateRole } from "~/utils/validate";
 import { getProjectDevList } from "./server.get-dev-list";
 
 // get project managers that isnt assigned to the project
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const ticketId = params.ticketId!
     const session = await getSession(request);
-    const userRole = session.get("user").role
-
-    if (!validateRole(userRole, permissions.ticket.assign)) {
-        return ForbiddenResponse()
-    }
 
     const {
         data: tokenResponse,

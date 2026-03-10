@@ -11,25 +11,10 @@ import DeveloperListModal from "./DeveloperListModal";
 import { BasicTicketInfo, BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
 import { useEditMode } from "~/utils/editMode";
 import { EditModeForm } from "~/components/EditModeForm";
-import { validateRole } from "~/utils/validate";
-import permissions from "~/data/permissions";
 import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
-import {
-    canEditTicketFields,
-    canUpdateStatus,
-    canUpdatePriority,
-    canUpdateType,
-    canAssignDeveloper,
-    canDeleteTicket,
-    canArchiveTicket,
-    canUnarchiveTicket,
-    canCreateComment,
-    canEditNameDescription,
-    type TicketPermissionContext,
-} from "~/utils/ticketPermissions";
 
 import AttachmentSection from "./AttachmentSection";
 
@@ -230,28 +215,16 @@ export default function TicketDetailsRoute() {
         }
     };
 
-    // Calculate permission context
-    const permissionContext: TicketPermissionContext = {
-        role: userInfo.role,
-        userId: userInfo.memberId,
-        ticketSubmitterId: ticket.submitter.id,
-        ticketAssignedDeveloperId: ticket.assignee?.id || null,
-        isProjectManager: userInfo.memberId ? ticket.projectManagerId === userInfo.memberId : false,
-        isArchived: ticket.isArchived,
-        status: ticket.status,
-    };
-
-    // Permission checks
-    const canEdit = canEditTicketFields(permissionContext);
-    const canUpdateStatusField = canUpdateStatus(permissionContext);
-    const canUpdatePriorityField = canUpdatePriority(permissionContext);
-    const canUpdateTypeField = canUpdateType(permissionContext);
-    const canAssign = canAssignDeveloper(userInfo.role, ticket.isArchived, permissionContext.isProjectManager);
-    const canDelete = canDeleteTicket(userInfo.role, ticket.isArchived, permissionContext.isProjectManager);
-    const canArchive = canArchiveTicket(userInfo.role, permissionContext.isProjectManager);
-    const canUnarchive = canUnarchiveTicket(userInfo.role, permissionContext.isProjectManager);
-    const canComment = canCreateComment(userInfo.role, ticket.isArchived);
-    const canEditNameDescriptionField = canEditNameDescription(permissionContext);
+    const canEdit = ticket.capabilities.canEditDetails;
+    const canUpdateStatusField = ticket.capabilities.canUpdateStatus;
+    const canUpdatePriorityField = ticket.capabilities.canUpdatePriority;
+    const canUpdateTypeField = ticket.capabilities.canUpdateType;
+    const canAssign = ticket.capabilities.canAssignDeveloper;
+    const canDelete = ticket.capabilities.canDelete;
+    const canArchive = ticket.capabilities.canArchive;
+    const canUnarchive = ticket.capabilities.canUnarchive;
+    const canComment = ticket.capabilities.canComment;
+    const canEditNameDescriptionField = ticket.capabilities.canEditNameDescription;
 
     // Handler for disabled field clicks
     const handleDisabledFieldClick = (fieldName: string) => {
@@ -731,11 +704,6 @@ export default function TicketDetailsRoute() {
 
 export async function action({ request, params }: ActionFunctionArgs) {
     const session = await getSession(request);
-    const userRole = session.get("user").role;
-
-    if (!validateRole(userRole, permissions.ticket.editDetails)) {
-        return ForbiddenResponse();
-    }
     const { data: tokenResponse, error: tokenError } = await tryCatch(
         apiClient.auth.getValidToken(session),
     );

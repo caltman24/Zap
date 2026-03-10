@@ -21,6 +21,7 @@ export type UserInfoResponse = {
   avatarUrl: string;
   companyId?: string;
   memberId: string | undefined;
+  permissions: string[];
 };
 export type BasicUserInfo = {
   id: string;
@@ -86,6 +87,13 @@ export type ProjectResponse = {
     role: RoleName;
   }[];
   tickets: BasicTicketInfo[];
+  capabilities: {
+    canEdit: boolean;
+    canArchive: boolean;
+    canAssignProjectManager: boolean;
+    canManageMembers: boolean;
+    canCreateTicket: boolean;
+  };
 };
 
 export type BasicProjectResponse = {
@@ -127,6 +135,18 @@ export type BasicTicketInfo = {
   projectIsArchived: boolean;
   createdAt: string;
   updatedAt: string | null;
+  capabilities: {
+    canEditDetails: boolean;
+    canEditNameDescription: boolean;
+    canUpdatePriority: boolean;
+    canUpdateStatus: boolean;
+    canUpdateType: boolean;
+    canAssignDeveloper: boolean;
+    canArchive: boolean;
+    canUnarchive: boolean;
+    canDelete: boolean;
+    canComment: boolean;
+  };
 };
 
 export type CreateTicketResult = {
