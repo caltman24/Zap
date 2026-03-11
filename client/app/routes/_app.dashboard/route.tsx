@@ -10,6 +10,8 @@ import { requestJson } from "~/utils/api";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import roleNames from "~/data/roles";
+import { hasPermission } from "~/utils/permissions";
+import getMyProjects from "../_app.projects.myprojects._index/server.get-myprojects";
 
 type DashboardDeadline = {
     id: string;
@@ -151,6 +153,7 @@ function toUpcomingDeadlines(projects: CompanyProjectsResponse[]): DashboardDead
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    const userInfo = session.get("user") as UserInfoResponse;
     const {
         data: tokenResponse,
         error: tokenError
@@ -161,8 +164,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     try {
+        const projectsRequest = hasPermission(userInfo.permissions, "project.viewAll")
+            ? apiClient.getCompanyProjects(tokenResponse.token)
+            : getMyProjects(userInfo.memberId!, tokenResponse.token);
+
         const [projects, openTickets, resolvedTickets] = await Promise.all([
-            apiClient.getCompanyProjects(tokenResponse.token),
+            projectsRequest,
             requestJson<BasicTicketInfo[]>("/tickets/open", { method: "GET" }, tokenResponse.token),
             requestJson<BasicTicketInfo[]>("/tickets/resolved", { method: "GET" }, tokenResponse.token)
         ]);
