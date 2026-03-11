@@ -4,6 +4,7 @@ export type MenuLink = {
   matchId: string;
   materialIcon?: string;
   requiredPermission?: string;
+  hiddenRoles?: string[];
 };
 
 export type MenuGroup = {
@@ -48,6 +49,7 @@ export const menuRoutes: MenuRoutes = [
         matchId: "routes/_app.projects.myprojects._index",
         materialIcon: "folder_shared",
         requiredPermission: "project.viewAssigned",
+        hiddenRoles: ["admin"],
       },
       {
         name: "Archived Projects",
@@ -105,12 +107,15 @@ export const menuRoutes: MenuRoutes = [
 
 export function filterMenuRoutesByPermissions(
   menuRoutes: MenuRoutes,
-  permissions: string[]
+  permissions: string[],
+  role?: string
 ): MenuRoutes {
   return menuRoutes.map((menuGroup) => ({
     ...menuGroup,
     links: menuGroup.links.filter(
-      (link) => !link.requiredPermission || permissions.includes(link.requiredPermission)
+      (link) =>
+        (!link.requiredPermission || permissions.includes(link.requiredPermission)) &&
+        !(link.hiddenRoles?.includes((role ?? "").toLowerCase()))
     ),
   }));
 }

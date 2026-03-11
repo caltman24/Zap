@@ -68,7 +68,7 @@ export default function AppRoute() {
 
                 {/* sidebar - hidden on mobile unless toggled */}
                 <div className={`${mobileMenuOpen ? "block" : "hidden"} lg:block fixed min-w-64 lg:relative z-20 h-screen`}>
-                    <SideMenu menuRoutes={filterMenuRoutesByPermissions(menuRoutes, userData?.permissions ?? [])} />
+                    <SideMenu menuRoutes={filterMenuRoutesByPermissions(menuRoutes, userData?.permissions ?? [], userData?.role)} />
                 </div>
 
                 {/* contnet */}

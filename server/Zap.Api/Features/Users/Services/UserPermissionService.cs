@@ -10,7 +10,6 @@ public sealed class UserPermissionService : IUserPermissionService
         "company.edit",
         "project.create",
         "project.viewAll",
-        "project.viewAssigned",
         "project.viewArchived",
         "project.assignPm",
         "ticket.create"
