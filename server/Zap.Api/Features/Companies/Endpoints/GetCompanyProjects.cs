@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
+using Zap.Api.Common.Constants;
 using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Companies.Endpoints;
@@ -11,18 +12,14 @@ public class GetCompanyProjects : IEndpoint
     public static void Map(IEndpointRouteBuilder app)
     {
         app.MapGet("/", Handle)
-            .WithCompanyMember();
+            .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
     }
 
     private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectDto>>>> Handle(
         ICompanyService companyService, CurrentUser currentUser, ILogger<Program> logger,
         [FromQuery] bool? isArchived = null)
     {
-        var projects = await companyService.GetVisibleProjectsAsync(
-            currentUser.CompanyId!,
-            currentUser.Member!.Id,
-            currentUser.Member.Role.Name,
-            isArchived);
+        var projects = await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId!);
 
         return TypedResults.Ok(projects);
     }

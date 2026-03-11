@@ -28,7 +28,7 @@ public sealed class ProjectAuthorizationService(AppDbContext db) : IProjectAutho
         return currentUser.Member.Role.Name switch
         {
             RoleNames.Admin => true,
-            RoleNames.ProjectManager => context.ProjectManagerId == currentUser.Member.Id,
+            RoleNames.ProjectManager => true,
             RoleNames.Developer => context.AssignedMemberIds.Contains(currentUser.Member.Id),
             RoleNames.Submitter => context.AssignedMemberIds.Contains(currentUser.Member.Id),
             _ => false
