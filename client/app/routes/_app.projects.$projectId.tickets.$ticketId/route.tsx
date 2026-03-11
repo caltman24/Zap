@@ -619,8 +619,6 @@ export default function TicketDetailsRoute() {
                                     comments={(getCommentsFetcher.data as any)?.data}
                                     loading={getCommentsFetcher.state === "loading"}
                                     userId={userInfo.memberId ?? ""}
-                                    userRole={userInfo.role}
-                                    isArchived={ticket.isArchived}
                                 />
 
                                 <Form
@@ -639,7 +637,7 @@ export default function TicketDetailsRoute() {
                                             Send
                                         </button>
                                         <textarea
-                                            placeholder={canComment ? "Message" : "Cannot comment on archived tickets"}
+                                            placeholder={canComment ? "Message" : "You cannot comment on this ticket"}
                                             name="message"
                                             className="textarea w-full resize-none field-sizing-content min-h-auto"
                                             disabled={!canComment}

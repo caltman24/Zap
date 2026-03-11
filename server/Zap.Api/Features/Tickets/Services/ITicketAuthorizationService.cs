@@ -13,6 +13,7 @@ public interface ITicketAuthorizationService
     Task<bool> CanAssignDeveloperAsync(string ticketId, CurrentUser currentUser);
     Task<bool> CanArchiveTicketAsync(string ticketId, CurrentUser currentUser);
     Task<bool> CanDeleteTicketAsync(string ticketId, CurrentUser currentUser);
+    Task<bool> CanCommentTicketAsync(string ticketId, CurrentUser currentUser);
     TicketCapabilitiesDto GetCapabilities(BasicTicketDto ticket, CurrentUser currentUser);
 }
 

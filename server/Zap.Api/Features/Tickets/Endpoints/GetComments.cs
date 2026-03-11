@@ -22,7 +22,7 @@ public class GetComments : IEndpoint
         ITicketCommentsService commentsService
     )
     {
-        var comments = await commentsService.GetCommentsAsync(ticketId);
+        var comments = await commentsService.GetCommentsAsync(ticketId, currentUser);
         return TypedResults.Ok(comments);
     }
 }

@@ -160,4 +160,8 @@ export type TicketComment = {
   message: string;
   createdAt: string;
   updatedAt: string | null;
+  capabilities: {
+    canEdit: boolean;
+    canDelete: boolean;
+  };
 };

@@ -16,7 +16,6 @@ public class UpdateComment : IEndpoint
         app.MapPut("/{ticketId}/comments/{commentId}", Handle)
             .WithCompanyMember()
             .WithTicketAccessValidation()
-            .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }
 
@@ -32,7 +31,7 @@ public class UpdateComment : IEndpoint
             ticketId,
             commentId,
             request.Message,
-            currentUser.Member!.Id);
+            currentUser);
 
         if (!success) return TypedResults.NotFound();
 
