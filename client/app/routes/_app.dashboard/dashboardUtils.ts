@@ -1,5 +1,9 @@
-import roleNames from "~/data/roles";
-import { BasicTicketInfo, CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
+import roleNames, { RoleName } from "~/data/roles";
+import {
+  BasicTicketInfo,
+  CompanyProjectsResponse,
+  UserInfoResponse,
+} from "~/services/api.server/types";
 
 export type DashboardDeadline = {
   id: string;
@@ -106,9 +110,15 @@ export function formatDeadlineDays(daysRemaining: number): string {
   return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining`;
 }
 
-export function toUpcomingDeadlines(projects: CompanyProjectsResponse[]): DashboardDeadline[] {
+export function toUpcomingDeadlines(
+  projects: CompanyProjectsResponse[]
+): DashboardDeadline[] {
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  ).getTime();
 
   return projects
     .map((project) => {
@@ -116,10 +126,12 @@ export function toUpcomingDeadlines(projects: CompanyProjectsResponse[]): Dashbo
       const dueDateStart = new Date(
         dueDateValue.getFullYear(),
         dueDateValue.getMonth(),
-        dueDateValue.getDate(),
+        dueDateValue.getDate()
       ).getTime();
 
-      const daysRemaining = Math.floor((dueDateStart - todayStart) / (24 * 60 * 60 * 1000));
+      const daysRemaining = Math.floor(
+        (dueDateStart - todayStart) / (24 * 60 * 60 * 1000)
+      );
 
       return {
         id: project.id,
@@ -129,11 +141,16 @@ export function toUpcomingDeadlines(projects: CompanyProjectsResponse[]): Dashbo
         daysRemaining,
       };
     })
-    .sort((left, right) => new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime())
+    .sort(
+      (left, right) =>
+        new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime()
+    )
     .slice(0, 5);
 }
 
-export function getDashboardProjectLabel(role: UserInfoResponse["role"]): string {
+export function getDashboardProjectLabel(
+  role: UserInfoResponse["role"]
+): string {
   if (role === roleNames.admin) return "Total Projects";
   if (role === roleNames.projectManager) return "Projects In Scope";
   return "Assigned Projects";
@@ -163,14 +180,18 @@ export function getDashboardTicketLabels(role: UserInfoResponse["role"]) {
   };
 }
 
-export function getDashboardDeadlineLabel(role: UserInfoResponse["role"]): string {
-  return role === roleNames.admin ? "Upcoming Deadlines" : "Upcoming Deadlines In Your Scope";
+export function getDashboardDeadlineLabel(
+  role: UserInfoResponse["role"]
+): string {
+  return role === roleNames.admin
+    ? "Upcoming Deadlines"
+    : "Upcoming Deadlines In Your Scope";
 }
 
 export function getDashboardSummaryTickets(
   role: UserInfoResponse["role"],
   memberId: string | undefined,
-  tickets: BasicTicketInfo[] | null,
+  tickets: BasicTicketInfo[] | null
 ) {
   if (!tickets) return null;
 
@@ -183,4 +204,30 @@ export function getDashboardSummaryTickets(
   }
 
   return tickets;
+}
+
+export function getDashboardDescription(
+  role: UserInfoResponse["role"]
+): string {
+  let description = "";
+
+  switch (role) {
+    case "admin":
+      description = "Overview of projects and tickets in your company.";
+      break;
+    case roleNames.projectManager:
+      description =
+        "Overview of projects and tickets in your managed projects.";
+      break;
+    case "submitter":
+      description =
+        "Overview of tickets you have submitted within your assigned projects.";
+      break;
+    case "developer":
+      description =
+        "Overview of projects and tickets you have been assigned to.";
+      break;
+  }
+
+  return description;
 }

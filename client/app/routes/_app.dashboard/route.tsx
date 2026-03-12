@@ -9,7 +9,7 @@ import { getSession } from "~/services/sessions.server";
 import { requestJson } from "~/utils/api";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import roleNames from "~/data/roles";
+import roleNames, { RoleName } from "~/data/roles";
 import { hasPermission } from "~/utils/permissions";
 import getMyProjects from "../_app.projects.myprojects._index/server.get-myprojects";
 import { getMyTickets } from "../_app.tickets.mytickets._index/server.get-mytickets";
@@ -18,6 +18,7 @@ import {
     formatDeadlineDays,
     formatRelativeTime,
     getDashboardDeadlineLabel,
+    getDashboardDescription,
     getDashboardProjectLabel,
     getDashboardSummaryTickets,
     getDashboardTicketLabels,
@@ -103,11 +104,12 @@ export const handle = {
 export default function DashboardRoute() {
     const { data, error } = useLoaderData<JsonResponseResult<DashboardData>>();
     const userInfo = useOutletContext<UserInfoResponse>();
+    const userRole = userInfo.role.toLowerCase() as UserInfoResponse["role"]
     const navigate = useNavigate();
-    const usesOwnTicketSummary = [roleNames.developer, roleNames.submitter].includes(userInfo.role);
-    const projectLabel = getDashboardProjectLabel(userInfo.role);
+    const projectLabel = getDashboardProjectLabel(userRole);
     const { ticketLabel, openTicketLabel, closedTicketLabel } = getDashboardTicketLabels(userInfo.role);
-    const deadlineLabel = getDashboardDeadlineLabel(userInfo.role);
+    const deadlineLabel = getDashboardDeadlineLabel(userRole);
+    const dashboardDescription = getDashboardDescription(userRole);
 
     function getTicketRoute(ticket: BasicTicketInfo): string {
         return `/projects/${ticket.projectId}/tickets/${ticket.id}`;
@@ -119,6 +121,7 @@ export default function DashboardRoute() {
             navigate(route);
         }
     }
+
 
     if (error || !data) {
         return (
@@ -133,7 +136,7 @@ export default function DashboardRoute() {
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">Dashboard</h1>
                 <p className="text-base-content/65 mt-1">
-                    Overview of projects and tickets currently visible to your role.
+                    {dashboardDescription}
                 </p>
             </div>
             <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">

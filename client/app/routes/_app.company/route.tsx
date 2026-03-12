@@ -92,7 +92,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const logoFile = formData.get("logo") as File;
 
     const maxMB = 2;
-    if (logoFile.size > maxMB * 1024 * 1024) {
+    if (logoFile && logoFile.size > maxMB * 1024 * 1024) {
         return ActionResponse({ success: false, error: `Logo file is too large. Maximum size is ${maxMB}MB.`, headers: tokenResponse.headers })
     }
     if (logoFile && logoFile.size > 0) {
