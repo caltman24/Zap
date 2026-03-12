@@ -13,8 +13,7 @@ public class DeleteComment : IEndpoint
     {
         app.MapDelete("/{ticketId}/comments/{commentId}", Handle)
             .WithCompanyMember()
-            .WithTicketAccessValidation()
-            .WithTicketArchiveValidation();
+            .WithTicketAccessValidation();
     }
 
     private static async Task<Results<NoContent, NotFound>> Handle(
@@ -24,7 +23,7 @@ public class DeleteComment : IEndpoint
         ITicketCommentsService commentsService
     )
     {
-        var success = await commentsService.DeleteCommentAsync(ticketId, commentId, currentUser.Member!.Id);
+        var success = await commentsService.DeleteCommentAsync(ticketId, commentId, currentUser);
         if (!success) return TypedResults.NotFound();
 
         return TypedResults.NoContent();

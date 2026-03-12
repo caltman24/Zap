@@ -1,3 +1,4 @@
+using Zap.Api.Common.Authorization;
 using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Tickets.Services;
@@ -10,9 +11,9 @@ public interface ITicketCommentsService
         string message
     );
 
-    Task<List<CommentDto>> GetCommentsAsync(string ticketId);
-    Task<bool> DeleteCommentAsync(string ticketId, string commentId, string requestingUserId);
-    Task<bool> UpdateCommentAsync(string ticketId, string commentId, string message, string requestingUserId);
+    Task<List<CommentDto>> GetCommentsAsync(string ticketId, CurrentUser currentUser);
+    Task<bool> DeleteCommentAsync(string ticketId, string commentId, CurrentUser currentUser);
+    Task<bool> UpdateCommentAsync(string ticketId, string commentId, string message, CurrentUser currentUser);
 }
 
 public record CommentDto(
@@ -21,5 +22,11 @@ public record CommentDto(
     string Message,
     MemberInfoDto Sender,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    CommentCapabilitiesDto Capabilities
+);
+
+public record CommentCapabilitiesDto(
+    bool CanEdit,
+    bool CanDelete
 );

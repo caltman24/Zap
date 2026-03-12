@@ -9,148 +9,29 @@ import { getSession } from "~/services/sessions.server";
 import { requestJson } from "~/utils/api";
 import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import roleNames from "~/data/roles";
-
-type DashboardDeadline = {
-    id: string;
-    name: string;
-    priority: string;
-    dueDate: string;
-    daysRemaining: number;
-};
-
-type DashboardData = {
-    totalProjects: number;
-    totalTickets: number;
-    openTickets: number;
-    closedTickets: number;
-    recentActivity: BasicTicketInfo[];
-    upcomingDeadlines: DashboardDeadline[];
-};
-
-function getPriorityBadgeClass(priority: string): string {
-    switch (priority.toLowerCase()) {
-        case "urgent":
-            return "badge-error";
-        case "high":
-            return "badge-warning";
-        case "medium":
-            return "badge-info";
-        case "low":
-            return "badge-success";
-        default:
-            return "badge-neutral";
-    }
-}
-
-function getStatusBadgeClass(status: string): string {
-    switch (status.toLowerCase()) {
-        case "resolved":
-        case "closed":
-            return "badge-success";
-        case "testing":
-            return "badge-info";
-        case "in development":
-        case "in progress":
-            return "badge-warning";
-        case "new":
-        case "open":
-            return "badge-neutral";
-        default:
-            return "badge-ghost";
-    }
-}
-
-function getTypeBadgeClass(type: string): string {
-    switch (type.toLowerCase()) {
-        case "defect":
-            return "badge-error";
-        case "enhancement":
-        case "feature":
-            return "badge-accent";
-        case "change request":
-            return "badge-info";
-        default:
-            return "badge-neutral";
-    }
-}
-
-function getTicketUpdatedAt(ticket: BasicTicketInfo): number {
-    return new Date(ticket.updatedAt ?? ticket.createdAt).getTime();
-}
-
-function formatRelativeTime(isoDate: string): string {
-    const now = Date.now();
-    const timestamp = new Date(isoDate).getTime();
-    const diffMs = now - timestamp;
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < minute) {
-        return "Just now";
-    }
-
-    if (diffMs < hour) {
-        const minutes = Math.floor(diffMs / minute);
-        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-    }
-
-    if (diffMs < day) {
-        const hours = Math.floor(diffMs / hour);
-        return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-    }
-
-    const days = Math.floor(diffMs / day);
-    if (days < 7) {
-        return `${days} day${days === 1 ? "" : "s"} ago`;
-    }
-
-    return new Date(isoDate).toLocaleDateString();
-}
-
-function formatDeadlineDays(daysRemaining: number): string {
-    if (daysRemaining < 0) {
-        const overdueDays = Math.abs(daysRemaining);
-        return `Overdue by ${overdueDays} day${overdueDays === 1 ? "" : "s"}`;
-    }
-
-    if (daysRemaining === 0) {
-        return "Due today";
-    }
-
-    return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining`;
-}
-
-function toUpcomingDeadlines(projects: CompanyProjectsResponse[]): DashboardDeadline[] {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-
-    return projects
-        .map((project) => {
-            const dueDateValue = new Date(project.dueDate);
-            const dueDateStart = new Date(
-                dueDateValue.getFullYear(),
-                dueDateValue.getMonth(),
-                dueDateValue.getDate()
-            ).getTime();
-
-            const daysRemaining = Math.floor((dueDateStart - todayStart) / (24 * 60 * 60 * 1000));
-
-            return {
-                id: project.id,
-                name: project.name,
-                priority: project.priority,
-                dueDate: project.dueDate,
-                daysRemaining
-            };
-        })
-        .sort((left, right) => new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime())
-        .slice(0, 5);
-}
+import roleNames, { RoleName } from "~/data/roles";
+import { hasPermission } from "~/utils/permissions";
+import getMyProjects from "../_app.projects.myprojects._index/server.get-myprojects";
+import { getMyTickets } from "../_app.tickets.mytickets._index/server.get-mytickets";
+import {
+    DashboardData,
+    formatDeadlineDays,
+    formatRelativeTime,
+    getDashboardDeadlineLabel,
+    getDashboardDescription,
+    getDashboardProjectLabel,
+    getDashboardSummaryTickets,
+    getDashboardTicketLabels,
+    getPriorityBadgeClass,
+    getStatusBadgeClass,
+    getTicketUpdatedAt,
+    getTypeBadgeClass,
+    toUpcomingDeadlines,
+} from "./dashboardUtils";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
+    const userInfo = session.get("user") as UserInfoResponse;
     const {
         data: tokenResponse,
         error: tokenError
@@ -161,11 +42,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     try {
-        const [projects, openTickets, resolvedTickets] = await Promise.all([
-            apiClient.getCompanyProjects(tokenResponse.token),
+        const useOwnTicketSummary = [roleNames.developer, roleNames.submitter].includes(userInfo.role);
+        const projectsRequest = hasPermission(userInfo.permissions, "project.viewAll")
+            ? apiClient.getCompanyProjects(tokenResponse.token)
+            : getMyProjects(userInfo.memberId!, tokenResponse.token);
+        const ownTicketsRequest = useOwnTicketSummary
+            ? getMyTickets(tokenResponse.token)
+            : Promise.resolve<BasicTicketInfo[] | null>(null);
+
+        const [projects, openTickets, resolvedTickets, ownTickets] = await Promise.all([
+            projectsRequest,
             requestJson<BasicTicketInfo[]>("/tickets/open", { method: "GET" }, tokenResponse.token),
-            requestJson<BasicTicketInfo[]>("/tickets/resolved", { method: "GET" }, tokenResponse.token)
+            requestJson<BasicTicketInfo[]>("/tickets/resolved", { method: "GET" }, tokenResponse.token),
+            ownTicketsRequest
         ]);
+
+        const summaryTickets = getDashboardSummaryTickets(userInfo.role, userInfo.memberId, ownTickets);
+
+        const ownOpenTickets = summaryTickets?.filter((ticket) => ticket.status.toLowerCase() !== "resolved") ?? [];
+        const ownResolvedTickets = summaryTickets?.filter((ticket) => ticket.status.toLowerCase() === "resolved") ?? [];
+        const upcomingDeadlines = toUpcomingDeadlines(projects);
 
         const recentActivity = [...openTickets, ...resolvedTickets]
             .sort((left, right) => getTicketUpdatedAt(right) - getTicketUpdatedAt(left))
@@ -173,11 +69,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
         const dashboardData: DashboardData = {
             totalProjects: projects.length,
-            totalTickets: openTickets.length + resolvedTickets.length,
-            openTickets: openTickets.length,
-            closedTickets: resolvedTickets.length,
+            totalTickets: useOwnTicketSummary ? summaryTickets?.length ?? 0 : openTickets.length + resolvedTickets.length,
+            openTickets: useOwnTicketSummary ? ownOpenTickets.length : openTickets.length,
+            closedTickets: useOwnTicketSummary ? ownResolvedTickets.length : resolvedTickets.length,
             recentActivity,
-            upcomingDeadlines: toUpcomingDeadlines(projects)
+            upcomingDeadlines,
         };
 
         return JsonResponse({
@@ -208,11 +104,12 @@ export const handle = {
 export default function DashboardRoute() {
     const { data, error } = useLoaderData<JsonResponseResult<DashboardData>>();
     const userInfo = useOutletContext<UserInfoResponse>();
+    const userRole = userInfo.role.toLowerCase() as UserInfoResponse["role"]
     const navigate = useNavigate();
-    const normalizedRole = userInfo.role.toLowerCase();
-    const projectLabel = normalizedRole === roleNames.admin ? "Total Projects" : "Visible Projects";
-    const ticketLabel = normalizedRole === roleNames.admin ? "Total Tickets" : "Visible Tickets";
-    const deadlineLabel = normalizedRole === roleNames.admin ? "Upcoming Deadlines" : "Upcoming Deadlines In Your Scope";
+    const projectLabel = getDashboardProjectLabel(userRole);
+    const { ticketLabel, openTicketLabel, closedTicketLabel } = getDashboardTicketLabels(userInfo.role);
+    const deadlineLabel = getDashboardDeadlineLabel(userRole);
+    const dashboardDescription = getDashboardDescription(userRole);
 
     function getTicketRoute(ticket: BasicTicketInfo): string {
         return `/projects/${ticket.projectId}/tickets/${ticket.id}`;
@@ -224,6 +121,7 @@ export default function DashboardRoute() {
             navigate(route);
         }
     }
+
 
     if (error || !data) {
         return (
@@ -238,7 +136,7 @@ export default function DashboardRoute() {
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">Dashboard</h1>
                 <p className="text-base-content/65 mt-1">
-                    Overview of projects and tickets currently visible to your role.
+                    {dashboardDescription}
                 </p>
             </div>
             <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
@@ -262,7 +160,7 @@ export default function DashboardRoute() {
                     <div className="stat-figure text-accent">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                     </div>
-                    <div className="stat-title">Open Tickets</div>
+                    <div className="stat-title">{openTicketLabel}</div>
                     <div className="stat-value text-accent">{data.openTickets}</div>
                 </div>
 
@@ -280,7 +178,7 @@ export default function DashboardRoute() {
                                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </div>
-                    <div className="stat-title">Closed Tickets</div>
+                    <div className="stat-title">{closedTicketLabel}</div>
                     <div className="stat-value text-content">{data.closedTickets}</div>
                 </div>
             </div>

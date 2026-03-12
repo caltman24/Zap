@@ -5,7 +5,6 @@ import { CompanyMemberPerRole, ProjectManagerInfo, ProjectResponse, UserInfoResp
 import { useEditMode } from "~/utils/editMode";
 import { ActionResponseParams, JsonResponseResult } from "~/utils/response";
 import RouteLayout from "~/layouts/RouteLayout";
-import roleNames from "~/data/roles";
 import MembersListTable from "~/components/MembersListTable";
 import TicketTable from "~/components/TicketTable";
 import { DeadlineDisplay } from "~/utils/deadline";
@@ -43,10 +42,6 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
 
     // State for form fields
     const [priority, setPriority] = useState<string>(project?.priority || "");
-
-    const isAdmin = userRole === roleNames.admin
-    const isManagedProject = project?.projectManager?.id === userInfo.memberId
-    const canManageProject = isAdmin || isManagedProject
 
     // Reset priority when toggling edit mode
     const handleEditToggle = () => {
@@ -172,7 +167,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                             </div>
                                         </div>
                                         <div className="flex gap-3 items-center flex-shrink-0 ml-6">
-                                            {canManageProject && (
+                                            {project.capabilities.canEdit && (
                                                 <button
                                                     onClick={handleEditToggle}
                                                     className="btn btn-soft btn-sm gap-2 shadow-sm"
@@ -181,7 +176,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                                     Edit Details
                                                 </button>
                                             )}
-                                            {canManageProject && (
+                                            {project.capabilities.canArchive && (
                                                 <Form method="post" action={`/projects/${project.id}/archive`}>
                                                     <button
                                                         type="submit"
@@ -199,7 +194,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                 </div>
 
                                 {/* Project Manager Modal */}
-                                {isAdmin && (
+                                {project.capabilities.canAssignProjectManager && (
                                     <ProjectManagerListModal
                                         modalRef={assignProjectManagerModalRef}
                                         loading={getProjectManagersFetcher.state === "loading"}
@@ -225,7 +220,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                                                 <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide">
                                                     Project Manager
                                                 </div>
-                                                {isAdmin && !project.isArchived && (
+                                                {project.capabilities.canAssignProjectManager && (
                                                     <div className="flex gap-1">
                                                         <button
                                                             onClick={() => handleOnGetPMs()}
@@ -306,7 +301,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Assigned Members</h2>
                             {/* Add members */}
-                            {(canManageProject && !project.isArchived) && (
+                            {project.capabilities.canManageMembers && (
                                 <>
                                     <div className="flex gap-2">
                                         <button className="btn btn-soft btn-sm gap-2 shadow-sm" onClick={() => handleOnGetMembersList()}>
@@ -357,7 +352,7 @@ export default function Route({ loaderData, userInfo, collection }: ProjectRoute
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Tickets</h2>
                             {
-                                !project.isArchived && [roleNames.admin, roleNames.projectManager, roleNames.submitter].includes(userInfo.role) && (
+                                project.capabilities.canCreateTicket && (
                                     <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm gap-2 shadow-sm">
                                         <span className="material-symbols-outlined text-success text-sm">add_circle</span>
                                         New Ticket
@@ -390,4 +385,3 @@ function getPriorityDisplay(priority: string): string {
             return priority;
     }
 }
-

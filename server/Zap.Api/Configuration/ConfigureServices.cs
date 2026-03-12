@@ -16,6 +16,7 @@ using Zap.Api.Features.FileUpload.Configuration;
 using Zap.Api.Features.FileUpload.Services;
 using Zap.Api.Features.Projects.Services;
 using Zap.Api.Features.Tickets.Services;
+using Zap.Api.Features.Users.Services;
 
 namespace Zap.Api.Configuration;
 
@@ -52,6 +53,7 @@ public static class ConfigureServices
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketAuthorizationService, TicketAuthorizationService>();
         services.AddScoped<ITicketHistoryService, TicketHistoryService>();
+        services.AddScoped<IUserPermissionService, UserPermissionService>();
 
         services.AddScoped<ITicketCommentsService, TicketCommentsService>();
 

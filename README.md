@@ -8,7 +8,7 @@ Companies can manage projects, assign members, track tickets, and collaborate th
 
 ## Highlights
 
-- Server-first authorization: the API decides what each role can see and do, and the UI mirrors that behavior
+- Server-first authorization: the API decides what each role can see and do, and the UI mirrors that behavior through API-driven permissions and resource capabilities
 - Scoped data access: developers and submitters only receive projects and tickets they are actually allowed to access
 - Full-stack architecture: Remix SSR frontend, ASP.NET Core Minimal API backend, PostgreSQL persistence, S3-ready attachment path
 - Maintainable backend design: vertical slice structure, thin endpoints, focused services, integration-tested permission logic
@@ -39,7 +39,7 @@ Notes: the client is a Remix v2 + Vite app that runs server-side. All API calls 
 ## What This Demonstrates
 
 - Full-stack product development with a Remix SSR frontend and ASP.NET Core Minimal API backend
-- Role-based authorization enforced on both the API and UI
+- API-driven authorization and UI gating: global permissions come from `/user/info`, while project/ticket actions come from resource capabilities
 - Vertical slice backend architecture with thin endpoints and service-based business logic
 - Session-based auth in the web app with token refresh handling
 - Scoped data access so users only receive the projects and tickets relevant to their role
@@ -59,9 +59,12 @@ I built Zap to be a strong hiring project rather than a tutorial app. The goal w
 
 If you are reviewing this as part of an interview or application, the best places to look are:
 
-- `client/app/data/permissions.ts` and `client/app/utils/ticketPermissions.ts`
+- `client/app/data/routes.ts` and `client/app/utils/permissions.ts`
+- `client/app/commonRoutes/projectDetails/commonRoute.tsx`
+- `client/app/routes/_app.projects.$projectId.tickets.$ticketId/route.tsx`
 - `server/Zap.Api/Features/Tickets/Services/TicketAuthorizationService.cs`
 - `server/Zap.Api/Features/Projects/Services/ProjectAuthorizationService.cs`
+- `server/Zap.Api/Features/Users/Services/UserPermissionService.cs`
 - `server/Zap.Tests/IntegrationTests/`
 
 ---
@@ -85,8 +88,10 @@ Key client files and locations:
 - `client/app/components/ProjectCard.tsx` — project card for grids
 - `client/app/components/EditModeForm.tsx` — reusable edit wrapper
 - `client/app/data/roles.ts` — app roles
-- `client/app/data/permissions.ts` — permission matrix
-- `client/app/data/routes.ts` — sidebar/navigation structure
+- `client/app/data/routes.ts` — sidebar/navigation structure and required global permissions
+- `client/app/utils/permissions.ts` — global permission helper
+- `client/app/utils/commentPermissions.ts` — temporary comment UI permission helper
+- `client/app/commonRoutes/projectDetails/commonRoute.tsx` — project detail UI driven by API capabilities
 
 Key server files and locations:
 - `server/Zap.Api/Program.cs` — entry point and service registration
@@ -122,7 +127,7 @@ Key server files and locations:
 1. Vertical slice architecture (server) — each feature is self-contained with endpoints, services, DTOs, and filters
 2. Fetcher-based mutations (client) — headless routes like `/tickets/:id/update-priority` enable optimistic UI without full navigation
 3. Shared route logic — `client/app/routes/commonRoutes/projectDetails` is reused across views (all/my/archived)
-4. Role-based access — enforced via authorization policies, endpoint filters, and service validation
+4. API-driven access model — global app permissions come from `/user/info`, while project/ticket action visibility comes from resource `capabilities`
 5. Token auth flow — login returns bearer + refresh tokens stored in session cookie; client auto-refreshes with a 2-minute expiry buffer
 6. Ticket history — all ticket mutations create audit trail entries with human-friendly messages
 
@@ -131,6 +136,10 @@ Key server files and locations:
 ## Role Matrix
 
 The API is the source of truth for permissions. The Remix client mirrors those rules by hiding irrelevant routes, buttons, and actions.
+
+- Global permissions are returned from `/user/info` as `user.permissions` and drive navigation, page access, and broad UI actions like `company.edit`, `project.create`, and `project.assignPm`
+- Resource-specific actions are returned on project and ticket payloads as `capabilities`, so UI decisions stay aligned with live server state such as project membership, PM ownership, ticket assignee, archive status, and ticket status
+- The API still enforces everything server-side; the client uses permissions/capabilities as presentation hints rather than the final authority
 
 ### Admin
 
@@ -228,4 +237,3 @@ Applying EF migrations
 - No CI/CD pipeline (no GitHub Actions or similar configured)
 - No client tests configured (no test runner present)
 - Incomplete features (see `todo.txt`): user settings/profile, admin tools, invite system, realtime notifications
-

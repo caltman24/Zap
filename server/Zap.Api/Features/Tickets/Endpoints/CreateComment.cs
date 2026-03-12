@@ -16,17 +16,20 @@ public class CreateComment : IEndpoint
         app.MapPost("/{ticketId}/comments", Handle)
             .WithCompanyMember()
             .WithTicketAccessValidation()
-            .WithTicketArchiveValidation()
             .WithRequestValidation<Request>();
     }
 
-    private static async Task<NoContent> Handle(
+    private static async Task<Results<ForbidHttpResult, NoContent>> Handle(
         [FromRoute] string ticketId,
         CurrentUser currentUser,
+        ITicketAuthorizationService ticketAuthorizationService,
         ITicketCommentsService commentsService,
         Request request
     )
     {
+        if (!await ticketAuthorizationService.CanCommentTicketAsync(ticketId, currentUser))
+            return TypedResults.Forbid();
+
         await commentsService.CreateCommentAsync(
             currentUser.Member!.Id,
             ticketId,

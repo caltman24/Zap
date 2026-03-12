@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
+using Zap.Api.Features.Users.Services;
 
 namespace Zap.Api.Features.Users.Endpoints;
 
@@ -12,10 +13,12 @@ public class GetUserInfo : IEndpoint
     }
 
     private static Results<NotFound<string>, Ok<Response>> Handle(
-        HttpContext context, CurrentUser currentUser)
+        HttpContext context, CurrentUser currentUser, IUserPermissionService userPermissionService)
     {
         var user = currentUser.User;
         if (user == null) return TypedResults.NotFound("User not found");
+
+        var permissions = userPermissionService.GetPermissions(currentUser);
 
         var response = new Response
         (
@@ -26,7 +29,8 @@ public class GetUserInfo : IEndpoint
             AvatarUrl: user.AvatarUrl,
             Role: currentUser.Member?.Role?.Name ?? "",
             CompanyId: currentUser.CompanyId,
-            MemberId: currentUser.Member?.Id
+            MemberId: currentUser.Member?.Id,
+            Permissions: permissions
         );
 
         return TypedResults.Ok(response);
@@ -40,5 +44,6 @@ public class GetUserInfo : IEndpoint
         string Role,
         string AvatarUrl,
         string? CompanyId,
-        string? MemberId);
+        string? MemberId,
+        IReadOnlyList<string> Permissions);
 }

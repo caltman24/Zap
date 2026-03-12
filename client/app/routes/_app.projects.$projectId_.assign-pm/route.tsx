@@ -1,21 +1,21 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
+import { UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { ActionResponse, ForbiddenResponse } from "~/utils/response";
+import { hasPermission } from "~/utils/permissions";
 import tryCatch from "~/utils/tryCatch";
-import { validateRole } from "~/utils/validate";
 import { assignPM } from "./server.assign-pm";
 
 // Assign pm to project
 export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
-    const userRole = session.get("user").role
+    const user = session.get("user") as UserInfoResponse;
     const formData = await request.formData();
     const memberId = formData.get("memberId");
 
-    if (!validateRole(userRole, permissions.project.assignPM)) {
+    if (!hasPermission(user.permissions, "project.assignPm")) {
         return ForbiddenResponse()
     }
 

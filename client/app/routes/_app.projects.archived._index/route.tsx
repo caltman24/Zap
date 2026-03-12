@@ -9,12 +9,13 @@ import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
 import ProjectCard from "~/components/ProjectCard";
 import roleNames from "~/data/roles";
+import { hasPermission } from "~/utils/permissions";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const userInfo = session.get("user");
+    const userInfo = session.get("user") as UserInfoResponse;
 
-    if (![roleNames.admin, roleNames.projectManager].includes(userInfo.role.toLowerCase())) {
+    if (!hasPermission(userInfo.permissions, "project.viewArchived")) {
         return redirect("/projects/myprojects");
     }
 

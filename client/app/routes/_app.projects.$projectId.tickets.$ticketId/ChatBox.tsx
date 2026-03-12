@@ -2,21 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { Form } from "@remix-run/react";
 import { TicketComment } from "~/services/api.server/types";
 import { convertTo12HourTime, formatDateHeader, isSameDay, isToday } from "~/utils/dateTime";
-import { canEditComment, canDeleteComment } from "~/utils/ticketPermissions";
-import roleNames, { type RoleName } from "~/data/roles";
 
 type ChatBoxProps = {
     className?: string,
     comments?: TicketComment[]
     userId: string | undefined
-    userRole: RoleName
-    isArchived: boolean
     loading: boolean
     onDeleteComment: (commentId: string) => void
     onEditComment: (commentId: string, message: string) => void
 }
 
-export default function ChatBox({ className, comments, userId, userRole, isArchived, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
+export default function ChatBox({ className, comments, userId, loading, onDeleteComment, onEditComment }: ChatBoxProps) {
     const scrollableChatContainerRef = useRef<HTMLDivElement>(null)
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
     const [editMessage, setEditMessage] = useState("")
@@ -97,10 +93,9 @@ export default function ChatBox({ className, comments, userId, userRole, isArchi
                                 </div>
                                 <div className="flex gap-2">
                                     {/* Check permissions before showing edit/delete icons */}
-                                    {(canEditComment(userRole, !!userId && c.sender.id === userId, isArchived) || 
-                                      canDeleteComment(userRole, !!userId && c.sender.id === userId, isArchived)) && (
+                                    {(c.capabilities.canEdit || c.capabilities.canDelete) && (
                                         <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transform duration-100 ease-in">
-                                            {canEditComment(userRole, !!userId && c.sender.id === userId, isArchived) && (
+                                            {c.capabilities.canEdit && (
                                                 <span
                                                     onClick={() => handleEditClick(c.id, c.message)}
                                                     className="material-symbols-outlined text-gray-600 hover:text-primary hover:cursor-pointer"
@@ -109,7 +104,7 @@ export default function ChatBox({ className, comments, userId, userRole, isArchi
                                                     edit
                                                 </span>
                                             )}
-                                            {canDeleteComment(userRole, !!userId && c.sender.id === userId, isArchived) && (
+                                            {c.capabilities.canDelete && (
                                                 <span
                                                     onClick={() => onDeleteComment(c.id)}
                                                     className="material-symbols-outlined text-gray-600 hover:text-error hover:cursor-pointer"

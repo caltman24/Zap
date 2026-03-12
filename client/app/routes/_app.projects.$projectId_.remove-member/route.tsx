@@ -1,22 +1,15 @@
 import { ActionFunctionArgs, data, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import permissions from "~/data/permissions";
 import apiClient from "~/services/api.server/apiClient";
 import { getSession } from "~/services/sessions.server";
-import { ActionResponse, ForbiddenResponse } from "~/utils/response";
+import { ActionResponse } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import { validateRole } from "~/utils/validate";
 import removeMember from "./server.remove-member";
 
 export async function action({ request, params }: ActionFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
-    const userRole = session.get("user").role
     const formData = await request.formData();
     const memberId = formData.get("memberId");
-
-    if (!validateRole(userRole, permissions.project.edit)) {
-        return ForbiddenResponse()
-    }
 
     const {
         data: tokenResponse,
