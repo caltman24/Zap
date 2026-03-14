@@ -1,0 +1,27 @@
+user uploads attachment on client
+
+server recieves the attachment (pdf)
+
+server validates the attachment 
+
+server creates a TicketAttachment object
+ - Ticket Attachment contains StoredFile Object
+
+add attachment to database
+ - Uses TicketAttachmentService.cs
+ - Since StoredFile object is a property insdide the TicketAttachment object
+   this should auto add data to StoredFile table as well
+
+upload file to s3
+ - uses S3FileUploadService.cs
+ - bucketname
+ - key should be private/companies/{companyId}/attachments/{attachmendId}.pdf
+
+
+Service Notes:
+ - TicketAttachmentService: Responsible for reading/writing to DB
+ - S3FileUploadService: Responseible for reading/writing to S3
+
+Avatar & Company Logo Notes:
+ - Avatar key should be: public/companies/{companyId}/users/{userId}/avatar/{id}.file
+ - Company Logo key should be: public/companies/{companyId}/Branding/{id}.file
