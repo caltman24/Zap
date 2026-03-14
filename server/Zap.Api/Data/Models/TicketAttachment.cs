@@ -1,5 +1,6 @@
 namespace Zap.Api.Data.Models;
 
+// will always be a file uploaded to s3 storage
 public class TicketAttachment : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -10,12 +11,6 @@ public class TicketAttachment : BaseEntity
     public required string OwnerId { get; set; }
     public CompanyMember Owner { get; set; } = default!;
 
-    public string StoreKey { get; set; } = default!;
-    public string StoreUrl { get; set; } = default!;
-
-
-    // Name of file
-    // size of file
-    // type of file
-    // s3: object key / url. (Url embeds object key inside)
+    public required string FileId { get; set; }
+    public StoredFile File { get; set; } = default!;
 }

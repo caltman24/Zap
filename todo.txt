@@ -11,6 +11,10 @@ Goal: turn Zap into a polished, portfolio-quality internal business app that fee
   - Wire ticket attachments to S3/local storage
   - List, download, and delete attachments from the ticket details page
   - Add tests for upload/delete permissions and failures
+  - 3 CORE principle
+    1. S3 does storage
+    2. DB does tracking
+    3. API does security
 
 - [ ] Invitations and company onboarding
   - Create a real invite flow for joining an existing company

@@ -22,8 +22,10 @@ public class AppDbContext : IdentityUserContext<AppUser>
     public DbSet<TicketType> TicketTypes { get; set; } = default!;
 
     public DbSet<TicketComment> TicketComments { get; set; } = default!;
-    public DbSet<TicketAttachment> TicketAttachments { get; set; } = default!;
     public DbSet<TicketHistory> TicketHistories { get; set; } = default!;
+
+    public DbSet<TicketAttachment> TicketAttachments { get; set; } = default!;
+    public DbSet<StoredFile> StoredFiles { get; set; } = default!;
 
     public override int SaveChanges()
     {
@@ -112,13 +114,38 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithOne(t => t.Ticket)
             .HasForeignKey(t => t.TicketId);
         builder.Entity<Ticket>()
-            .HasMany(t => t.Attachments)
-            .WithOne(t => t.Ticket)
-            .HasForeignKey(t => t.TicketId);
-        builder.Entity<Ticket>()
             .HasMany(t => t.History)
             .WithOne(t => t.Ticket)
             .HasForeignKey(t => t.TicketId);
+        builder.Entity<Ticket>()
+            .HasMany(t => t.Attachments)
+            .WithOne(t => t.Ticket)
+            .HasForeignKey(t => t.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Ticket Attachments
+        builder.Entity<TicketAttachment>()
+            .HasOne(a => a.Owner)
+            .WithMany(a => a.UploadedAttachments)
+            .HasForeignKey(a => a.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<TicketAttachment>()
+            .HasOne(a => a.File)
+            .WithOne(f => f.TicketAttachment)
+            .HasForeignKey<TicketAttachment>(a => a.FileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Stored Files
+        builder.Entity<StoredFile>()
+            .HasOne(f => f.Company)
+            .WithMany()
+            .HasForeignKey(f => f.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<StoredFile>()
+            .HasOne(f => f.Owner)
+            .WithMany(m => m.UploadedFiles)
+            .HasForeignKey(f => f.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Ticket Comment
         builder.Entity<TicketComment>()
@@ -129,16 +156,6 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .HasOne(c => c.Ticket)
             .WithMany()
             .HasForeignKey(c => c.TicketId);
-
-        // Ticket Attachments
-        builder.Entity<TicketAttachment>()
-            .HasOne(c => c.Ticket)
-            .WithMany()
-            .HasForeignKey(t => t.TicketId);
-        builder.Entity<TicketAttachment>()
-            .HasOne(a => a.Owner)
-            .WithMany()
-            .HasForeignKey(a => a.OwnerId);
 
         // Ticket History
         builder.Entity<TicketHistory>()

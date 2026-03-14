@@ -11,6 +11,8 @@ public class CompanyMember : BaseEntity
     public Company? Company { get; set; }
 
     public ICollection<Project> AssignedProjects { get; set; } = [];
+    public ICollection<TicketAttachment> UploadedAttachments { get; set; } = [];
+    public ICollection<StoredFile> UploadedFiles { get; set; } = [];
 
     public string RoleId { get; set; } = default!;
     public CompanyRole Role { get; set; } = default!;
