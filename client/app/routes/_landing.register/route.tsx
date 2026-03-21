@@ -1,11 +1,38 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
+import { useMemo, useState } from "react";
 import apiClient from "~/services/api.server/apiClient";
-import { commitSession, getSession } from "~/services/sessions.server";
+import { getSession } from "~/services/sessions.server";
 import setSession from "../_landing.login/setSession";
 import tryCatch from "~/utils/tryCatch";
 import { TokenResponse } from "~/services/api.server/types";
+
+const registerHighlights = [
+    {
+        title: "Real account flow",
+        description: "Create a normal account and drop straight into the setup path you already built.",
+    },
+    {
+        title: "Strong password rules",
+        description: "Client-side validation stays intact so the visual refresh does not weaken the existing constraints.",
+    },
+] as const;
+
+function getActionMessage(message: unknown) {
+    if (typeof message === "string") {
+        return message;
+    }
+
+    if (message && typeof message === "object") {
+        const firstValue = Object.values(message)[0];
+
+        if (typeof firstValue === "string") {
+            return firstValue;
+        }
+    }
+
+    return null;
+}
 
 export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
@@ -15,7 +42,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
 
-    // Check if passwords match
     if (password !== confirmPassword) {
         return Response.json({ message: "Passwords do not match" });
     }
@@ -26,7 +52,8 @@ export async function action({ request }: ActionFunctionArgs) {
             lastName: lastName as string,
             email: email as string,
             password: password as string,
-        }));
+        }),
+    );
 
     if (error) {
         return Response.json({ message: "Failed to register. Please try again later." });
@@ -55,136 +82,195 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return null;
 }
 
-export default function RegisterCompany() {
+export default function RegisterAccount() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
     const actionData = useActionData<typeof action>();
-    const [error, setError] = useState<string | null>(null);
-    const [password, setPassword] = useState<string>("");
-    const [confirmPassword, setConfirmPassword] = useState<string>("");
-    const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+    const actionMessage = getActionMessage(actionData?.message);
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    useEffect(() => {
-        if (actionData?.message) {
-            setError(actionData.message);
+    const passwordsMatch = useMemo(() => {
+        if (password.length === 0 && confirmPassword.length === 0) {
+            return true;
         }
-    }, [actionData])
 
+        return password === confirmPassword;
+    }, [confirmPassword, password]);
 
     return (
-        <div className="grid place-items-center py-10">
-            <Form method="post" >
-                <fieldset className="fieldset w-sm md:w-lg bg-base-200 border border-base-300 p-4 rounded-box">
-                    <legend className="fieldset-legend text-2xl">Register Account</legend>
-                    {error && <p className="text-error">{error}</p>}
-                    <div className="flex gap-4">
-                        <div className="w-full">
-                            <label className="fieldset-label mb-1">First Name</label>
-                            <label className="input validator w-full">
-                                <input type="text" name="firstName" maxLength={50} placeholder="John" required className="w-full" />
-                            </label>
-                            <div className="validator-hint hidden">Required</div>
-                        </div>
-
-                        <div className="w-full">
-                            <label className="fieldset-label mb-1">Last Name</label>
-                            <label className="input validator w-full">
-                                <input type="text" name="lastName" maxLength={50} placeholder="Doe" required className="w-full" />
-                            </label>
-                            <div className="validator-hint hidden">Required</div>
-                        </div>
+        <div className="landing-page min-h-screen px-6 pb-14 pt-24 sm:px-8 sm:pb-18 sm:pt-28 lg:pt-32">
+            <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center lg:gap-14 xl:grid-cols-[minmax(0,1fr)_31rem]">
+                <section className="order-2 space-y-7 lg:order-1 lg:pr-10">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--landing-on-surface-variant)]">
+                        <span className="material-symbols-outlined text-base text-[var(--landing-primary)]">person_add</span>
+                        Account Setup
                     </div>
 
-                    <label className="fieldset-label">Email</label>
-                    <label className="input validator w-full">
-                        <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></g></svg>
-                        <input type="email" name="email" maxLength={75} placeholder="mail@site.com" required />
-                    </label>
-                    <div className="validator-hint hidden">Enter valid email address</div>
+                    <div className="space-y-5">
+                        <h1 className="landing-headline max-w-2xl text-4xl font-extrabold tracking-[-0.04em] text-[var(--landing-on-surface)] sm:text-5xl lg:text-6xl">
+                            Create your account and start building your workspace.
+                        </h1>
+                        <p className="max-w-xl text-lg leading-8 text-[var(--landing-on-surface-variant)]">
+                            Register with the same production-minded auth flow that powers the app, then move directly into company setup and project onboarding.
+                        </p>
+                    </div>
 
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {registerHighlights.map((highlight) => (
+                            <article key={highlight.title} className="rounded-3xl bg-[var(--landing-surface-container-low)] p-6">
+                                <h2 className="landing-headline text-lg font-bold tracking-[-0.02em] text-[var(--landing-on-surface)]">
+                                    {highlight.title}
+                                </h2>
+                                <p className="mt-3 text-sm leading-7 text-[var(--landing-on-surface-variant)]">
+                                    {highlight.description}
+                                </p>
+                            </article>
+                        ))}
+                    </div>
 
-                    <label className="fieldset-label">Password</label>
-                    <label className="input validator w-full">
-                        <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></g></svg>
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            required
-                            minLength={6}
-                            maxLength={50}
-                            placeholder="Password"
-                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}"
-                            title="Must be more than 6 characters, including number, lowercase letter, uppercase letter, and non alphanumeric character"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        <button
-                            type="button"
-                            className="opacity-70 hover:opacity-100"
-                            onClick={() => setShowPassword(!showPassword)}
-                        >
-                            {showPassword ?
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                </svg>
-                                :
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                                </svg>
-                            }
-                        </button>
-                    </label>
-                    <p className="validator-hint hidden">
-                        Must be more than 6 characters, including
-                        <br />At least one number
-                        <br />At least one lowercase letter
-                        <br />At least one uppercase letter
-                        <br />At least one non alphanumeric character
-                    </p>
+                    <div className="rounded-[1.75rem] bg-[color:var(--landing-surface-container-high)]/45 p-6 sm:p-8">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-primary)]">What happens next</p>
+                        <div className="mt-4 space-y-3 text-sm leading-7 text-[var(--landing-on-surface-variant)]">
+                            <p>1. Create your account with a strong password.</p>
+                            <p>2. Enter the setup flow and attach yourself to a company.</p>
+                            <p>3. Start managing projects, tickets, and role-aware workflows.</p>
+                        </div>
+                    </div>
+                </section>
 
-                    <label className="fieldset-label">Confirm Password</label>
-                    <label className={`input w-full ${(confirmPassword.length > 1 || password.length > 1) && (password === confirmPassword ? "input-success" : "input-error")}`}>
-                        <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></g></svg>
-                        <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            name="confirmPassword"
-                            required
-                            minLength={6}
-                            maxLength={50}
-                            placeholder="Confirm Password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                        <button
-                            type="button"
-                            className="opacity-70 hover:opacity-100"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                            {showConfirmPassword ?
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                </svg>
-                                :
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                                </svg>
-                            }
-                        </button>
-                    </label>
-                    <div className={`text-error text-xs ${password === confirmPassword ? "hidden" : ""}`}>Passwords must match</div>
+                <section className="landing-auth-panel order-1 lg:order-2">
+                    <div className="landing-auth-card">
+                        <div className="space-y-3 pb-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-primary)]">New Account</p>
+                            <h2 className="landing-headline text-3xl font-extrabold tracking-[-0.03em] text-[var(--landing-on-surface)]">
+                                Register Account
+                            </h2>
+                            <p className="text-sm leading-6 text-[var(--landing-on-surface-variant)]">
+                                Create a full account, then continue into setup without changing the auth behavior already in place.
+                            </p>
+                        </div>
 
-                    <button className="btn btn-primary mt-4" type="submit" >
-                        {isSubmitting ?
-                            <span className="loading loading-spinner loading-sm"></span>
-                            : "Register"}
-                    </button>
-                </fieldset>
-            </Form>
+                        {actionMessage && <div className="landing-auth-alert">{actionMessage}</div>}
+
+                        <Form className="space-y-5" method="post">
+                            <fieldset className="space-y-5" disabled={isSubmitting}>
+                                <div className="grid gap-5 sm:grid-cols-2">
+                                    <label className="block space-y-2">
+                                        <span className="landing-auth-label">First Name</span>
+                                        <span className="landing-auth-input-wrap">
+                                            <span aria-hidden="true" className="landing-auth-input-icon material-symbols-outlined">badge</span>
+                                            <input className="landing-auth-input" maxLength={50} name="firstName" placeholder="John" required type="text" />
+                                        </span>
+                                    </label>
+
+                                    <label className="block space-y-2">
+                                        <span className="landing-auth-label">Last Name</span>
+                                        <span className="landing-auth-input-wrap">
+                                            <span aria-hidden="true" className="landing-auth-input-icon material-symbols-outlined">badge</span>
+                                            <input className="landing-auth-input" maxLength={50} name="lastName" placeholder="Doe" required type="text" />
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <label className="block space-y-2">
+                                    <span className="landing-auth-label">Email</span>
+                                    <span className="landing-auth-input-wrap">
+                                        <span aria-hidden="true" className="landing-auth-input-icon material-symbols-outlined">mail</span>
+                                        <input className="landing-auth-input" maxLength={75} name="email" placeholder="mail@site.com" required type="email" />
+                                    </span>
+                                </label>
+
+                                <label className="block space-y-2">
+                                    <span className="landing-auth-label">Password</span>
+                                    <span className="landing-auth-input-wrap">
+                                        <span aria-hidden="true" className="landing-auth-input-icon material-symbols-outlined">key</span>
+                                        <input
+                                            className="landing-auth-input"
+                                            maxLength={50}
+                                            minLength={6}
+                                            name="password"
+                                            onChange={(event) => setPassword(event.target.value)}
+                                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}"
+                                            placeholder="Password"
+                                            required
+                                            title="Must be more than 6 characters, including number, lowercase letter, uppercase letter, and non alphanumeric character"
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                        />
+                                        <button
+                                            className="landing-auth-toggle"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            type="button"
+                                        >
+                                            <span aria-hidden="true" className="material-symbols-outlined text-lg">
+                                                {showPassword ? "visibility_off" : "visibility"}
+                                            </span>
+                                        </button>
+                                    </span>
+                                </label>
+
+                                <p className="landing-auth-helper">
+                                    Use at least one number, one lowercase letter, one uppercase letter, and one non-alphanumeric character.
+                                </p>
+
+                                <label className="block space-y-2">
+                                    <span className="landing-auth-label">Confirm Password</span>
+                                    <span className={`landing-auth-input-wrap ${passwordsMatch ? "" : "landing-auth-input-wrap-error"}`.trim()}>
+                                        <span aria-hidden="true" className="landing-auth-input-icon material-symbols-outlined">verified_user</span>
+                                        <input
+                                            className="landing-auth-input"
+                                            maxLength={50}
+                                            minLength={6}
+                                            name="confirmPassword"
+                                            onChange={(event) => setConfirmPassword(event.target.value)}
+                                            placeholder="Confirm Password"
+                                            required
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                        />
+                                        <button
+                                            className="landing-auth-toggle"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            type="button"
+                                        >
+                                            <span aria-hidden="true" className="material-symbols-outlined text-lg">
+                                                {showConfirmPassword ? "visibility_off" : "visibility"}
+                                            </span>
+                                        </button>
+                                    </span>
+                                </label>
+
+                                {!passwordsMatch && (
+                                    <p className="text-sm text-[#ffdad6]">
+                                        Passwords must match before you can continue.
+                                    </p>
+                                )}
+
+                                <button className="landing-button landing-button-primary w-full min-h-13 text-base disabled:opacity-70 sm:min-h-14" type="submit">
+                                    {isSubmitting ? (
+                                        <span className="flex items-center gap-3">
+                                            <span className="landing-spinner" />
+                                            Creating Account
+                                        </span>
+                                    ) : (
+                                        "Register"
+                                    )}
+                                </button>
+                            </fieldset>
+                        </Form>
+
+                        <p className="text-sm text-[var(--landing-on-surface-variant)]">
+                            Already have an account?{" "}
+                            <Link className="font-semibold text-[var(--landing-primary)] transition-colors duration-200 hover:text-[var(--landing-on-surface)]" to="/login">
+                                Sign in here
+                            </Link>
+                        </p>
+                    </div>
+                </section>
+            </div>
         </div>
     );
 }

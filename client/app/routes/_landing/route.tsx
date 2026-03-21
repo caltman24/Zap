@@ -1,7 +1,7 @@
-import { Outlet, useLoaderData } from "@remix-run/react";
+import { Outlet, useLoaderData, useLocation } from "@remix-run/react";
 import MainNavbar from "./MainNavbar";
 import { getSession } from "~/services/sessions.server";
-import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -14,11 +14,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function LandingRoute() {
     const { isAuthenticated } = useLoaderData<typeof loader>();
+    const location = useLocation();
+    const isHomepage = location.pathname === "/";
 
     return (
         <div>
-            <MainNavbar isAuthenticated={isAuthenticated} />
-            <Outlet />
+            {!isHomepage && <MainNavbar isAuthenticated={Boolean(isAuthenticated)} />}
+            <Outlet context={{ isAuthenticated: Boolean(isAuthenticated) }} />
         </div>
     )
 }

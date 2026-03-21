@@ -1,63 +1,35 @@
-import { Form, Link } from "@remix-run/react";
+import { Link, useLocation } from "@remix-run/react";
 
 export default function MainNavbar({ isAuthenticated }: { isAuthenticated: boolean }) {
+    const location = useLocation();
+    const isLoginPage = location.pathname === "/login";
+
+    const secondaryLink = { to: "/", label: "Home" };
+    const primaryLink = isAuthenticated
+        ? { to: "/dashboard", label: "Dashboard" }
+        : isLoginPage
+            ? { to: "/register", label: "Register" }
+            : { to: "/login", label: "Sign In" };
+    const primaryLinkClassName = isAuthenticated
+        ? "landing-button landing-button-primary landing-nav-button"
+        : "landing-button landing-button-secondary landing-nav-button";
+
     return (
-        <div className="bg-base-200 shadow-sm">
-            <nav className="navbar max-w-7xl mx-auto">
-                <div className="flex-1">
-                    <Link to="/" className="btn btn-ghost text-2xl">ZAP</Link>
-                </div>
-                <div className="flex gap-2 items-center">
-                    <ul className="menu menu-horizontal px-1 2xl:text-lg">
-                        <li>
-                            <Link to="/">Home</Link>
-                        </li>
-                        {
-                            isAuthenticated ?
-                                <li>
-                                    <Link to="/dashboard">Dashboard</Link>
-                                </li>
-                                :
-                                (
-                                    <>
-                                        <li>
-                                            <Link to="/login">Login</Link>
-                                        </li>
-                                        <li>
-                                            <Link to="/register">Register</Link>
-                                        </li>
-                                    </>
-                                )
-                        }
-                    </ul>
-                    {
-                        isAuthenticated && (
-                            <div className="dropdown dropdown-end">
-                                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                                    <div className="w-10 rounded-full">
-                                        <img
-                                            alt="Tailwind CSS Navbar component"
-                                            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                                    </div>
-                                </div>
-                                <ul
-                                    tabIndex={0}
-                                    className="menu menu-sm dropdown-content bg-base-200 rounded-box z-1 mt-3 w-52 p-2 shadow">
-                                    <li>
-                                        <a className="justify-between">
-                                            Profile
-                                        </a>
-                                    </li>
-                                    <li><a>Settings</a></li>
-                                    <Form method="post">
-                                        <li><button type="submit" formAction="/logout">Logout</button></li>
-                                    </Form>
-                                </ul>
-                            </div>
-                        )
-                    }
+        <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[color:var(--landing-surface)]/80 backdrop-blur-xl">
+            <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-6 py-3.5 sm:px-8 sm:py-4">
+                <Link className="landing-headline text-2xl font-black tracking-[-0.08em] text-[var(--landing-on-surface)]" to="/">
+                    Zap
+                </Link>
+
+                <div className="flex items-center gap-3">
+                    <Link className="landing-button landing-button-secondary landing-nav-button" to={secondaryLink.to}>
+                        {secondaryLink.label}
+                    </Link>
+                    <Link className={primaryLinkClassName} to={primaryLink.to}>
+                        {primaryLink.label}
+                    </Link>
                 </div>
             </nav>
-        </div>
-    )
+        </header>
+    );
 }

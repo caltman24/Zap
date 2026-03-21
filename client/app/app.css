@@ -3,3 +3,382 @@
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.landing-page {
+  --landing-primary: #c0c1ff;
+  --landing-primary-container: #8083ff;
+  --landing-surface: #131313;
+  --landing-surface-container-lowest: #0e0e0e;
+  --landing-surface-container-low: #1c1b1b;
+  --landing-surface-container-high: #2a2a2a;
+  --landing-surface-container-highest: #353534;
+  --landing-on-surface: #e5e2e1;
+  --landing-on-surface-variant: #c7c4d7;
+  --landing-outline-variant: rgba(70, 69, 84, 0.24);
+  --landing-tertiary-fixed: #ffdcc5;
+  --landing-tertiary-fixed-strong: #ffb783;
+  background:
+    radial-gradient(circle at top center, rgba(192, 193, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0)),
+    var(--landing-surface);
+}
+
+.landing-headline {
+  font-family: "Manrope", sans-serif;
+}
+
+.landing-kinetic-gradient {
+  background: linear-gradient(135deg, var(--landing-primary) 0%, var(--landing-primary-container) 100%);
+}
+
+.landing-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.landing-button:hover {
+  transform: translateY(-1px);
+}
+
+.landing-button-primary {
+  background: linear-gradient(135deg, var(--landing-primary) 0%, var(--landing-primary-container) 100%);
+  color: #1000a9;
+  box-shadow: 0 14px 28px rgba(128, 131, 255, 0.2);
+}
+
+.landing-button-secondary {
+  border: 1px solid var(--landing-outline-variant);
+  background: rgba(53, 53, 52, 0.42);
+  color: var(--landing-on-surface);
+  backdrop-filter: blur(16px);
+}
+
+.landing-button-large {
+  min-height: 3.5rem;
+  padding: 1rem 1.75rem;
+  font-size: 1rem;
+}
+
+.landing-nav-button {
+  min-height: 2.75rem;
+  padding-inline: 1.1rem;
+}
+
+@media (max-width: 639px) {
+  .landing-nav-button {
+    min-height: 2.5rem;
+    padding-inline: 0.9rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.landing-hero-stage {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgba(204, 211, 184, 0.98) 0%, rgba(188, 200, 165, 0.96) 52%, rgba(220, 220, 206, 0.9) 100%);
+}
+
+.landing-hero-stage::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+  content: "";
+}
+
+.landing-hero-stage-glow {
+  position: absolute;
+  inset: 12% 18%;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.24);
+  filter: blur(40px);
+}
+
+.landing-hero-card {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-botanical {
+  position: relative;
+  width: 9rem;
+  height: 10rem;
+}
+
+.landing-botanical-stem {
+  position: absolute;
+  left: 48%;
+  bottom: 0.5rem;
+  width: 0.18rem;
+  height: 6.2rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #5f8e4f 0%, #355f31 100%);
+  transform: rotate(10deg);
+  transform-origin: bottom center;
+}
+
+.landing-botanical-leaf {
+  position: absolute;
+  bottom: 2.3rem;
+  left: 50%;
+  width: 2rem;
+  height: 4.4rem;
+  border-radius: 9999px 9999px 9999px 9999px / 75% 75% 25% 25%;
+  background: linear-gradient(180deg, #5ca35a 0%, #2d6c32 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transform-origin: bottom center;
+}
+
+.landing-botanical-leaf::after {
+  position: absolute;
+  left: 50%;
+  top: 0.45rem;
+  width: 1px;
+  height: calc(100% - 0.9rem);
+  background: rgba(255, 255, 255, 0.22);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.landing-botanical-leaf-1 {
+  transform: translateX(-105%) rotate(-38deg);
+}
+
+.landing-botanical-leaf-2 {
+  height: 4.8rem;
+  transform: translateX(-75%) rotate(-18deg);
+}
+
+.landing-botanical-leaf-3 {
+  height: 4.2rem;
+  transform: translateX(-30%) rotate(-4deg);
+}
+
+.landing-botanical-leaf-4 {
+  width: 2.2rem;
+  height: 5.1rem;
+  transform: translateX(2%) rotate(14deg);
+}
+
+.landing-botanical-leaf-5 {
+  height: 4.5rem;
+  transform: translateX(28%) rotate(30deg);
+}
+
+.landing-botanical-leaf-6 {
+  width: 1.7rem;
+  height: 4rem;
+  transform: translateX(62%) rotate(42deg);
+}
+
+.landing-botanical-leaf-7 {
+  width: 1.6rem;
+  height: 3.5rem;
+  transform: translateX(86%) rotate(56deg);
+}
+
+.landing-botanical-warm .landing-botanical-stem {
+  background: linear-gradient(180deg, #7ca455 0%, #496f34 100%);
+}
+
+.landing-botanical-warm .landing-botanical-leaf {
+  background: linear-gradient(180deg, #7db15d 0%, #477637 100%);
+}
+
+.landing-preview-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  box-shadow: 0 30px 80px rgba(229, 226, 225, 0.04);
+}
+
+.landing-auth-panel {
+  position: relative;
+  width: 100%;
+}
+
+.landing-auth-panel::before {
+  position: absolute;
+  inset: 2.5rem 1.25rem auto;
+  height: 10rem;
+  border-radius: 9999px;
+  background: rgba(192, 193, 255, 0.14);
+  content: "";
+  filter: blur(64px);
+}
+
+.landing-auth-card {
+  position: relative;
+  max-width: 32rem;
+  margin-inline: auto;
+  border: 1px solid var(--landing-outline-variant);
+  border-radius: 1.75rem;
+  background: rgba(28, 27, 27, 0.92);
+  padding: 1.35rem;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(20px);
+}
+
+@media (min-width: 640px) {
+  .landing-auth-card {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-auth-card {
+    min-height: 41.5rem;
+    padding: 2.1rem;
+  }
+}
+
+.landing-auth-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--landing-on-surface-variant);
+}
+
+.landing-auth-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--landing-outline-variant);
+  border-radius: 1rem;
+  background: rgba(14, 14, 14, 0.92);
+  padding: 0.95rem 1rem;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.landing-auth-input-wrap:focus-within {
+  border-color: rgba(192, 193, 255, 0.42);
+  background: rgba(28, 27, 27, 0.96);
+  box-shadow: 0 0 0 4px rgba(192, 193, 255, 0.08);
+}
+
+.landing-auth-input-wrap-error {
+  border-color: rgba(255, 180, 171, 0.34);
+}
+
+.landing-auth-input-icon {
+  color: var(--landing-on-surface-variant);
+  font-size: 1.125rem;
+}
+
+.landing-auth-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--landing-on-surface);
+  font-size: 0.95rem;
+  outline: 0;
+}
+
+.landing-auth-input::placeholder {
+  color: rgba(199, 196, 215, 0.55);
+}
+
+.landing-auth-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--landing-on-surface-variant);
+  transition: color 180ms ease;
+}
+
+.landing-auth-toggle:hover {
+  color: var(--landing-on-surface);
+}
+
+.landing-auth-helper {
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  color: var(--landing-on-surface-variant);
+}
+
+.landing-auth-alert {
+  border: 1px solid rgba(255, 180, 171, 0.18);
+  border-radius: 1rem;
+  background: rgba(147, 0, 10, 0.18);
+  padding: 0.875rem 1rem;
+  color: #ffdad6;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.landing-auth-choice {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid var(--landing-outline-variant);
+  border-radius: 9999px;
+  background: rgba(53, 53, 52, 0.42);
+  padding: 0.85rem 1rem;
+  color: var(--landing-on-surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+  backdrop-filter: blur(16px);
+}
+
+@media (max-width: 639px) {
+  .landing-auth-choice {
+    width: 100%;
+  }
+}
+
+.landing-auth-choice:hover {
+  transform: translateY(-1px);
+  border-color: rgba(192, 193, 255, 0.28);
+  background: rgba(53, 53, 52, 0.62);
+}
+
+.landing-spinner {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: landing-spin 0.7s linear infinite;
+}
+
+@keyframes landing-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
