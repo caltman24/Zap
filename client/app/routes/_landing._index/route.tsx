@@ -341,7 +341,7 @@ export default function Index() {
                             </div>
 
                             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-                                <div className="space-y-6 lg:order-last">
+                                <div className="space-y-6">
                                     <h3 className="landing-headline text-2xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-3xl">
                                         Contextual Detail View
                                     </h3>
@@ -350,7 +350,7 @@ export default function Index() {
                                     </p>
                                 </div>
 
-                                <div className="landing-preview-card rounded-[1.5rem] p-5 sm:p-6 lg:order-first">
+                                <div className="landing-preview-card rounded-[1.5rem] p-5 sm:p-6">
                                     <div className="rounded-[1.25rem] bg-[#f3e8d8] p-6 text-[#231e1e] shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-7">
                                         <div className="mb-4 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[#8a857d]">
                                             <span className="h-2 w-2 rounded-full bg-[#8da567]" />
