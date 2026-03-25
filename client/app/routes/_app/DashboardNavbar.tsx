@@ -68,9 +68,9 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
                 search
               </span>
               <input
-                aria-label="Search issues and pull requests"
+                aria-label="Search tickets and projects"
                 className="app-shell-mono h-9 w-full rounded-lg border-none bg-transparent pl-10 pr-4 text-xs tracking-wide text-[var(--app-on-surface)] outline-none placeholder:text-[color:var(--app-outline)]"
-                placeholder="Search issues, pull requests..."
+                placeholder="Search tickets, projects..."
                 type="text"
               />
             </div>
