@@ -1,89 +1,173 @@
-import { Link, Outlet, redirect, useLoaderData, useLocation, useNavigation } from "@remix-run/react";
-import SideMenu from "./SideMenu";
-import { useEffect, useMemo, useState } from "react";
+import { Outlet, useLoaderData, useLocation, useNavigation } from "@remix-run/react";
+import { useEffect, useState } from "react";
+import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import DashboardNavbar from "./DashboardNavbar";
+import SideMenu from "./SideMenu";
 import { filterMenuRoutesByPermissions, menuRoutes } from "~/data/routes";
-import { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { commitSession, destroySession, getSession } from "~/services/sessions.server";
-import { UserInfoResponse } from "~/services/api.server/types";
-import { JsonResponse, JsonResponseResult } from "~/utils/response";
 import apiClient from "~/services/api.server/apiClient";
+import type { UserInfoResponse } from "~/services/api.server/types";
+import { commitSession, destroySession, getSession } from "~/services/sessions.server";
+import { JsonResponse, type JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
+const mobileMenuTransitionMs = 220;
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const session = await getSession(request);
-    const { data: tokenResponse,
-        error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
-    if (tokenError) {
-        return redirect("/logout");
-    }
-    const accessToken = tokenResponse.token;
+  const session = await getSession(request);
+  const { data: tokenResponse, error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
 
-    // INFO: Fetch new user info every page load, in case member data changed e.g member role
-    const newUserInfo = await apiClient.getUserInfo(accessToken)
-    if (!newUserInfo) {
-        return redirect("/login", {
-            headers: {
-                "Set-Cookie": await destroySession(session),
-            },
-        });
-    }
-    if (!newUserInfo.companyId) {
-        return redirect("/setup", {
-            headers: {
-                "Set-Cookie": await commitSession(session),
-            }
-        });
-    }
+  if (tokenError) {
+    return redirect("/logout");
+  }
 
-    session.set("user", newUserInfo)
-    return JsonResponse({
-        data: newUserInfo,
-        error: null,
-        headers: {
-            "Set-Cookie": await commitSession(session),
-        },
+  const accessToken = tokenResponse.token;
+
+  const newUserInfo = await apiClient.getUserInfo(accessToken);
+
+  if (!newUserInfo) {
+    return redirect("/login", {
+      headers: {
+        "Set-Cookie": await destroySession(session),
+      },
     });
+  }
+
+  if (!newUserInfo.companyId) {
+    return redirect("/setup", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
+
+  session.set("user", newUserInfo);
+
+  return JsonResponse({
+    data: newUserInfo,
+    error: null,
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
 
 export default function AppRoute() {
-    const { data: userData, error } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
-    const navigation = useNavigation()
-    // Add state for mobile menu
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: userData } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
+  const navigation = useNavigation();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuMounted, setMobileMenuMounted] = useState(false);
+  const filteredRoutes = filterMenuRoutesByPermissions(menuRoutes, userData?.permissions ?? [], userData?.role);
 
-    return (
-        <div>
-            <div className="flex min-h-screen h-screen max-h-screen overflow-y-hidden bg-base-300">
-                {/* Mobile menu button */}
-                <button
-                    className="lg:hidden fixed z-30 bottom-4 right-4 btn btn-circle btn-primary"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                >
-                    <span className="material-symbols-outlined">
-                        {mobileMenuOpen ? "close" : "menu"}
-                    </span>
-                </button>
+  function openMobileMenu() {
+    setMobileMenuMounted(true);
+    window.requestAnimationFrame(() => setMobileMenuOpen(true));
+  }
 
-                {/* sidebar - hidden on mobile unless toggled */}
-                <div className={`${mobileMenuOpen ? "block" : "hidden"} lg:block fixed min-w-64 lg:relative z-20 h-screen`}>
-                    <SideMenu menuRoutes={filterMenuRoutesByPermissions(menuRoutes, userData?.permissions ?? [], userData?.role)} />
-                </div>
+  function closeMobileMenu() {
+    setMobileMenuOpen(false);
+  }
 
-                {/* contnet */}
-                <div className="w-full">
-                    <DashboardNavbar avatarUrl={userData!.avatarUrl} />
-                    <div className="relative overflow-y-auto h-[calc(100vh-64px)]">
-                        <Outlet context={userData!} />
-                        {navigation.state === "loading" && (
-                            <div className="absolute inset-0 grid place-items-center bg-base-300/35 pointer-events-none">
-                                <div className="loading loading-dots loading-xl"></div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+  useEffect(() => {
+    closeMobileMenu();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuMounted) {
+      return undefined;
+    }
+
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [mobileMenuMounted]);
+
+  useEffect(() => {
+    if (!mobileMenuMounted) {
+      return undefined;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeMobileMenu();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuMounted]);
+
+  useEffect(() => {
+    if (!mobileMenuMounted || mobileMenuOpen) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setMobileMenuMounted(false);
+    }, mobileMenuTransitionMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [mobileMenuMounted, mobileMenuOpen]);
+
+  return (
+    <div className="app-shell">
+      <div className="min-h-screen lg:pl-[15.5rem]">
+        <div className="hidden outline outline-1 outline-[var(--app-outline-variant-soft)] lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-[15.5rem]">
+          <SideMenu menuRoutes={filteredRoutes} />
+        </div>
+
+        {mobileMenuMounted ? (
+          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+            <button
+              aria-label="Close menu"
+              className={`absolute inset-0 bg-[var(--app-overlay-backdrop)] backdrop-blur-sm transition-opacity duration-200 ${mobileMenuOpen ? "opacity-100" : "opacity-0"}`}
+              onClick={closeMobileMenu}
+              type="button"
+            />
+
+            <div
+              className={`absolute inset-y-0 left-0 flex w-[15.5rem] max-w-[85vw] transition-transform duration-[220ms] ease-out will-change-transform ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+            >
+              <SideMenu
+                menuRoutes={filteredRoutes}
+                onClose={closeMobileMenu}
+                onNavigate={closeMobileMenu}
+              />
             </div>
-        </div >
-    )
+          </div>
+        ) : null}
+
+        <div className="flex min-h-screen min-w-0 flex-col">
+          <DashboardNavbar avatarUrl={userData?.avatarUrl ?? ""} onMenuToggle={openMobileMenu} />
+
+          <div className="relative min-h-0 flex-1 overflow-y-auto">
+            <div className="app-shell-scroll flex min-h-full flex-col">
+              <div className="flex-1">
+                <Outlet context={userData!} />
+              </div>
+            </div>
+
+            {navigation.state === "loading" ? (
+              <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[var(--app-loading-overlay)] backdrop-blur-[2px]">
+                <div className="flex items-center gap-3 rounded-full bg-[var(--app-surface-container-panel)] px-4 py-3 text-sm text-[var(--app-on-surface)] outline outline-1 outline-[var(--app-outline-variant-faint)] shadow-[var(--app-panel-shadow)]">
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--app-primary)]" />
+                  <span className="app-shell-mono text-[11px] uppercase tracking-[0.22em] text-[color:var(--app-on-surface-variant)]">
+                    Loading
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

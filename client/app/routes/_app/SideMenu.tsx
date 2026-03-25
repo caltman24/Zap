@@ -1,98 +1,147 @@
-import { Link, NavLink, useLocation, useMatches } from "@remix-run/react";
-import { useState } from "react";
-import AppLogo from "~/components/AppLogo";
-import { MenuGroup, MenuRoutes } from "~/data/routes";
+import { Form, Link, NavLink, useLocation, useMatches } from "@remix-run/react";
+import { MenuLink, MenuRoutes } from "~/data/routes";
 
+type SideMenuProps = {
+  menuRoutes: MenuRoutes;
+  onNavigate?: () => void;
+  onClose?: () => void;
+};
 
-export default function SideMenu({ menuRoutes: menuRoutes }: { menuRoutes: MenuRoutes }) {
-    const matches = useMatches();
-    const location = useLocation();
-    const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({
-        "Company": true,
-        "Projects": true,
-        "Tickets": true// Default expanded menu
-    });
+const railItemBaseClass =
+  "group relative flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-[color:var(--app-on-surface-variant)] transition-all duration-200 hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)] active:scale-95";
 
-    const toggleMenu = (menuName: string) => {
-        setExpandedMenus(prev => ({
-            ...prev,
-            [menuName]: !prev[menuName]
-        }));
-    };
+const railItemActiveClass =
+  "text-[var(--app-primary-fixed-strong)] before:absolute before:left-0 before:top-1/2 before:h-6 before:w-0.5 before:-translate-y-1/2 before:bg-[var(--app-primary-fixed-strong)] before:content-[''] before:shadow-[var(--app-active-rail-shadow)]";
 
-    const MenuItem = (item: MenuGroup) => {
-        const isExpanded = expandedMenus[item.name] || false;
-        const hasActiveLink = item.links.some(link => matches.some(m => m.pathname === link.to));
+const railIconBaseClass = "material-symbols-outlined shrink-0 text-[22px] text-[var(--app-rail-icon)]";
 
-        return (
-            <div>
-                <div
-                    className={`font-bold mb-2 flex items-center justify-between cursor-pointer hover:bg-base-300 px-4 py-2 rounded ${hasActiveLink ? "text-primary" : ""}`}
-                    onClick={() => toggleMenu(item.name)}
-                >
-                    <span>{item.name}</span>
-                    <span className={`material-symbols-outlined transition-transform ${isExpanded ? "rotate-90" : ""}`}>
-                        chevron_right
-                    </span>
-                </div>
+const railLabelClass = "flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[0.84rem] leading-[1.1rem]";
 
-                {isExpanded && (
-                    <ul className="flex flex-col gap-1 pl-2 transition-all">
-                        {item.links.map((link, index) => {
-                            const preserveTicketSearch =
-                                location.pathname.startsWith("/tickets") &&
-                                link.to.startsWith("/tickets") &&
-                                link.to !== "/tickets/new";
+const utilityButtonClass =
+  "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-[color:var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-surface-container-high)] hover:text-[var(--app-on-surface)]";
 
-                            return (
-                                <li key={index}>
-                                    <NavLink
-                                        to={{
-                                            pathname: link.to,
-                                            search: preserveTicketSearch ? location.search : ""
-                                        }}
-                                        end={!matches.some(m => m.id.endsWith("Id"))}
-                                        className={({ isActive }) => {
-                                            if (matches.some(
-                                                m => (
-                                                    m.id.includes("archived") ||
-                                                    m.id.includes("mytickets") ||
-                                                    m.id.includes("myprojects")) &&
-                                                    (link.to === "/projects" ||
-                                                        link.to === "/tickets"))) {
-                                                isActive = false
-                                            }
-                                            return `hover:bg-base-300 p-2 ml-2 rounded w-full flex gap-2 items-center ${isActive && "text-primary"}`
-                                        }}
-                                    >
-                                        {link.materialIcon && (
-                                            <span className="material-symbols-outlined">
-                                                {link.materialIcon}
-                                            </span>
-                                        )}
-                                        {link.name}
-                                    </NavLink>
-                                </li>
-                            )
-                        })}
-                    </ul>
-                )}
-            </div>
-        )
+function isPrimaryCollectionLink(link: MenuLink) {
+  return link.to === "/projects" || link.to === "/tickets";
+}
+
+export default function SideMenu({ menuRoutes, onNavigate, onClose }: SideMenuProps) {
+  const matches = useMatches();
+  const location = useLocation();
+
+  function isLinkForcedInactive(link: MenuLink) {
+    return matches.some(
+      (match) =>
+        (match.id.includes("archived") ||
+          match.id.includes("mytickets") ||
+          match.id.includes("myprojects")) &&
+        isPrimaryCollectionLink(link),
+    );
+  }
+
+  function isLinkCurrentlyActive(link: MenuLink, isActive: boolean) {
+    if (isLinkForcedInactive(link)) {
+      return false;
     }
 
-    return (
-        <div className={`overflow-x-hidden flex flex-col bg-base-200 text-content 2xl:flex-1/5 xl:flex-1/4 lg:flex-1/3 flex-1/2 border-r border-base-content/10`}>
-            <div className="">
-                <Link to={"/"} className="text-4xl flex gap-4 items-center justify-center p-4 font-extrabold tracking-wider hover:text-base-content hover:bg-base-300"><AppLogo />
-                    ZAP</Link>
-            </div>
-            <div className="overflow-x-hidden h-[calc(100vh-64px)]">
-                {menuRoutes.map((item, index) => (
-                    <MenuItem key={index} {...item} />
-                ))}
-            </div>
-        </div>
+    return isActive || matches.some((match) => match.id === link.matchId);
+  }
 
-    )
+  return (
+    <aside className="flex h-full w-full flex-col bg-[var(--app-surface)] py-5 text-[var(--app-on-surface)] lg:w-[15.5rem] lg:py-6">
+      <div className="mb-7 px-5 lg:px-7">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            className="app-shell-headline text-[2.15rem] font-black tracking-[-0.08em] text-[var(--app-primary-fixed-strong)] transition-colors hover:text-[var(--app-primary-fixed)]"
+            onClick={onNavigate}
+            to="/"
+          >
+            Zap
+          </Link>
+
+          {onClose ? (
+            <button
+              aria-label="Close menu"
+              className={`${utilityButtonClass} lg:hidden`}
+              onClick={onClose}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="app-shell-scroll flex-1 overflow-y-auto px-3 lg:px-4">
+        <nav aria-label="Primary" className="flex flex-col gap-6">
+          {menuRoutes.map((group, index) => {
+            if (group.length === 0) {
+              return null;
+            }
+
+            return (
+              <div className="flex flex-col gap-2.5" key={group[0]?.to ?? index}>
+                {group.map((link) => {
+                  const preserveTicketSearch =
+                    location.pathname.startsWith("/tickets") &&
+                    link.to.startsWith("/tickets") &&
+                    link.to !== "/tickets/new";
+
+                  return (
+                    <NavLink
+                      key={link.to}
+                      className={({ isActive }) => {
+                        const active = isLinkCurrentlyActive(link, isActive);
+
+                        return [railItemBaseClass, active ? railItemActiveClass : ""].join(" ");
+                      }}
+                      end={!matches.some((match) => match.id.endsWith("Id"))}
+                      onClick={onNavigate}
+                      to={{
+                        pathname: link.to,
+                        search: preserveTicketSearch ? location.search : "",
+                      }}
+                    >
+                      {({ isActive }) => {
+                        const active = isLinkCurrentlyActive(link, isActive);
+
+                        return (
+                          <>
+                            {link.materialIcon ? (
+                              <span
+                                className={`${railIconBaseClass} ${active ? "text-[var(--app-primary-fixed-strong)]" : "group-hover:text-[var(--app-on-surface)]"}`}
+                              >
+                                {link.materialIcon}
+                              </span>
+                            ) : null}
+                            <span className={`${railLabelClass} ${active ? "text-[var(--app-primary-fixed-strong)]" : ""}`}>{link.name}</span>
+                          </>
+                        );
+                      }}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div className="mt-auto flex flex-col gap-3 px-3 pb-1 lg:px-4">
+        <div className="h-px w-full bg-[var(--app-outline-variant)]/20" />
+
+        <div className="flex flex-col gap-2.5">
+          <Form method="post">
+            <button
+              className={railItemBaseClass}
+              formAction="/logout"
+              type="submit"
+            >
+              <span className={`${railIconBaseClass} group-hover:text-[var(--app-on-surface)]`}>logout</span>
+              <span className={railLabelClass}>Logout</span>
+            </button>
+          </Form>
+        </div>
+      </div>
+    </aside>
+  );
 }
