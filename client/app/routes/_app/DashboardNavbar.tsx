@@ -11,6 +11,8 @@ type BreadcrumbMatch = UIMatch<unknown, {
   breadcrumbLabel?: string | ((match: UIMatch) => string);
 }>;
 
+const monoClass = "[font-family:'JetBrains_Mono',monospace]";
+
 const utilityButtonClass =
   "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-[color:var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-surface-container-high)] hover:text-[var(--app-on-surface)]";
 
@@ -69,7 +71,7 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
               </span>
               <input
                 aria-label="Search tickets and projects"
-                className="app-shell-mono h-9 w-full rounded-lg border-none bg-transparent pl-10 pr-4 text-xs tracking-wide text-[var(--app-on-surface)] outline-none placeholder:text-[color:var(--app-outline)]"
+                className={`${monoClass} h-9 w-full rounded-lg border-none bg-transparent pl-10 pr-4 text-xs tracking-wide text-[var(--app-on-surface)] outline-none placeholder:text-[color:var(--app-outline)]`}
                 placeholder="Search tickets, projects..."
                 type="text"
               />
@@ -79,7 +81,7 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
               {breadcrumbMatches.map((match, index) => (
                 <div className="flex min-w-0 mt-2 items-center gap-2" key={`${match.id}-${getBreadcrumbLabel(match)}`}>
                   {index > 0 ? (
-                    <span className="app-shell-mono text-[10px] text-[color:var(--app-outline)]">/</span>
+                    <span className={`${monoClass} text-[10px] text-[color:var(--app-outline)]`}>/</span>
                   ) : null}
                   <span className="min-w-0 truncate text-[color:var(--app-on-surface-variant)] [&_a]:truncate [&_a]:text-inherit [&_a]:transition-colors [&_a]:hover:text-[var(--app-on-surface)]">
                     {match.handle?.breadcrumb?.(match)}
@@ -108,7 +110,7 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
                   {avatarUrl ? (
                     <img alt="Developer avatar" className="h-full w-full object-cover" src={avatarUrl} />
                   ) : (
-                    <span className="app-shell-mono text-[11px] font-medium text-[var(--app-on-surface)]">ZA</span>
+                    <span className={`${monoClass} text-[11px] font-medium text-[var(--app-on-surface)]`}>ZA</span>
                   )}
                 </span>
               </span>

@@ -1,6 +1,8 @@
 import { Form, Link, NavLink, useLocation, useMatches } from "@remix-run/react";
 import { MenuLink, MenuRoutes } from "~/data/routes";
 
+const headlineClass = "[font-family:Manrope,sans-serif]";
+
 type SideMenuProps = {
   menuRoutes: MenuRoutes;
   onNavigate?: () => void;
@@ -51,7 +53,7 @@ export default function SideMenu({ menuRoutes, onNavigate, onClose }: SideMenuPr
       <div className="mb-7 px-5 lg:px-7">
         <div className="flex items-center justify-between gap-3">
           <Link
-            className="app-shell-headline text-[2.15rem] font-black tracking-[-0.08em] text-[var(--app-primary-fixed-strong)] transition-colors hover:text-[var(--app-primary-fixed)]"
+            className={`${headlineClass} text-[2.15rem] font-black tracking-[-0.08em] text-[var(--app-primary-fixed-strong)] transition-colors hover:text-[var(--app-primary-fixed)]`}
             onClick={onNavigate}
             to="/"
           >

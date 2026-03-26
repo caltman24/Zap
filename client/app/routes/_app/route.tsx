@@ -11,6 +11,7 @@ import { JsonResponse, type JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 const mobileMenuTransitionMs = 220;
+const monoClass = "[font-family:'JetBrains_Mono',monospace]";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request);
@@ -159,7 +160,7 @@ export default function AppRoute() {
               <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[var(--app-loading-overlay)] backdrop-blur-[2px]">
                 <div className="flex items-center gap-3 rounded-full bg-[var(--app-surface-container-panel)] px-4 py-3 text-sm text-[var(--app-on-surface)] outline outline-1 outline-[var(--app-outline-variant-faint)] shadow-[var(--app-panel-shadow)]">
                   <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--app-primary)]" />
-                  <span className="app-shell-mono text-[11px] uppercase tracking-[0.22em] text-[color:var(--app-on-surface-variant)]">
+                  <span className={`${monoClass} text-[11px] uppercase tracking-[0.22em] text-[color:var(--app-on-surface-variant)]`}>
                     Loading
                   </span>
                 </div>

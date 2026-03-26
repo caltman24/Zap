@@ -55,6 +55,15 @@ const navItems = [
     { href: "#why", label: "Why I Built This" },
 ] as const;
 
+const headlineClass = "[font-family:Manrope,sans-serif]";
+const buttonBaseClass = "inline-flex items-center justify-center rounded-full text-sm font-bold leading-none transition duration-200 hover:-translate-y-px";
+const primaryButtonClass = "bg-[linear-gradient(135deg,var(--landing-primary)_0%,var(--landing-primary-container)_100%)] text-[#1000a9] shadow-[0_14px_28px_rgba(128,131,255,0.2)]";
+const secondaryButtonClass = "border border-[var(--landing-outline-variant)] bg-[rgba(53,53,52,0.42)] text-[var(--landing-on-surface)] backdrop-blur-xl";
+const navButtonSizeClass = "min-h-11 px-[1.1rem] max-sm:min-h-10 max-sm:px-[0.9rem] max-sm:text-[0.8125rem]";
+const heroButtonSizeClass = "min-h-14 px-7 text-base";
+const previewCardClass = "rounded-[1.5rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-5 shadow-[0_30px_80px_rgba(229,226,225,0.04)] sm:p-6";
+const kineticGradientClass = "bg-[linear-gradient(135deg,var(--landing-primary)_0%,var(--landing-primary-container)_100%)]";
+
 export const meta: MetaFunction = () => {
     return [
         { title: "Zap - Modern Issue Tracking" },
@@ -151,7 +160,7 @@ export default function Index() {
         <div className="landing-page min-h-screen bg-[var(--landing-surface)] text-[var(--landing-on-surface)] selection:bg-[color:var(--landing-primary)]/30">
             <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[color:var(--landing-surface)]/80 backdrop-blur-xl">
                 <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-6 py-4 sm:px-8">
-                    <Link className="landing-headline text-2xl font-black tracking-[-0.08em] text-[var(--landing-on-surface)]" to="/">
+                    <Link className={`${headlineClass} text-2xl font-black tracking-[-0.08em] text-[var(--landing-on-surface)]`} to="/">
                         Zap
                     </Link>
 
@@ -169,10 +178,10 @@ export default function Index() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <Link className="landing-button landing-button-secondary landing-nav-button" to={navbarSecondaryLink.to}>
+                        <Link className={`${buttonBaseClass} ${navButtonSizeClass} ${secondaryButtonClass}`} to={navbarSecondaryLink.to}>
                             {navbarSecondaryLink.label}
                         </Link>
-                        <Link className="landing-button landing-button-primary landing-nav-button" to={navbarPrimaryLink.to}>
+                        <Link className={`${buttonBaseClass} ${navButtonSizeClass} ${primaryButtonClass}`} to={navbarPrimaryLink.to}>
                             {navbarPrimaryLink.label}
                         </Link>
                     </div>
@@ -184,7 +193,7 @@ export default function Index() {
                     <div className="grid items-center gap-14 lg:grid-cols-12 lg:gap-12">
                         <div className="space-y-8 lg:col-span-6 lg:pr-4">
                             <div className="space-y-6">
-                                <h1 className="landing-headline max-w-xl text-5xl font-extrabold leading-[0.95] tracking-[-0.04em] text-[var(--landing-on-surface)] sm:text-6xl lg:text-7xl">
+                                <h1 className={`${headlineClass} max-w-xl text-5xl font-extrabold leading-[0.95] tracking-[-0.04em] text-[var(--landing-on-surface)] sm:text-6xl lg:text-7xl`}>
                                     A modern issue tracker built for developers
                                 </h1>
                                 <p className="max-w-lg text-lg leading-8 text-[var(--landing-on-surface-variant)] sm:text-xl">
@@ -193,21 +202,22 @@ export default function Index() {
                             </div>
 
                             <div className="flex flex-wrap gap-4 pt-2">
-                                <Link className="landing-button landing-button-primary landing-button-large" to={demoHref}>
+                                <Link className={`${buttonBaseClass} ${primaryButtonClass} ${heroButtonSizeClass}`} to={demoHref}>
                                     {demoLabel}
                                 </Link>
-                                <Link className="landing-button landing-button-secondary landing-button-large" to={secondaryHref}>
+                                <Link className={`${buttonBaseClass} ${secondaryButtonClass} ${heroButtonSizeClass}`} to={secondaryHref}>
                                     {secondaryLabel}
                                 </Link>
                             </div>
                         </div>
 
                         <div className="lg:col-span-6">
-                            <div className="landing-hero-stage rounded-[1.25rem] p-6 shadow-[0_32px_80px_rgba(229,226,225,0.08)] sm:p-8">
-                                <div className="landing-hero-stage-glow" />
-                                <div className="landing-hero-card mx-auto max-w-xs rounded-[1.35rem] bg-[#f6f2ea] p-5 text-[#211f1f] shadow-[0_20px_50px_rgba(0,0,0,0.22)] sm:max-w-sm sm:p-6">
+                            <div className="relative overflow-hidden rounded-[1.25rem] bg-[linear-gradient(160deg,rgba(204,211,184,0.98)_0%,rgba(188,200,165,0.96)_52%,rgba(220,220,206,0.9)_100%)] p-6 shadow-[0_32px_80px_rgba(229,226,225,0.08)] sm:p-8">
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.15),rgba(255,255,255,0))]" />
+                                <div className="absolute inset-[12%_18%] rounded-full bg-[rgba(255,255,255,0.24)] blur-[40px]" />
+                                <div className="relative z-[1] mx-auto max-w-xs rounded-[1.35rem] bg-[#f6f2ea] p-5 text-[#211f1f] shadow-[0_20px_50px_rgba(0,0,0,0.22)] sm:max-w-sm sm:p-6">
                                     <div className="mb-5 flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.18em] text-[#767169]">
-                                        <span className="landing-headline text-base font-extrabold tracking-[-0.05em] text-[#201d1d]">zap</span>
+                                        <span className={`${headlineClass} text-base font-extrabold tracking-[-0.05em] text-[#201d1d]`}>zap</span>
                                         <span>preview</span>
                                     </div>
 
@@ -241,10 +251,10 @@ export default function Index() {
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
                         <article className="rounded-3xl bg-[var(--landing-surface-container-low)] p-8 md:col-span-2 md:p-10">
                             <div>
-                                <span className="landing-headline text-xs font-bold uppercase tracking-[0.22em] text-[var(--landing-primary)]">
+                                <span className={`${headlineClass} text-xs font-bold uppercase tracking-[0.22em] text-[var(--landing-primary)]`}>
                                     {workflowFeature.eyebrow}
                                 </span>
-                                <h2 className="landing-headline mt-4 text-3xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-[2rem]">
+                                <h2 className={`${headlineClass} mt-4 text-3xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-[2rem]`}>
                                     {workflowFeature.title}
                                 </h2>
                                 <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--landing-on-surface-variant)]">
@@ -279,7 +289,7 @@ export default function Index() {
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--landing-primary)]/10 text-[var(--landing-primary)]">
                                     <MaterialIcon className="text-[22px]" icon={feature.icon} />
                                 </div>
-                                <h3 className="landing-headline mt-5 text-xl font-bold tracking-[-0.02em] text-[var(--landing-on-surface)]">
+                                <h3 className={`${headlineClass} mt-5 text-xl font-bold tracking-[-0.02em] text-[var(--landing-on-surface)]`}>
                                     {feature.title}
                                 </h3>
                                 <p className="mt-3 text-sm leading-7 text-[var(--landing-on-surface-variant)]">
@@ -293,7 +303,7 @@ export default function Index() {
                 <section className="mt-14 scroll-mt-28 bg-[var(--landing-surface-container-lowest)] py-24 sm:scroll-mt-32 sm:py-32" id="product">
                     <div className="mx-auto max-w-7xl px-6 sm:px-8">
                         <div className="mb-16 space-y-4 sm:mb-20">
-                            <h2 className="landing-headline text-4xl font-extrabold tracking-[-0.04em] text-[var(--landing-on-surface)] sm:text-5xl">
+                            <h2 className={`${headlineClass} text-4xl font-extrabold tracking-[-0.04em] text-[var(--landing-on-surface)] sm:text-5xl`}>
                                 Clarity in every view.
                             </h2>
                             <p className="max-w-2xl text-lg leading-8 text-[var(--landing-on-surface-variant)]">
@@ -303,7 +313,7 @@ export default function Index() {
 
                         <div className="space-y-20 sm:space-y-28">
                             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-                                <div className="flex min-h-[11rem] items-center landing-preview-card rounded-[1.5rem] p-5 sm:p-6">
+                                <div className={`flex min-h-[11rem] items-center ${previewCardClass}`}>
                                     <div className="w-full rounded-[1.25rem] bg-[var(--landing-surface)] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
                                         <div className="mb-4 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[var(--landing-on-surface-variant)]">
                                             <span className="h-2 w-2 rounded-full bg-[var(--landing-primary)]" />
@@ -319,19 +329,19 @@ export default function Index() {
                                                 ].map((width, index) => (
                                                     <div key={index} className="rounded-2xl bg-white/5 p-3">
                                                         <div className="h-2 rounded-full bg-white/10" style={{ width }} />
-                                                        <div className="mt-3 h-10 rounded-2xl landing-kinetic-gradient opacity-65" />
+                                                        <div className={`mt-3 h-10 rounded-2xl ${kineticGradientClass} opacity-65`} />
                                                     </div>
                                                 ))}
                                             </div>
                                             <div className="h-3 rounded-full bg-white/8">
-                                                <div className="h-3 w-3/4 rounded-full landing-kinetic-gradient" />
+                                                <div className={`h-3 w-3/4 rounded-full ${kineticGradientClass}`} />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <h3 className="landing-headline text-2xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-3xl">
+                                    <h3 className={`${headlineClass} text-2xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-3xl`}>
                                         Analytics Dashboard
                                     </h3>
                                     <p className="text-lg leading-8 text-[var(--landing-on-surface-variant)]">
@@ -342,7 +352,7 @@ export default function Index() {
 
                             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
                                 <div className="space-y-6">
-                                    <h3 className="landing-headline text-2xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-3xl">
+                                    <h3 className={`${headlineClass} text-2xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-3xl`}>
                                         Contextual Detail View
                                     </h3>
                                     <p className="text-lg leading-8 text-[var(--landing-on-surface-variant)]">
@@ -350,7 +360,7 @@ export default function Index() {
                                     </p>
                                 </div>
 
-                                <div className="landing-preview-card rounded-[1.5rem] p-5 sm:p-6">
+                                <div className={previewCardClass}>
                                     <div className="rounded-[1.25rem] bg-[#f3e8d8] p-6 text-[#231e1e] shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-7">
                                         <div className="mb-4 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[#8a857d]">
                                             <span className="h-2 w-2 rounded-full bg-[#8da567]" />
@@ -368,7 +378,7 @@ export default function Index() {
 
                 <section className="mx-auto max-w-7xl scroll-mt-28 px-6 py-24 sm:scroll-mt-32 sm:px-8 sm:py-32" id="tech">
                     <div className="mb-14 text-center sm:mb-16">
-                        <h2 className="landing-headline text-3xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-4xl">
+                        <h2 className={`${headlineClass} text-3xl font-bold tracking-[-0.03em] text-[var(--landing-on-surface)] sm:text-4xl`}>
                             The Stack
                         </h2>
                         <p className="mt-4 text-[var(--landing-on-surface-variant)]">Built with performance and scalability in mind.</p>
@@ -379,14 +389,14 @@ export default function Index() {
                             <article key={item.label} className="rounded-3xl bg-[var(--landing-surface-container-low)] p-5 text-center transition-colors duration-200 hover:bg-[var(--landing-surface-container-high)] sm:p-6">
                                 <div className="mb-3 flex justify-center text-[var(--landing-primary)]">
                                     {"monogram" in item ? (
-                                        <span className="landing-headline text-[1.15rem] font-extrabold tracking-[-0.08em] text-[var(--landing-primary)]">
+                                        <span className={`${headlineClass} text-[1.15rem] font-extrabold tracking-[-0.08em] text-[var(--landing-primary)]`}>
                                             {item.monogram}
                                         </span>
                                     ) : (
                                         <MaterialIcon className="text-[2rem]" icon={item.icon} />
                                     )}
                                 </div>
-                                <p className="landing-headline text-sm font-semibold text-[var(--landing-on-surface)]">{item.label}</p>
+                                <p className={`${headlineClass} text-sm font-semibold text-[var(--landing-on-surface)]`}>{item.label}</p>
                             </article>
                         ))}
                     </div>
@@ -399,7 +409,7 @@ export default function Index() {
                         </div>
 
                         <div className="relative z-10 max-w-3xl">
-                            <h2 className="landing-headline text-3xl font-extrabold tracking-[-0.03em] text-[var(--landing-on-surface)]">
+                            <h2 className={`${headlineClass} text-3xl font-extrabold tracking-[-0.03em] text-[var(--landing-on-surface)]`}>
                                 Why I Built This
                             </h2>
                             <p className="mt-8 text-lg leading-8 text-[var(--landing-on-surface-variant)]">
@@ -425,7 +435,7 @@ export default function Index() {
             <footer className="mt-20 bg-[var(--landing-surface-container-lowest)] px-6 py-12 sm:px-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-8 md:flex-row md:items-end md:justify-between">
                     <div className="space-y-2 text-center md:text-left">
-                        <p className="landing-headline text-lg font-bold tracking-[-0.03em] text-[var(--landing-on-surface)]">Zap</p>
+                        <p className={`${headlineClass} text-lg font-bold tracking-[-0.03em] text-[var(--landing-on-surface)]`}>Zap</p>
                         <p className="max-w-xs text-sm leading-6 text-[var(--landing-on-surface-variant)]">
                             Built as a real-world full-stack project focused on maintainable architecture and production-minded workflows. &copy; {currentYear} Zap.
                         </p>
