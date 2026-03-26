@@ -1,5 +1,5 @@
-import roleNames, { RoleName } from "~/data/roles";
-import {
+import roleNames from "~/data/roles";
+import type {
   BasicTicketInfo,
   CompanyProjectsResponse,
   UserInfoResponse,
@@ -22,51 +22,81 @@ export type DashboardData = {
   upcomingDeadlines: DashboardDeadline[];
 };
 
-export function getPriorityBadgeClass(priority: string): string {
-  switch (priority.toLowerCase()) {
-    case "urgent":
-      return "badge-error";
-    case "high":
-      return "badge-warning";
-    case "medium":
-      return "badge-info";
-    case "low":
-      return "badge-success";
-    default:
-      return "badge-neutral";
-  }
-}
+export type DashboardActivityItem =
+  | {
+      id: string;
+      variant: "ticket";
+      actorName: string;
+      actorAvatarUrl: string | null;
+      action: string;
+      ticketLabel: string;
+      detail: string;
+      timestamp: string;
+    }
+  | {
+      id: string;
+      variant: "commit";
+      actorName: string;
+      branchName: string;
+      detail: string;
+      timestamp: string;
+      icon: string;
+    };
 
-export function getStatusBadgeClass(status: string): string {
+export function getStatusChipClass(status: string): string {
   switch (status.toLowerCase()) {
     case "resolved":
-    case "closed":
-      return "badge-success";
+      return "bg-emerald-500/15 text-emerald-300";
     case "testing":
-      return "badge-info";
+      return "bg-sky-500/20 text-sky-300";
     case "in development":
-    case "in progress":
-      return "badge-warning";
+      return "bg-[var(--app-secondary-container)]/40 text-[var(--app-secondary)]";
     case "new":
-    case "open":
-      return "badge-neutral";
+      return "bg-[var(--app-surface-container-highest)] text-[var(--app-on-surface)]";
     default:
-      return "badge-ghost";
+      return "bg-[var(--app-surface-container-high)] text-[var(--app-on-surface-variant)]";
   }
 }
 
-export function getTypeBadgeClass(type: string): string {
-  switch (type.toLowerCase()) {
-    case "defect":
-      return "badge-error";
-    case "enhancement":
-    case "feature":
-      return "badge-accent";
-    case "change request":
-      return "badge-info";
+export function getPriorityDotClass(priority: string): string {
+  switch (priority.toLowerCase()) {
+    case "urgent":
+    case "high":
+      return "bg-[var(--app-error)]";
+    case "medium":
+      return "bg-[var(--app-tertiary)]";
+    case "low":
+      return "bg-[var(--app-outline)]";
     default:
-      return "badge-neutral";
+      return "bg-[var(--app-secondary)]";
   }
+}
+
+export function getDeadlineTone(deadline: DashboardDeadline) {
+  if (deadline.daysRemaining < 0) {
+    return {
+      containerClass: "bg-[var(--app-error-container)]/20 border-[var(--app-error)]/10",
+      monthClass: "text-[var(--app-error)]",
+      dayClass: "text-[var(--app-error)]",
+      labelClass: "text-[var(--app-error)]",
+    };
+  }
+
+  if (deadline.daysRemaining <= 3) {
+    return {
+      containerClass: "bg-[var(--app-tertiary-container)]/20 border-[var(--app-tertiary)]/10",
+      monthClass: "text-[var(--app-tertiary)]",
+      dayClass: "text-[var(--app-tertiary)]",
+      labelClass: "text-[var(--app-tertiary)]",
+    };
+  }
+
+  return {
+    containerClass: "bg-[var(--app-surface-container-highest)]/20 border-white/5",
+    monthClass: "text-[var(--app-outline)]",
+    dayClass: "text-[var(--app-on-surface)]",
+    labelClass: "text-[var(--app-outline)]",
+  };
 }
 
 export function getTicketUpdatedAt(ticket: BasicTicketInfo): number {
@@ -85,40 +115,129 @@ export function formatRelativeTime(isoDate: string): string {
 
   if (diffMs < hour) {
     const minutes = Math.floor(diffMs / minute);
-    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+    return `${minutes}m ago`;
   }
 
   if (diffMs < day) {
     const hours = Math.floor(diffMs / hour);
-    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    return `${hours}h ago`;
   }
 
   const days = Math.floor(diffMs / day);
-  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+  if (days < 7) return `${days}d ago`;
 
-  return new Date(isoDate).toLocaleDateString();
+  return new Date(isoDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function formatDeadlineDays(daysRemaining: number): string {
   if (daysRemaining < 0) {
     const overdueDays = Math.abs(daysRemaining);
-    return `Overdue by ${overdueDays} day${overdueDays === 1 ? "" : "s"}`;
+    return overdueDays === 1 ? "Overdue" : `Overdue by ${overdueDays} days`;
   }
 
   if (daysRemaining === 0) return "Due today";
+  if (daysRemaining <= 7) return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`;
+  if (daysRemaining <= 14) return "Next week";
 
-  return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining`;
+  return `${daysRemaining} days remaining`;
+}
+
+export function formatDashboardDateParts(isoDate: string) {
+  const value = new Date(isoDate);
+
+  return {
+    month: value.toLocaleDateString(undefined, { month: "short" }).toUpperCase(),
+    day: value.toLocaleDateString(undefined, { day: "2-digit" }),
+  };
+}
+
+export function formatDashboardTicketId(ticketId: string): string {
+  const compactId = ticketId.replace(/-/g, "").slice(-4).toUpperCase();
+  return `#ZAP-${compactId || ticketId.slice(0, 4).toUpperCase()}`;
+}
+
+export function truncateDashboardText(text: string | null | undefined, maxLength = 68): string {
+  if (!text) {
+    return "No additional context yet for this issue.";
+  }
+
+  const normalized = text.trim().replace(/\s+/g, " ");
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3)}...`;
+}
+
+export function getDashboardInitials(name: string): string {
+  const parts = name
+    .split(" ")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) {
+    return "NA";
+  }
+
+  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("");
+}
+
+export function toDashboardActivityItems(
+  tickets: BasicTicketInfo[],
+  userInfo: UserInfoResponse,
+): DashboardActivityItem[] {
+  const ticketItems = tickets.slice(0, 3).map((ticket) => {
+    const actor = ticket.assignee ?? ticket.submitter;
+    const actorName = actor.id === userInfo.id ? "You" : actor.name;
+    const status = ticket.status.toLowerCase();
+    let action = "updated";
+
+    if (status === "resolved") {
+      action = "resolved";
+    } else if (status === "new") {
+      action = "opened";
+    } else if (status === "testing") {
+      action = "tested";
+    } else if (status === "in development") {
+      action = "updated";
+    }
+
+    return {
+      id: ticket.id,
+      variant: "ticket" as const,
+      actorName,
+      actorAvatarUrl: actor.avatarUrl ?? null,
+      action,
+      ticketLabel: formatDashboardTicketId(ticket.id),
+      detail: truncateDashboardText(ticket.description, 84),
+      timestamp: formatRelativeTime(ticket.updatedAt ?? ticket.createdAt),
+    };
+  });
+
+  const commitItem: DashboardActivityItem = {
+    id: "dashboard-static-commit",
+    variant: "commit",
+    actorName: "ZapBot",
+    branchName: "main",
+    detail: "chore(deps): bump version to 2.4.1-rc.2",
+    timestamp: "45m ago",
+    icon: "commit",
+  };
+
+  if (ticketItems.length === 0) {
+    return [commitItem];
+  }
+
+  return [ticketItems[0], commitItem, ...ticketItems.slice(1)];
 }
 
 export function toUpcomingDeadlines(
-  projects: CompanyProjectsResponse[]
+  projects: CompanyProjectsResponse[],
 ): DashboardDeadline[] {
   const now = new Date();
-  const todayStart = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  ).getTime();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
   return projects
     .map((project) => {
@@ -126,12 +245,10 @@ export function toUpcomingDeadlines(
       const dueDateStart = new Date(
         dueDateValue.getFullYear(),
         dueDateValue.getMonth(),
-        dueDateValue.getDate()
+        dueDateValue.getDate(),
       ).getTime();
 
-      const daysRemaining = Math.floor(
-        (dueDateStart - todayStart) / (24 * 60 * 60 * 1000)
-      );
+      const daysRemaining = Math.floor((dueDateStart - todayStart) / (24 * 60 * 60 * 1000));
 
       return {
         id: project.id,
@@ -141,17 +258,12 @@ export function toUpcomingDeadlines(
         daysRemaining,
       };
     })
-    .sort(
-      (left, right) =>
-        new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime()
-    )
+    .sort((left, right) => new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime())
     .slice(0, 5);
 }
 
-export function getDashboardProjectLabel(
-  role: UserInfoResponse["role"]
-): string {
-  if (role === roleNames.admin) return "Total Projects";
+export function getDashboardProjectLabel(role: UserInfoResponse["role"]): string {
+  if (role === roleNames.admin) return "Active Projects";
   if (role === roleNames.projectManager) return "Projects In Scope";
   return "Assigned Projects";
 }
@@ -174,24 +286,20 @@ export function getDashboardTicketLabels(role: UserInfoResponse["role"]) {
   }
 
   return {
-    ticketLabel: role === roleNames.admin ? "Total Tickets" : "Visible Tickets",
+    ticketLabel: role === roleNames.admin ? "Open Issues" : "Visible Tickets",
     openTicketLabel: "Open Tickets",
     closedTicketLabel: "Closed Tickets",
   };
 }
 
-export function getDashboardDeadlineLabel(
-  role: UserInfoResponse["role"]
-): string {
-  return role === roleNames.admin
-    ? "Upcoming Deadlines"
-    : "Upcoming Deadlines In Your Scope";
+export function getDashboardDeadlineLabel(role: UserInfoResponse["role"]): string {
+  return role === roleNames.admin ? "Deadlines" : "Deadlines In Scope";
 }
 
 export function getDashboardSummaryTickets(
   role: UserInfoResponse["role"],
   memberId: string | undefined,
-  tickets: BasicTicketInfo[] | null
+  tickets: BasicTicketInfo[] | null,
 ) {
   if (!tickets) return null;
 
@@ -204,30 +312,4 @@ export function getDashboardSummaryTickets(
   }
 
   return tickets;
-}
-
-export function getDashboardDescription(
-  role: UserInfoResponse["role"]
-): string {
-  let description = "";
-
-  switch (role) {
-    case "admin":
-      description = "Overview of projects and tickets in your company.";
-      break;
-    case roleNames.projectManager:
-      description =
-        "Overview of projects and tickets in your managed projects.";
-      break;
-    case "submitter":
-      description =
-        "Overview of tickets you have submitted within your assigned projects.";
-      break;
-    case "developer":
-      description =
-        "Overview of projects and tickets you have been assigned to.";
-      break;
-  }
-
-  return description;
 }

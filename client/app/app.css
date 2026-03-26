@@ -25,9 +25,13 @@ body:has(.app-shell) {
   --app-primary-fixed: #8d90ff;
   --app-primary-fixed-strong: #6366f1;
   --app-primary-fixed-glow: rgba(99, 102, 241, 0.4);
+  --app-secondary: #c0c1ff;
+  --app-secondary-container: #42447b;
   --app-surface: #131313;
   --app-surface-container-lowest: #0e0e0e;
+  --app-surface-container-low: #1c1b1b;
   --app-surface-container-high: #2a2a2a;
+  --app-surface-container-highest: #353534;
   --app-surface-container-overlay: rgba(19, 19, 19, 0.8);
   --app-surface-container-panel: rgba(28, 27, 27, 0.92);
   --app-surface-container-menu: rgba(28, 27, 27, 0.96);
@@ -39,6 +43,11 @@ body:has(.app-shell) {
   --app-outline-variant-faint: rgba(144, 143, 160, 0.12);
   --app-outline-variant-strong: rgba(144, 143, 160, 0.16);
   --app-outline-variant-divider: rgba(144, 143, 160, 0.08);
+  --app-error: #ffb4ab;
+  --app-error-container: #93000a;
+  --app-success: #8ecfaa;
+  --app-tertiary: #ffb783;
+  --app-tertiary-container: #d97721;
   --app-avatar-border: rgba(70, 69, 84, 0.3);
   --app-hover-overlay: rgba(255, 255, 255, 0.04);
   --app-rail-icon: rgba(199, 196, 215, 0.72);
