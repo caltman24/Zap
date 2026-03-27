@@ -1,110 +1,154 @@
 import { Link } from "@remix-run/react";
-import { CompanyProjectsResponse } from "~/services/api.server/types";
-import { DeadlineDisplay } from "~/utils/deadline";
+import type { CompanyProjectsResponse } from "~/services/api.server/types";
+import ProjectDueDateBadge from "~/components/ProjectDueDateBadge";
+import { getDeadlineStatus } from "~/utils/deadline";
 
-type ProjectCollection = "archived" | "myprojects" | "projects"
+type ProjectCollection = "archived" | "myprojects" | "projects";
 
-interface ProjectCardProps {
+type ProjectCardProps = {
   project: CompanyProjectsResponse;
   showArchived?: boolean;
-  collection: ProjectCollection
+  collection: ProjectCollection;
+};
+
+function getProjectHref(project: CompanyProjectsResponse, collection: ProjectCollection) {
+  return collection === "projects" ? `/projects/${project.id}` : `/projects/${collection}/${project.id}`;
+}
+
+function getPriorityTone(priority: string) {
+  switch (priority.toLowerCase()) {
+    case "urgent":
+      return {
+        accentClass: "border-l-[var(--app-error)]",
+        chipClass: "bg-[var(--app-error-container)]/25 text-[var(--app-error)]",
+        dotClass: "bg-[var(--app-error)]",
+      };
+    case "high":
+      return {
+        accentClass: "border-l-[var(--app-tertiary)]",
+        chipClass: "bg-[var(--app-tertiary-container)]/25 text-[var(--app-tertiary)]",
+        dotClass: "bg-[var(--app-tertiary)]",
+      };
+    case "medium":
+      return {
+        accentClass: "border-l-[var(--app-primary-fixed)]",
+        chipClass: "bg-[var(--app-secondary-container)]/35 text-[var(--app-secondary)]",
+        dotClass: "bg-[var(--app-secondary)]",
+      };
+    case "low":
+      return {
+        accentClass: "border-l-[var(--app-success)]",
+        chipClass: "bg-emerald-500/15 text-[var(--app-success)]",
+        dotClass: "bg-[var(--app-success)]",
+      };
+    default:
+      return {
+        accentClass: "border-l-[var(--app-outline)]",
+        chipClass: "bg-[var(--app-surface-container-high)] text-[var(--app-on-surface-variant)]",
+        dotClass: "bg-[var(--app-outline)]",
+      };
+  }
+}
+
+function getDeadlineLabel(dueDate: string) {
+  const deadlineStatus = getDeadlineStatus(dueDate);
+  const now = new Date();
+  const deadline = new Date(dueDate);
+  const diffMs = deadline.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (deadlineStatus === "overdue") {
+    const overdueDays = Math.abs(diffDays);
+    return overdueDays <= 1 ? "Overdue" : `${overdueDays} days overdue`;
+  }
+
+  if (deadlineStatus === "due-soon") {
+    if (diffDays <= 0) return "Due today";
+    if (diffDays === 1) return "Due tomorrow";
+    return `${diffDays} days left`;
+  }
+
+  return "On track";
 }
 
 export default function ProjectCard({ project, showArchived, collection }: ProjectCardProps) {
+  const priorityTone = getPriorityTone(project.priority);
+  const visibleAvatars = project.avatarUrls.slice(0, 3);
+  const extraMemberCount = Math.max(project.memberCount - visibleAvatars.length, 0);
+  const isArchivedView = Boolean(showArchived);
+  const deadlineStatus = getDeadlineStatus(project.dueDate);
+  const deadlineIcon = deadlineStatus === "overdue" ? "error" : deadlineStatus === "due-soon" ? "schedule" : "event";
+  const deadlineTextClass =
+    deadlineStatus === "overdue"
+      ? "text-[var(--app-error)]"
+      : deadlineStatus === "due-soon"
+        ? "text-[var(--app-tertiary)]"
+        : "text-[var(--app-on-surface)]";
+
   return (
     <Link
-      to={collection === "projects" ? `/projects/${project.id}` : `/projects/${collection}/${project.id}`}
-      className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300"
+      className={`group flex h-full flex-col rounded-[1.6rem] border-l-2 bg-[var(--app-surface-container-low)] p-5 outline outline-1 outline-[var(--app-outline-variant-soft)] transition-all duration-200 hover:-translate-y-1 hover:bg-[var(--app-surface-container-high)]/35 hover:shadow-[0_24px_48px_rgba(0,0,0,0.2)] ${priorityTone.accentClass}`}
+      to={getProjectHref(project, collection)}
     >
-      <div className="card-body p-5">
-        <div className="flex justify-between">
-          {/* Project title */}
-          <h2 className="card-title text-xl mb-1">{project.name}</h2>
-
-          {/* Priority indicator */}
-          <div className="text-[1rem]">
-            {getPriorityDisplay(project.priority)}
-          </div>
-        </div>
-
-
-        {/* Due date with status */}
-        <div className="flex flex-col mb-4 space-y-2">
-          {(project.isArchived && showArchived) && (
-            <div className="flex items-center text-base-content/70 text-sm">
-              <span className="material-symbols-outlined mr-1 text-sm">folder</span>
-              Archived
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          {isArchivedView ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">
+                Archived
+              </span>
             </div>
-          )}
-          <DeadlineDisplay
-            dueDate={project.dueDate}
-            variant="card"
-            className="text-sm"
-          />
+          ) : null}
+
+          <h2 className="text-[1.35rem] font-bold tracking-[-0.03em] text-[var(--app-on-surface)] transition-colors group-hover:text-[var(--app-primary)]">
+            {project.name}
+          </h2>
         </div>
 
-        {/* Divider */}
-        <div className="divider my-1"></div>
+        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${priorityTone.chipClass}`}>
+          <span className={`h-2 w-2 rounded-full ${priorityTone.dotClass}`} />
+          {project.priority}
+        </span>
+      </div>
 
-        {/* Team members */}
-        <div className="flex items-center justify-between mt-2">
-          <div className="avatar-group -space-x-4 rtl:space-x-reverse">
-            {project.avatarUrls.slice(0, 3).map((avatarUrl, index) => (
-              <div key={index} className="avatar border-2 border-base-100">
-                <div className="w-10 rounded-full">
-                  <img src={avatarUrl} alt="Team member" />
-                </div>
-              </div>
-            ))}
-            {project.memberCount > 3 && (
-              <div className="avatar placeholder border-2 border-base-100">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-content relative">
-                  <span className="absolute inset-0 flex items-center justify-center text-xs">
-                    +{project.memberCount - 3}
-                  </span>
-                </div>
-              </div>
-            )}
+      <div className="mt-4 flex items-center gap-3">
+        <ProjectDueDateBadge dueDate={project.dueDate} />
+
+        <div className="min-w-0 flex-1">
+          <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Due Date</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className={`material-symbols-outlined text-sm ${deadlineTextClass}`}>{deadlineIcon}</span>
+            <span className={`text-xs ${deadlineTextClass}`}>{getDeadlineLabel(project.dueDate)}</span>
           </div>
-          <span className="badge badge-outline">
-            {project.memberCount} {project.memberCount === 1 ? 'Member' : 'Members'}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="flex items-center -space-x-3">
+          {visibleAvatars.map((avatarUrl, index) => (
+            <span
+              className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--app-surface-container-low)] bg-[var(--app-surface-container-high)]"
+              key={`${project.id}-${index}`}
+            >
+              <img alt="Project member" className="h-full w-full object-cover" src={avatarUrl} />
+            </span>
+          ))}
+          {extraMemberCount > 0 ? (
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--app-surface-container-low)] bg-[var(--app-surface-container-high)] text-[10px] font-bold text-[var(--app-on-surface)]">
+              +{extraMemberCount}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">
+            {project.memberCount} {project.memberCount === 1 ? "Member" : "Members"}
+          </span>
+          <span className="material-symbols-outlined text-lg text-[var(--app-outline)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--app-primary)]">
+            arrow_outward
           </span>
         </div>
       </div>
     </Link>
   );
 }
-
-// Helper function to get badge color based on priority
-function getPriorityClass(priority: string): string {
-  switch (priority.toLowerCase()) {
-    case 'urgent':
-      return 'badge-error font-bold';
-    case 'high':
-      return 'badge-error';
-    case 'medium':
-      return 'badge-warning';
-    case 'low':
-      return 'badge-info';
-    default:
-      return 'badge-ghost';
-  }
-}
-
-// Helper function to get priority display with emoji
-function getPriorityDisplay(priority: string): string {
-  switch (priority?.toLowerCase()) {
-    case 'urgent':
-      return '🔴 Urgent';
-    case 'high':
-      return '🟠 High';
-    case 'medium':
-      return '🟡 Medium';
-    case 'low':
-      return '🟢 Low';
-    default:
-      return priority;
-  }
-}
-
-

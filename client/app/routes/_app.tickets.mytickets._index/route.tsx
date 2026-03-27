@@ -1,11 +1,11 @@
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import { BasicTicketInfo } from "~/services/api.server/types";
+import type { BasicTicketInfo } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
-import { JsonResponse, JsonResponseResult } from "~/utils/response";
+import { JsonResponse, type JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import { getMyTickets } from "./server.get-mytickets";
 import TicketTable from "~/components/TicketTable";
@@ -44,23 +44,35 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function MyTicketsRoute() {
   const { data: tickets, error } = useLoaderData<JsonResponseResult<BasicTicketInfo[]>>();
+  const totalTickets = tickets?.length ?? 0;
 
   if (error) {
-    return <p className="text-error">{error}</p>;
-  }
-
     return (
       <RouteLayout>
-        <div className="flex justify-between items-center mb-6">
+        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+          {error}
+        </div>
+      </RouteLayout>
+    );
+  }
+
+  return (
+    <RouteLayout className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-2">
           <div>
-            <h1 className="text-3xl font-bold">My Tickets</h1>
-            <p className="text-base-content/65 mt-1">Tickets you submitted or are assigned to.</p>
+            <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">My Tickets</h1>
+            <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+              Tickets you submitted or are assigned to.
+            </p>
           </div>
         </div>
-
-        <div className="bg-base-100 rounded-lg shadow-lg p-6">
-          <TicketTable tickets={tickets} />
+        <div className="rounded-full bg-[var(--app-surface-container-low)] px-4 py-2 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+          <span className="app-shell-mono text-xs uppercase tracking-[0.22em] text-[var(--app-outline)]">{totalTickets} in scope</span>
         </div>
+      </div>
+
+      <TicketTable tickets={tickets} />
     </RouteLayout>
   );
 }

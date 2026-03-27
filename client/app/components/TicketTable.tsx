@@ -1,393 +1,322 @@
-import { useNavigate, useSearchParams } from "@remix-run/react";
-import type { KeyboardEvent } from "react";
-import { useMemo } from "react";
-import { BasicTicketInfo } from "~/services/api.server/types";
+import { useNavigate } from "@remix-run/react";
+import { useMemo, useState, type KeyboardEvent } from "react";
+import type { BasicTicketInfo } from "~/services/api.server/types";
+import useTicketListFiltering from "~/hooks/useTicketListFiltering";
+import useTicketSearchState, { DEFAULT_TICKET_SEARCH_QUERY } from "~/hooks/useTicketSearchState";
+import TicketAssignee from "./TicketAssignee";
+import TicketSearchInput from "./TicketSearchInput";
+import TicketSelectControl from "./TicketSelectControl";
+import TicketTitlePreview from "./TicketTitlePreview";
 import { formatDateTimeShort } from "~/utils/dateTime";
+import {
+  compareTicketStrings,
+  getTicketPriorityDotClass,
+  getTicketStatusChipClass,
+} from "./ticketTableUtils";
 
 export type TicketTableProps = {
-    tickets?: BasicTicketInfo[] | null
-    enableFiltering?: boolean
-}
+  tickets?: BasicTicketInfo[] | null;
+  enableFiltering?: boolean;
+};
 
 type SortBy = "updatedAt" | "title" | "status" | "priority" | "type";
 type SortDirection = "asc" | "desc";
 
-const SORT_BY_OPTIONS: SortBy[] = ["updatedAt", "title", "status", "priority", "type"];
-const SORT_DIRECTION_OPTIONS: SortDirection[] = ["asc", "desc"];
-const DEFAULT_SEARCH_QUERY = "";
 const DEFAULT_FILTER = "all";
 const DEFAULT_SORT_BY: SortBy = "updatedAt";
 const DEFAULT_SORT_DIRECTION: SortDirection = "desc";
 
-const PARAMS = {
-    query: "ticketQuery",
-    status: "ticketStatus",
-    priority: "ticketPriority",
-    type: "ticketType",
-    sortBy: "ticketSortBy",
-    sortDirection: "ticketSortDirection"
-} as const;
-
 const priorityOrder: Record<string, number> = {
-    urgent: 4,
-    high: 3,
-    medium: 2,
-    low: 1
+  urgent: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
 };
 
-function compareStrings(left: string, right: string): number {
-    return left.localeCompare(right, undefined, { sensitivity: "base" });
-}
-
 function getTicketLastUpdated(ticket: BasicTicketInfo): number {
-    return new Date(ticket.updatedAt ?? ticket.createdAt).getTime();
+  return new Date(ticket.updatedAt ?? ticket.createdAt).getTime();
 }
 
 export default function TicketTable({ tickets, enableFiltering = true }: TicketTableProps) {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { searchQuery, setSearchQuery, normalizedSearchQuery } = useTicketSearchState();
+  const [statusFilter, setStatusFilter] = useState(DEFAULT_FILTER);
+  const [priorityFilter, setPriorityFilter] = useState(DEFAULT_FILTER);
+  const [typeFilter, setTypeFilter] = useState(DEFAULT_FILTER);
+  const [sortBy, setSortBy] = useState<SortBy>(DEFAULT_SORT_BY);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(DEFAULT_SORT_DIRECTION);
 
-    const searchQuery = searchParams.get(PARAMS.query) ?? DEFAULT_SEARCH_QUERY;
-    const statusFilter = searchParams.get(PARAMS.status) ?? DEFAULT_FILTER;
-    const priorityFilter = searchParams.get(PARAMS.priority) ?? DEFAULT_FILTER;
-    const typeFilter = searchParams.get(PARAMS.type) ?? DEFAULT_FILTER;
+  const allTickets = useMemo(() => tickets ?? [], [tickets]);
 
-    const sortByParam = searchParams.get(PARAMS.sortBy);
-    const sortDirectionParam = searchParams.get(PARAMS.sortDirection);
-    const sortBy = SORT_BY_OPTIONS.includes(sortByParam as SortBy) ? (sortByParam as SortBy) : DEFAULT_SORT_BY;
-    const sortDirection = SORT_DIRECTION_OPTIONS.includes(sortDirectionParam as SortDirection)
-        ? (sortDirectionParam as SortDirection)
-        : DEFAULT_SORT_DIRECTION;
+  const statusOptions = useMemo(() => [...new Set(allTickets.map((ticket) => ticket.status))].sort(compareTicketStrings), [allTickets]);
+  const priorityOptions = useMemo(() => [...new Set(allTickets.map((ticket) => ticket.priority))].sort(compareTicketStrings), [allTickets]);
+  const typeOptions = useMemo(() => [...new Set(allTickets.map((ticket) => ticket.type))].sort(compareTicketStrings), [allTickets]);
 
-    const allTickets = useMemo(() => tickets ?? [], [tickets]);
+  const { filteredTickets } = useTicketListFiltering({
+    enableFiltering,
+    normalizedSearchQuery,
+    priorityFilter,
+    statusFilter,
+    tickets: allTickets,
+    typeFilter,
+  });
 
-    const statusOptions = useMemo(() => {
-        return [...new Set(allTickets.map((ticket) => ticket.status))].sort(compareStrings);
-    }, [allTickets]);
+  function clearFiltersAndSorting(): void {
+    setSearchQuery(DEFAULT_TICKET_SEARCH_QUERY);
+    setStatusFilter(DEFAULT_FILTER);
+    setPriorityFilter(DEFAULT_FILTER);
+    setTypeFilter(DEFAULT_FILTER);
+    setSortBy(DEFAULT_SORT_BY);
+    setSortDirection(DEFAULT_SORT_DIRECTION);
+  }
 
-    const priorityOptions = useMemo(() => {
-        return [...new Set(allTickets.map((ticket) => ticket.priority))].sort(compareStrings);
-    }, [allTickets]);
+  const visibleTickets = useMemo(() => {
+    return [...filteredTickets].sort((left, right) => {
+      let comparison = 0;
 
-    const typeOptions = useMemo(() => {
-        return [...new Set(allTickets.map((ticket) => ticket.type))].sort(compareStrings);
-    }, [allTickets]);
-
-    function updateParam(key: string, value: string, defaultValue: string): void {
-        setSearchParams((currentParams) => {
-            const nextParams = new URLSearchParams(currentParams);
-            if (value === defaultValue) {
-                nextParams.delete(key);
-            } else {
-                nextParams.set(key, value);
-            }
-            return nextParams;
-        }, { replace: true, preventScrollReset: true });
-    }
-
-    function clearFiltersAndSorting(): void {
-        setSearchParams((currentParams) => {
-            const nextParams = new URLSearchParams(currentParams);
-            nextParams.delete(PARAMS.query);
-            nextParams.delete(PARAMS.status);
-            nextParams.delete(PARAMS.priority);
-            nextParams.delete(PARAMS.type);
-            nextParams.delete(PARAMS.sortBy);
-            nextParams.delete(PARAMS.sortDirection);
-            return nextParams;
-        }, { replace: true, preventScrollReset: true });
-    }
-
-    const visibleTickets = useMemo(() => {
-        const normalizedQuery = searchQuery.trim().toLowerCase();
-
-        const filtered = allTickets.filter((ticket) => {
-            if (enableFiltering) {
-                if (statusFilter !== "all" && ticket.status !== statusFilter) {
-                    return false;
-                }
-
-                if (priorityFilter !== "all" && ticket.priority !== priorityFilter) {
-                    return false;
-                }
-
-                if (typeFilter !== "all" && ticket.type !== typeFilter) {
-                    return false;
-                }
-
-                if (normalizedQuery.length > 0) {
-                    const assigneeName = ticket.assignee?.name ?? "";
-                    const searchableText = `${ticket.name} ${ticket.submitter.name} ${assigneeName}`.toLowerCase();
-                    if (!searchableText.includes(normalizedQuery)) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        });
-
-        return [...filtered].sort((left, right) => {
-            let comparison = 0;
-
-            switch (sortBy) {
-                case "title":
-                    comparison = compareStrings(left.name, right.name);
-                    break;
-                case "status":
-                    comparison = compareStrings(left.status, right.status);
-                    break;
-                case "priority": {
-                    const leftPriority = priorityOrder[left.priority.toLowerCase()] ?? 0;
-                    const rightPriority = priorityOrder[right.priority.toLowerCase()] ?? 0;
-                    comparison = leftPriority - rightPriority;
-                    break;
-                }
-                case "type":
-                    comparison = compareStrings(left.type, right.type);
-                    break;
-                case "updatedAt":
-                default:
-                    comparison = getTicketLastUpdated(left) - getTicketLastUpdated(right);
-                    break;
-            }
-
-            return sortDirection === "asc" ? comparison : -comparison;
-        });
-    }, [allTickets, enableFiltering, priorityFilter, searchQuery, sortBy, sortDirection, statusFilter, typeFilter]);
-
-    function getTicketRoute(ticket: BasicTicketInfo): string {
-        return `/projects/${ticket.projectId}/tickets/${ticket.id}`;
-    }
-
-    function handleTicketRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, route: string): void {
-        if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            navigate(route);
+      switch (sortBy) {
+        case "title":
+          comparison = compareTicketStrings(left.name, right.name);
+          break;
+        case "status":
+          comparison = compareTicketStrings(left.status, right.status);
+          break;
+        case "priority": {
+          const leftPriority = priorityOrder[left.priority.toLowerCase()] ?? 0;
+          const rightPriority = priorityOrder[right.priority.toLowerCase()] ?? 0;
+          comparison = leftPriority - rightPriority;
+          break;
         }
-    }
-
-    return (
-        <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-                {enableFiltering && (
-                    <>
-                        <input
-                            type="text"
-                            className="input input-bordered input-sm w-full sm:w-64"
-                            placeholder="Search title, submitter, assignee"
-                            value={searchQuery}
-                            onChange={(event) => updateParam(PARAMS.query, event.target.value, DEFAULT_SEARCH_QUERY)}
-                        />
-                        <select
-                            className="select select-bordered select-sm"
-                            value={statusFilter}
-                            onChange={(event) => updateParam(PARAMS.status, event.target.value, DEFAULT_FILTER)}
-                        >
-                            <option value="all">All Statuses</option>
-                            {statusOptions.map((status) => (
-                                <option key={status} value={status}>{status}</option>
-                            ))}
-                        </select>
-                        <select
-                            className="select select-bordered select-sm"
-                            value={priorityFilter}
-                            onChange={(event) => updateParam(PARAMS.priority, event.target.value, DEFAULT_FILTER)}
-                        >
-                            <option value="all">All Priorities</option>
-                            {priorityOptions.map((priority) => (
-                                <option key={priority} value={priority}>{priority}</option>
-                            ))}
-                        </select>
-                        <select
-                            className="select select-bordered select-sm"
-                            value={typeFilter}
-                            onChange={(event) => updateParam(PARAMS.type, event.target.value, DEFAULT_FILTER)}
-                        >
-                            <option value="all">All Types</option>
-                            {typeOptions.map((type) => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                        </select>
-                    </>
-                )}
-                <select
-                    className="select select-bordered select-sm"
-                    value={sortBy}
-                    onChange={(event) => updateParam(PARAMS.sortBy, event.target.value, DEFAULT_SORT_BY)}
-                >
-                    <option value="updatedAt">Sort: Last Updated</option>
-                    <option value="title">Sort: Title</option>
-                    <option value="status">Sort: Status</option>
-                    <option value="priority">Sort: Priority</option>
-                    <option value="type">Sort: Type</option>
-                </select>
-                <button
-                    type="button"
-                    className="btn btn-sm btn-outline"
-                    onClick={() => updateParam(
-                        PARAMS.sortDirection,
-                        sortDirection === "asc" ? "desc" : "asc",
-                        DEFAULT_SORT_DIRECTION
-                    )}
-                >
-                    {sortDirection === "asc" ? "Ascending" : "Descending"}
-                </button>
-                <button
-                    type="button"
-                    className="btn btn-sm btn-ghost"
-                    onClick={clearFiltersAndSorting}
-                >
-                    {enableFiltering ? "Reset Filters and Sorting" : "Reset Sorting"}
-                </button>
-            </div>
-
-            <div className="overflow-x-auto">
-                <table className="table table-zebra w-full">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                            <th>Type</th>
-                            <th>Submitter</th>
-                            <th>Developer</th>
-                            <th>Last Updated</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {visibleTickets.length > 0 ? (
-                            visibleTickets.map((ticket) => (
-                                <tr
-                                    key={ticket.id}
-                                    className="cursor-pointer transition-opacity duration-150 hover:opacity-70 focus-within:opacity-70"
-                                    tabIndex={0}
-                                    onClick={() => navigate(getTicketRoute(ticket))}
-                                    onKeyDown={(event) => handleTicketRowKeyDown(event, getTicketRoute(ticket))}
-                                >
-                                    <td>
-                                        <span className="link link-hover">{ticket.name}</span>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            {getStatusDisplay(ticket.status)}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            {getPriorityDisplay(ticket.priority)}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className="flex items-center gap-1">
-                                            {getTypeDisplay(ticket.type)}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="flex items-center gap-2">
-                                            <div className="avatar">
-                                                <div className="w-6 rounded-full">
-                                                    <img src={ticket.submitter.avatarUrl} alt={ticket.submitter.name} />
-                                                </div>
-                                            </div>
-                                            <span className="text-xs">{ticket.submitter.name}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {ticket.assignee ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="avatar">
-                                                    <div className="w-6 rounded-full">
-                                                        <img src={ticket.assignee.avatarUrl} alt={ticket.assignee.name} />
-                                                    </div>
-                                                </div>
-                                                <span className="text-xs">{ticket.assignee.name}</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-xs opacity-60">Unassigned</span>
-                                        )}
-                                    </td>
-                                    <td>
-                                        {ticket.updatedAt ? (
-                                            <span className="text-xs">
-                                                {formatDateTimeShort(new Date(ticket.updatedAt))}
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs">
-                                                {formatDateTimeShort(new Date(ticket.createdAt))}
-                                            </span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={7} className="text-center py-4">
-                                    No tickets found
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    )
-}
-
-// Helper function to get priority display with emoji
-function getPriorityDisplay(priority: string): string {
-    switch (priority?.toLowerCase()) {
-        case 'urgent':
-            return '🔴 Urgent';
-        case 'high':
-            return '🟠 High';
-        case 'medium':
-            return '🟡 Medium';
-        case 'low':
-            return '🟢 Low';
+        case "type":
+          comparison = compareTicketStrings(left.type, right.type);
+          break;
+        case "updatedAt":
         default:
-            return priority;
-    }
-}
+          comparison = getTicketLastUpdated(left) - getTicketLastUpdated(right);
+          break;
+      }
 
-// Helper function to get status display with emoji
-function getStatusDisplay(status: string): string {
-    switch (status?.toLowerCase()) {
-        case 'new':
-            return '🆕 New';
-        case 'in development':
-            return '⚙️ In Development';
-        case 'testing':
-            return '🧪 Testing';
-        case 'resolved':
-            return '✅ Resolved';
-        case 'open':
-            return '🆕 Open';
-        case 'in progress':
-            return '⚙️ In Progress';
-        case 'closed':
-            return '🔒 Closed';
-        default:
-            return status;
-    }
-}
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredTickets, sortBy, sortDirection]);
 
-// Helper function to get type display with emoji
-function getTypeDisplay(type: string): string {
-    switch (type?.toLowerCase()) {
-        case 'defect':
-            return '🐛 Defect';
-        case 'feature':
-            return '✨ Feature';
-        case 'general task':
-            return '📋 General Task';
-        case 'work task':
-            return '💼 Work Task';
-        case 'change request':
-            return '🔄 Change Request';
-        case 'enhancement':
-            return '⚡ Enhancement';
-        default:
-            return type;
+  function getTicketRoute(ticket: BasicTicketInfo): string {
+    return `/projects/${ticket.projectId}/tickets/${ticket.id}`;
+  }
+
+  function handleTicketRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, route: string): void {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigate(route);
     }
+  }
+
+  return (
+    <div className="overflow-hidden rounded-[1.75rem] bg-[var(--app-surface-container-low)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+      <div className="flex flex-wrap items-center gap-3 bg-[color:var(--app-surface-container-high)]/50 p-4">
+        {enableFiltering ? (
+          <TicketSearchInput
+            className="min-w-[15rem] flex-1"
+            onChange={setSearchQuery}
+            placeholder="Search title, type, assignee"
+            value={searchQuery}
+          />
+        ) : null}
+
+        {enableFiltering ? (
+          <>
+            <TicketSelectControl
+              className="min-w-[10rem]"
+              onChange={(event) => setStatusFilter(event.target.value)}
+              value={statusFilter}
+            >
+              <option value="all">All Statuses</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </TicketSelectControl>
+
+            <TicketSelectControl
+              className="min-w-[10rem]"
+              onChange={(event) => setPriorityFilter(event.target.value)}
+              value={priorityFilter}
+            >
+              <option value="all">All Priorities</option>
+              {priorityOptions.map((priority) => (
+                <option key={priority} value={priority}>
+                  {priority}
+                </option>
+              ))}
+            </TicketSelectControl>
+
+            <TicketSelectControl
+              className="min-w-[10rem]"
+              onChange={(event) => setTypeFilter(event.target.value)}
+              value={typeFilter}
+            >
+              <option value="all">All Types</option>
+              {typeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </TicketSelectControl>
+          </>
+        ) : null}
+
+        <TicketSelectControl
+          className="min-w-[11rem]"
+          onChange={(event) => setSortBy(event.target.value as SortBy)}
+          value={sortBy}
+        >
+          <option value="updatedAt">Sort: Last Updated</option>
+          <option value="title">Sort: Title</option>
+          <option value="status">Sort: Status</option>
+          <option value="priority">Sort: Priority</option>
+          <option value="type">Sort: Type</option>
+        </TicketSelectControl>
+
+        <button
+          className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-[var(--app-outline-variant-soft)] bg-[var(--app-surface-container-lowest)] px-4 text-sm text-[var(--app-on-surface)] transition-colors hover:bg-[var(--app-surface-container-high)]"
+          onClick={() => setSortDirection((current) => (current === "asc" ? "desc" : "asc"))}
+          type="button"
+        >
+          <span className="material-symbols-outlined text-lg">
+            {sortDirection === "asc" ? "arrow_upward" : "arrow_downward"}
+          </span>
+          {sortDirection === "asc" ? "Ascending" : "Descending"}
+        </button>
+
+        <button
+          className="inline-flex h-11 cursor-pointer items-center rounded-xl px-3.5 text-sm text-[var(--app-outline)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+          onClick={clearFiltersAndSorting}
+          type="button"
+        >
+          {enableFiltering ? "Reset Filters" : "Reset Sorting"}
+        </button>
+      </div>
+
+      <div className="divide-y divide-[color:var(--app-outline-variant)]/5 md:hidden">
+        {visibleTickets.length > 0 ? (
+          visibleTickets.map((ticket) => {
+            const route = getTicketRoute(ticket);
+
+            return (
+              <button
+                className="flex w-full flex-col gap-4 p-6 text-left transition-colors hover:bg-[color:var(--app-surface-container-highest)]/25"
+                key={ticket.id}
+                onClick={() => navigate(route)}
+                type="button"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-2">
+                    <TicketTitlePreview
+                      descriptionClassName="text-xs text-[var(--app-on-surface-variant)]"
+                      descriptionLength={92}
+                      ticket={ticket}
+                      titleClassName="text-lg font-semibold text-[var(--app-on-surface)]"
+                    />
+                  </div>
+                  <span className={`app-shell-mono inline-flex shrink-0 rounded-md px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] ${getTicketStatusChipClass(ticket.status)}`}>
+                    {ticket.status}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--app-on-surface)]">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${getTicketPriorityDotClass(ticket.priority)}`} />
+                    <span>{ticket.priority}</span>
+                  </div>
+                  <span className="app-shell-mono text-xs text-[var(--app-outline)]">
+                    {formatDateTimeShort(new Date(ticket.updatedAt ?? ticket.createdAt))}
+                  </span>
+                </div>
+
+                <TicketAssignee fallbackLabel="Unassigned" person={ticket.assignee} size="md" />
+              </button>
+            );
+          })
+        ) : (
+          <div className="px-6 py-14 text-center text-sm text-[var(--app-on-surface-variant)]">
+            No tickets found for the current filters.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[1050px] border-collapse text-left">
+          <thead className="border-b border-[color:var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]">
+            <tr>
+              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Title &amp; Preview</th>
+              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Status</th>
+              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Priority</th>
+              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Assignee</th>
+              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Updated</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[color:var(--app-outline-variant)]/5">
+            {visibleTickets.length > 0 ? (
+              visibleTickets.map((ticket) => {
+                const route = getTicketRoute(ticket);
+
+                return (
+                  <tr
+                    className="group cursor-pointer transition-colors duration-150 hover:bg-[color:var(--app-surface-container-highest)]/35 focus-visible:outline-none focus-visible:bg-[color:var(--app-surface-container-highest)]/35"
+                    key={ticket.id}
+                    onClick={() => navigate(route)}
+                    onKeyDown={(event) => handleTicketRowKeyDown(event, route)}
+                    tabIndex={0}
+                  >
+                    <td className="px-6 py-5 align-top">
+                      <TicketTitlePreview
+                        descriptionClassName="max-w-[32rem] truncate text-xs text-[var(--app-on-surface-variant)]"
+                        ticket={ticket}
+                        titleClassName="text-[1rem] font-semibold text-[var(--app-on-surface)] transition-colors group-hover:text-[var(--app-primary)]"
+                      />
+                    </td>
+                    <td className="px-6 py-5 align-top">
+                      <span className={`app-shell-mono inline-flex rounded-md px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] ${getTicketStatusChipClass(ticket.status)}`}>
+                        {ticket.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 align-top">
+                      <div className="flex items-center gap-2 text-sm text-[var(--app-on-surface)]">
+                        <span className={`h-2.5 w-2.5 rounded-full ${getTicketPriorityDotClass(ticket.priority)}`} />
+                        <span>{ticket.priority}</span>
+                      </div>
+                    </td>
+                    <td className="min-w-[13rem] px-6 py-5 align-top">
+                      <TicketAssignee fallbackLabel="Unassigned" person={ticket.assignee} />
+                    </td>
+                    <td className="px-6 py-5 align-top">
+                      <span className="app-shell-mono text-xs text-[var(--app-outline)]">
+                        {formatDateTimeShort(new Date(ticket.updatedAt ?? ticket.createdAt))}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td className="px-6 py-14 text-center text-sm text-[var(--app-on-surface-variant)]" colSpan={5}>
+                  No tickets found for the current filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--app-surface-container-lowest)] px-4 py-4">
+        <span className="app-shell-mono text-xs text-[var(--app-outline)]">
+          Showing {visibleTickets.length} of {allTickets.length} tickets
+        </span>
+        <span className="text-xs text-[var(--app-on-surface-variant)]">
+          Select any row to open the full ticket details.
+        </span>
+      </div>
+    </div>
+  );
 }

@@ -5,13 +5,18 @@ import DashboardNavbar from "./DashboardNavbar";
 import SideMenu from "./SideMenu";
 import { filterMenuRoutesByPermissions, menuRoutes } from "~/data/routes";
 import apiClient from "~/services/api.server/apiClient";
-import type { UserInfoResponse } from "~/services/api.server/types";
+import type { CompanyInfoResponse, UserInfoResponse } from "~/services/api.server/types";
 import { commitSession, destroySession, getSession } from "~/services/sessions.server";
 import { JsonResponse, type JsonResponseResult } from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
 const mobileMenuTransitionMs = 220;
 const monoClass = "[font-family:'JetBrains_Mono',monospace]";
+
+type AppShellData = {
+  user: UserInfoResponse;
+  company: Pick<CompanyInfoResponse, "name" | "logoUrl"> | null;
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request);
@@ -43,8 +48,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   session.set("user", newUserInfo);
 
+  const { data: companyInfo } = await tryCatch(apiClient.getCompanyInfo(accessToken));
+
   return JsonResponse({
-    data: newUserInfo,
+    data: {
+      user: newUserInfo,
+      company: companyInfo
+        ? {
+            name: companyInfo.name,
+            logoUrl: companyInfo.logoUrl,
+          }
+        : null,
+    },
     error: null,
     headers: {
       "Set-Cookie": await commitSession(session),
@@ -53,7 +68,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function AppRoute() {
-  const { data: userData } = useLoaderData<typeof loader>() as JsonResponseResult<UserInfoResponse>;
+  const { data: appShellData } = useLoaderData<typeof loader>() as JsonResponseResult<AppShellData>;
+  const userData = appShellData?.user;
   const navigation = useNavigation();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -122,7 +138,7 @@ export default function AppRoute() {
     <div className="app-shell">
       <div className="min-h-screen lg:pl-[15.5rem]">
         <div className="hidden outline outline-1 outline-[var(--app-outline-variant-soft)] lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-[15.5rem]">
-          <SideMenu menuRoutes={filteredRoutes} />
+          <SideMenu company={appShellData?.company ?? null} menuRoutes={filteredRoutes} />
         </div>
 
         {mobileMenuMounted ? (
@@ -138,6 +154,7 @@ export default function AppRoute() {
               className={`absolute inset-y-0 left-0 flex w-[15.5rem] max-w-[85vw] transition-transform duration-[220ms] ease-out will-change-transform ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
               <SideMenu
+                company={appShellData?.company ?? null}
                 menuRoutes={filteredRoutes}
                 onClose={closeMobileMenu}
                 onNavigate={closeMobileMenu}

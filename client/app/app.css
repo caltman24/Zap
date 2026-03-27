@@ -12,6 +12,10 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 body:has(.app-shell) {
   background: #131313;
 }
@@ -46,6 +50,7 @@ body:has(.app-shell) {
   --app-error: #ffb4ab;
   --app-error-container: #93000a;
   --app-success: #8ecfaa;
+  --app-archive: #f0d76d;
   --app-tertiary: #ffb783;
   --app-tertiary-container: #d97721;
   --app-avatar-border: rgba(70, 69, 84, 0.3);

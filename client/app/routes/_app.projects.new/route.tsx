@@ -1,14 +1,19 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import FormShell, {
+  FormFieldHeader,
+  formInputClassName,
+  FormSelectControl,
+  formTextareaClassName,
+} from "~/components/FormShell";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import { CreateProjectRequest, UserInfoResponse } from "~/services/api.server/types";
+import type { CreateProjectRequest, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { hasPermission } from "~/utils/permissions";
 import tryCatch from "~/utils/tryCatch";
 import RouteLayout from "~/layouts/RouteLayout";
-import BackButton from "~/components/BackButton";
 
 export const handle = {
     breadcrumb: () => <Link to="/projects/new">New</Link>,
@@ -101,178 +106,111 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function NewProjectRoute() {
-    const navigation = useNavigation();
-    const isSubmitting = navigation.state === "submitting";
-    const actionData = useActionData<typeof action>();
-    const formRef = useRef<HTMLFormElement>(null);
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const actionData = useActionData<typeof action>();
+  const formRef = useRef<HTMLFormElement>(null);
 
-    const [priority, setPriority] = useState<string>("");
-    const [nameLength, setNameLength] = useState(0);
-    const [descriptionLength, setDescriptionLength] = useState(0);
+  const [priority, setPriority] = useState<string>("");
+  const [nameLength, setNameLength] = useState(0);
+  const [descriptionLength, setDescriptionLength] = useState(0);
 
-    // Reset form on successful submission
-    useEffect(() => {
-        if (actionData?.success) {
-            formRef.current?.reset();
-            setPriority("");
-            setNameLength(0);
-            setDescriptionLength(0);
-        }
-    }, [actionData]);
+  useEffect(() => {
+    if (actionData?.success) {
+      formRef.current?.reset();
+      setPriority("");
+      setNameLength(0);
+      setDescriptionLength(0);
+    }
+  }, [actionData]);
 
-    return (
-        <RouteLayout>
-            <div className="max-w-4xl mx-auto">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-base-content mb-2">Create New Project</h1>
-                    <p className="text-base-content/70">Fill out the form below to create a new project for your organization.</p>
+  return (
+    <RouteLayout>
+      <FormShell
+        description="Fill out the form below to create a new project for your organization."
+        error={actionData?.error}
+        title="Create New Project"
+      >
+        <Form className="space-y-8" method="post" ref={formRef}>
+          <fieldset className="space-y-8" disabled={isSubmitting}>
+            <div className="grid gap-6">
+              <div>
+                <FormFieldHeader detail={`${nameLength}/50`} label="Project Name" required />
+                <input
+                  className={formInputClassName}
+                  maxLength={50}
+                  name="name"
+                  onChange={(e) => setNameLength(e.target.value.length)}
+                  placeholder="Enter a descriptive project name"
+                  required
+                  type="text"
+                />
+              </div>
+
+              <div>
+                <FormFieldHeader detail={`${descriptionLength}/1000`} label="Description" required />
+                <textarea
+                  className={formTextareaClassName}
+                  maxLength={1000}
+                  name="description"
+                  onChange={(e) => setDescriptionLength(e.target.value.length)}
+                  placeholder="Provide a detailed description of the project..."
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <FormFieldHeader label="Priority" required />
+                  <FormSelectControl
+                    name="priority"
+                    onChange={(e) => setPriority(e.target.value)}
+                    required
+                    value={priority}
+                  >
+                    <option value="">Select priority</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </FormSelectControl>
                 </div>
 
-                <div className="bg-base-100 rounded-lg shadow-lg p-6">
-                    {/* Error Display */}
-                    {actionData?.error && (
-                        <div className="alert alert-error mb-6">
-                            <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>{actionData.error}</span>
-                        </div>
-                    )}
-
-                    <Form method="post" ref={formRef} className="space-y-6">
-                        <fieldset disabled={isSubmitting} className="space-y-6">
-                            {/* Project Name */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text font-medium">
-                                        Project Name <span className="text-error">*</span>
-                                    </span>
-                                    <span className="label-text-alt text-base-content/60">
-                                        {nameLength}/50
-                                    </span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    className="input input-bordered w-full focus:input-primary"
-                                    placeholder="Enter a descriptive project name"
-                                    required
-                                    maxLength={50}
-                                    onChange={(e) => setNameLength(e.target.value.length)}
-                                    aria-describedby="name-help"
-                                />
-                                <div className="label">
-                                    <span id="name-help" className="label-text-alt text-base-content/60">
-                                        A clear, concise name that describes the project
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text font-medium">
-                                        Description <span className="text-error">*</span>
-                                    </span>
-                                    <span className="label-text-alt text-base-content/60">
-                                        {descriptionLength}/1000
-                                    </span>
-                                </label>
-                                <textarea
-                                    name="description"
-                                    className="textarea textarea-bordered w-full h-32 focus:textarea-primary"
-                                    placeholder="Provide a detailed description of the project..."
-                                    required
-                                    maxLength={1000}
-                                    onChange={(e) => setDescriptionLength(e.target.value.length)}
-                                    aria-describedby="description-help"
-                                />
-                                <div className="label">
-                                    <span id="description-help" className="label-text-alt text-base-content/60">
-                                        Include project goals, scope, and any relevant details
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Priority and Due Date Row */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Priority */}
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-medium">
-                                            Priority <span className="text-error">*</span>
-                                        </span>
-                                    </label>
-                                    <select
-                                        name="priority"
-                                        className="select select-bordered w-full focus:select-primary"
-                                        required
-                                        value={priority}
-                                        onChange={(e) => setPriority(e.target.value)}
-                                        aria-describedby="priority-help"
-                                    >
-                                        <option value="">-- Select priority --</option>
-                                        <option value="Low">🟢 Low</option>
-                                        <option value="Medium">🟡 Medium</option>
-                                        <option value="High">🟠 High</option>
-                                        <option value="Urgent">🔴 Urgent</option>
-                                    </select>
-                                    <div className="label">
-                                        <span id="priority-help" className="label-text-alt text-base-content/60">
-                                            How urgent is this project?
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Due Date */}
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-medium">
-                                            Due Date <span className="text-error">*</span>
-                                        </span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="dueDate"
-                                        className="input input-bordered w-full focus:input-primary"
-                                        required
-                                        min={new Date().toISOString().split('T')[0]}
-                                        aria-describedby="date-help"
-                                    />
-                                    <div className="label">
-                                        <span id="date-help" className="label-text-alt text-base-content/60">
-                                            Target completion date for the project
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Submit Button */}
-                            <div className="flex justify-end pt-4 border-t border-base-300">
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary btn-lg min-w-32"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <span className="loading loading-spinner loading-sm"></span>
-                                            Creating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            Create Project
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </fieldset>
-                    </Form>
+                <div>
+                  <FormFieldHeader label="Due Date" required />
+                  <input
+                    className={formInputClassName}
+                    min={new Date().toISOString().split("T")[0]}
+                    name="dueDate"
+                    required
+                    type="date"
+                  />
                 </div>
+              </div>
             </div>
-        </RouteLayout>
-    );
+
+            <div className="flex justify-end border-t border-[var(--app-outline-variant)]/10 pt-5">
+              <button
+                className="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-5 py-3 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isSubmitting}
+                type="submit"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-lg">add</span>
+                    Create Project
+                  </>
+                )}
+              </button>
+            </div>
+          </fieldset>
+        </Form>
+      </FormShell>
+    </RouteLayout>
+  );
 }

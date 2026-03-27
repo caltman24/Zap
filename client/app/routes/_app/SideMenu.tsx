@@ -1,10 +1,14 @@
 import { Form, Link, NavLink, useLocation, useMatches } from "@remix-run/react";
 import { MenuLink, MenuRoutes } from "~/data/routes";
+import type { CompanyInfoResponse } from "~/services/api.server/types";
 
 const headlineClass = "[font-family:Manrope,sans-serif]";
 
+type SidebarCompany = Pick<CompanyInfoResponse, "name" | "logoUrl"> | null;
+
 type SideMenuProps = {
   menuRoutes: MenuRoutes;
+  company: SidebarCompany;
   onNavigate?: () => void;
   onClose?: () => void;
 };
@@ -26,7 +30,7 @@ function isPrimaryCollectionLink(link: MenuLink) {
   return link.to === "/projects" || link.to === "/tickets";
 }
 
-export default function SideMenu({ menuRoutes, onNavigate, onClose }: SideMenuProps) {
+export default function SideMenu({ menuRoutes, company, onNavigate, onClose }: SideMenuProps) {
   const matches = useMatches();
   const location = useLocation();
 
@@ -71,6 +75,21 @@ export default function SideMenu({ menuRoutes, onNavigate, onClose }: SideMenuPr
             </button>
           ) : null}
         </div>
+
+        {company ? (
+          <div className="mt-5 flex items-center gap-3 rounded-2xl bg-[var(--app-surface-container-low)] px-2 py-2 outline outline-1 outline-[var(--app-outline-variant)]/10">
+            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--app-surface-container-high)]">
+              <img
+                alt={`${company.name} logo`}
+                className="h-full w-full object-cover"
+                src={company.logoUrl ?? "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+              />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-[var(--app-on-surface)]">{company.name}</p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="app-shell-scroll flex-1 overflow-y-auto px-3 lg:px-4">

@@ -1,387 +1,505 @@
-import { Link, useLoaderData, useOutletContext, useParams, useActionData, useNavigation, useFetcher, Form } from "@remix-run/react";
-import { useRef, useState, } from "react";
-import { EditModeForm, PrioritySelect } from "~/components/EditModeForm";
-import { CompanyMemberPerRole, ProjectManagerInfo, ProjectResponse, UserInfoResponse } from "~/services/api.server/types";
-import { useEditMode } from "~/utils/editMode";
-import { ActionResponseParams, JsonResponseResult } from "~/utils/response";
-import RouteLayout from "~/layouts/RouteLayout";
+import { Form, Link, useActionData, useFetcher, useNavigation, useParams } from "@remix-run/react";
+import { useRef, useState } from "react";
 import MembersListTable from "~/components/MembersListTable";
+import {
+  FormFieldHeader,
+  FormSelectControl,
+  formInputClassName,
+  formTextareaClassName,
+} from "~/components/FormShell";
 import TicketTable from "~/components/TicketTable";
-import { DeadlineDisplay } from "~/utils/deadline";
-import ProjectManagerListModal from "./components/ProjectManagerListModal";
-import MemberListModal from "./components/MemberListModal";
-import RemoveMemberListModal from "./components/RemoveMemberListModal";
+import ProjectDueDateBadge from "~/components/ProjectDueDateBadge";
+import RouteLayout from "~/layouts/RouteLayout";
+import type {
+  CompanyMemberPerRole,
+  ProjectManagerInfo,
+  ProjectResponse,
+  UserInfoResponse,
+} from "~/services/api.server/types";
+import { useEditMode } from "~/utils/editMode";
+import type { ActionResponseParams, JsonResponseResult } from "~/utils/response";
+import { getDeadlineStatus } from "~/utils/deadline";
 import BackButton from "~/components/BackButton";
+import MemberListModal from "./components/MemberListModal";
+import ProjectManagerListModal from "./components/ProjectManagerListModal";
+import RemoveMemberListModal from "./components/RemoveMemberListModal";
 
 export type ProjectRouteParams = {
-    loaderData: JsonResponseResult<ProjectResponse>,
-    userInfo: UserInfoResponse
-    collection?: "myprojects" | "archived"
+  loaderData: JsonResponseResult<ProjectResponse>;
+  userInfo: UserInfoResponse;
+  collection?: "myprojects" | "archived";
+};
+
+function getPriorityTone(priority: string) {
+  switch (priority.toLowerCase()) {
+    case "urgent":
+      return {
+        textClass: "text-[var(--app-error)]",
+        dotClass: "bg-[var(--app-error)]",
+      };
+    case "high":
+      return {
+        textClass: "text-[var(--app-tertiary)]",
+        dotClass: "bg-[var(--app-tertiary)]",
+      };
+    case "medium":
+      return {
+        textClass: "text-[var(--app-primary-fixed)]",
+        dotClass: "bg-[var(--app-primary-fixed)]",
+      };
+    case "low":
+      return {
+        textClass: "text-[var(--app-success)]",
+        dotClass: "bg-[var(--app-success)]",
+      };
+    default:
+      return {
+        textClass: "text-[var(--app-on-surface)]",
+        dotClass: "bg-[var(--app-outline)]",
+      };
+  }
 }
 
-export default function Route({ loaderData, userInfo, collection }: ProjectRouteParams) {
-    const { projectId } = useParams()
-    const { data: project, error } = loaderData;
-    const actionData = useActionData() as ActionResponseParams;
-    const userRole = userInfo?.role?.toLowerCase()
-    const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+function getDeadlineMeta(dueDate: string) {
+  const deadlineStatus = getDeadlineStatus(dueDate);
+  const today = new Date();
+  const deadline = new Date(dueDate);
+  const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    const navigation = useNavigation();
-    const isSubmitting = navigation.state === "submitting";
-
-    const archiveFetcher = useFetcher({ key: "archive-project" });
-    const getMembersFetcher = useFetcher({ key: "get-members" })
-    const addMembersFetcher = useFetcher({ key: "add-members" })
-    const removeMemberFetcher = useFetcher({ key: "remove-member" })
-    const getProjectManagersFetcher = useFetcher({ key: "get-pms" })
-    const assignProjectManagerFetcher = useFetcher({ key: "assign-pm" })
-
-    const getMembersModalRef = useRef<HTMLDialogElement>(null)
-    const removeMemberModalRef = useRef<HTMLDialogElement>(null)
-    const assignProjectManagerModalRef = useRef<HTMLDialogElement>(null)
-
-    // State for form fields
-    const [priority, setPriority] = useState<string>(project?.priority || "");
-
-    // Reset priority when toggling edit mode
-    const handleEditToggle = () => {
-        if (project) {
-            setPriority(project.priority);
-        }
-        toggleEditMode();
+  if (deadlineStatus === "overdue") {
+    const overdueDays = Math.abs(diffDays);
+    return {
+      containerClass: "bg-[var(--app-error-container)]/20 border-[var(--app-error)]/10",
+      textClass: "text-[var(--app-error)]",
+      icon: "error",
+      label: overdueDays <= 1 ? "Overdue" : `${overdueDays} days overdue`,
     };
+  }
 
-    const handleOnGetMembersList = () => {
-        if (getMembersModalRef && projectId) {
-            getMembersModalRef.current?.showModal()
-            getMembersFetcher.load(`/projects/${projectId}/unassigned-members`)
-        }
-    }
+  if (deadlineStatus === "due-soon") {
+    return {
+      containerClass: "bg-[var(--app-tertiary-container)]/20 border-[var(--app-tertiary)]/10",
+      textClass: "text-[var(--app-tertiary)]",
+      icon: "schedule",
+      label: diffDays <= 0 ? "Due today" : diffDays === 1 ? "Due tomorrow" : `${diffDays} days left`,
+    };
+  }
 
-    const handleOnRemoveMembersList = () => {
-        if (removeMemberModalRef && projectId) {
-            removeMemberModalRef.current?.showModal()
-        }
-    }
-
-    const handleOnGetPMs = () => {
-        if (assignProjectManagerModalRef && projectId) {
-            assignProjectManagerModalRef.current?.showModal()
-            getProjectManagersFetcher.load(`/projects/${projectId}/get-pms`)
-        }
-    }
-
-    const handleOnRemovePM = () => {
-        if (projectId && project?.projectManager) {
-            const formData = new FormData();
-            // Send empty form data. When no memberId present, it removes the pm
-            assignProjectManagerFetcher.submit(formData, {
-                method: "post",
-                action: `/projects/${projectId}/assign-pm`
-            })
-        }
-    }
-
-    return (
-        <RouteLayout >
-            {error || !project ?
-                <p className="text-error mt-4">{error}</p> :
-                <>
-                    <BackButton to={collection ? `/projects/${collection}` : "/projects"} />
-                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 mb-6 mt-3 overflow-hidden">
-                        {isEditing ? (
-                            <div className="p-6">
-                                <EditModeForm
-                                    error={formError}
-                                    isSubmitting={isSubmitting}
-                                    onCancel={handleEditToggle}
-                                >
-                                    <div className="form-control mb-4">
-                                        <label className="label">
-                                            <span className="label-text">Project Name</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            className="input input-bordered w-full"
-                                            defaultValue={project?.name}
-                                            required
-                                            maxLength={50}
-                                        />
-                                    </div>
-
-                                    <div className="form-control mb-4">
-                                        <label className="label">
-                                            <span className="label-text">Description</span>
-                                        </label>
-                                        <textarea
-                                            name="description"
-                                            className="textarea textarea-bordered w-full"
-                                            defaultValue={project?.description}
-                                            rows={4}
-                                            required
-                                            maxLength={1000}
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <PrioritySelect
-                                            value={priority}
-                                            onChange={setPriority}
-                                        />
-
-                                        <div className="form-control">
-                                            <label className="label">
-                                                <span className="label-text">Due Date</span>
-                                            </label>
-                                            <input
-                                                type="date"
-                                                name="dueDate"
-                                                className="input input-bordered w-full"
-                                                defaultValue={new Date(project!.dueDate).toISOString().split('T')[0]}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </EditModeForm>
-                            </div>
-                        ) : (
-                            // Display project details
-                            <>
-                                {/* Header Section */}
-                                <div className="border-b border-base-300/30 p-6">
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex flex-col space-y-3">
-                                            {project.isArchived && (
-                                                <div className="font-semibold text-lg text-warning">
-                                                    📁 Archived
-                                                </div>
-                                            )}
-                                            <div className="space-y-2">
-                                                <h1 className="text-3xl font-bold text-base-content leading-tight">
-                                                    {project?.name}
-                                                </h1>
-                                                <p className="text-base-content/70 text-lg leading-relaxed max-w-3xl">
-                                                    {project?.description}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-3 items-center flex-shrink-0 ml-6">
-                                            {project.capabilities.canEdit && (
-                                                <button
-                                                    onClick={handleEditToggle}
-                                                    className="btn btn-soft btn-sm gap-2 shadow-sm"
-                                                >
-                                                    <span className="material-symbols-outlined text-sm">edit</span>
-                                                    Edit Details
-                                                </button>
-                                            )}
-                                            {project.capabilities.canArchive && (
-                                                <Form method="post" action={`/projects/${project.id}/archive`}>
-                                                    <button
-                                                        type="submit"
-                                                        name="intent"
-                                                        value={project?.isArchived ? "unarchive" : "archive"}
-                                                        className={`btn btn-sm gap-2 shadow-sm ${project?.isArchived ? 'btn-success' : 'btn-warning'}`}
-                                                    >
-                                                        <span className="material-symbols-outlined text-sm">folder</span>
-                                                        {project?.isArchived ? "Unarchive" : "Archive"}
-                                                    </button>
-                                                </Form>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Project Manager Modal */}
-                                {project.capabilities.canAssignProjectManager && (
-                                    <ProjectManagerListModal
-                                        modalRef={assignProjectManagerModalRef}
-                                        loading={getProjectManagersFetcher.state === "loading"}
-                                        members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
-                                        actionFetcher={assignProjectManagerFetcher}
-                                        currentPM={project.projectManager}
-                                        actionFetcherSubmit={(formData) => {
-                                            assignProjectManagerFetcher.submit(formData, {
-                                                method: "post",
-                                                action: `/projects/${projectId}/assign-pm`
-                                            })
-                                        }}
-                                        modalTitle="Select Project Manager to Assign"
-                                        buttonText="Assign"
-                                    />
-                                )}
-
-                                {/* Project Details Stats */}
-                                <div className="p-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide">
-                                                    Project Manager
-                                                </div>
-                                                {project.capabilities.canAssignProjectManager && (
-                                                    <div className="flex gap-1">
-                                                        <button
-                                                            onClick={() => handleOnGetPMs()}
-                                                            className="btn btn-xs btn-ghost btn-circle"
-                                                            title="Assign PM"
-                                                        >
-                                                            <span className="material-symbols-outlined text-xs">person_add</span>
-                                                        </button>
-                                                        {project.projectManager && (
-                                                            <button
-                                                                onClick={() => handleOnRemovePM()}
-                                                                className="btn btn-xs btn-ghost btn-circle"
-                                                                title="Remove PM"
-                                                            >
-                                                                <span className="material-symbols-outlined text-xs">person_remove</span>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {project.projectManager ? (
-                                                <div className="flex gap-3 items-center">
-                                                    <div className="avatar">
-                                                        <div className="w-10 rounded-full ring-2 ring-base-300/50">
-                                                            <img src={project.projectManager.avatarUrl} alt="Project Manager" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-base font-semibold text-base-content">
-                                                        {project.projectManager.name}
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="text-base font-medium text-base-content/50">
-                                                    Not assigned
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                                            <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                                                Priority
-                                            </div>
-                                            <div className="text-base font-semibold">
-                                                {getPriorityDisplay(project.priority)}
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                                            <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                                                Due Date
-                                            </div>
-                                            <div className="text-base font-semibold">
-                                                <DeadlineDisplay
-                                                    dueDate={project.dueDate}
-                                                    variant="detailed"
-                                                    showLabel={false}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                                            <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                                                Team Size
-                                            </div>
-                                            <div className="text-base font-semibold">
-                                                {project.projectManager ?
-                                                    project.members.length + 1 :
-                                                    project.members.length} members
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                    {/* Team Members Section */}
-                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6 mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Assigned Members</h2>
-                            {/* Add members */}
-                            {project.capabilities.canManageMembers && (
-                                <>
-                                    <div className="flex gap-2">
-                                        <button className="btn btn-soft btn-sm gap-2 shadow-sm" onClick={() => handleOnGetMembersList()}>
-                                            <span className="material-symbols-outlined text-success text-sm">person_add</span>
-                                            Add
-                                        </button>
-                                        <button className="btn btn-soft btn-sm gap-2 shadow-sm" onClick={() => handleOnRemoveMembersList()}>
-                                            <span className="material-symbols-outlined text-error text-sm">person_remove</span>
-                                            Remove
-                                        </button>
-                                    </div>
-                                    <MemberListModal
-                                        modalRef={getMembersModalRef}
-                                        loading={getMembersFetcher.state === "loading"}
-                                        members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
-                                        actionFetcher={addMembersFetcher}
-                                        actionFetcherSubmit={(formData) => {
-                                            addMembersFetcher.submit(formData, {
-                                                method: "post",
-                                                action: `/projects/${projectId}/add-members`
-                                            })
-                                        }}
-                                        projectId={projectId}
-                                    />
-                                    {/* INFO: This modal removes a single member. There may be conditions to removing a member */}
-                                    <RemoveMemberListModal
-                                        modalRef={removeMemberModalRef}
-                                        projectId={projectId}
-                                        members={project.members.filter(m => m.id !== userInfo.memberId)}
-                                        actionFetcher={removeMemberFetcher}
-                                        actionFetcherSubmit={(formData) => {
-                                            removeMemberFetcher.submit(formData, {
-                                                method: "post",
-                                                action: `/projects/${projectId}/remove-member`
-                                            })
-                                        }}
-                                    />
-                                </>
-                            )}
-                        </div>
-
-                        {/* Members by Role */}
-                        <MembersListTable members={project.members} />
-                    </div>
-
-                    {/* Tickets Section */}
-                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6" >
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Tickets</h2>
-                            {
-                                project.capabilities.canCreateTicket && (
-                                    <Link to={`/tickets/new?projectId=${project.id}`} className="btn btn-soft btn-sm gap-2 shadow-sm">
-                                        <span className="material-symbols-outlined text-success text-sm">add_circle</span>
-                                        New Ticket
-                                    </Link>
-                                )
-                            }
-                        </div>
-
-                        {/* Tickets Table */}
-                        <TicketTable tickets={project?.tickets} enableFiltering={false} />
-                    </div>
-                </>
-            }
-        </RouteLayout >
-    );
+  return {
+    containerClass: "bg-[var(--app-surface-container-highest)]/30 border-white/5",
+      textClass: "text-[var(--app-on-surface-variant)]",
+      icon: "event",
+      label: "On track",
+  };
 }
 
-// Helper function to get priority display with emoji
-function getPriorityDisplay(priority: string): string {
-    switch (priority?.toLowerCase()) {
-        case 'urgent':
-            return '🔴 Urgent';
-        case 'high':
-            return '🟠 High';
-        case 'medium':
-            return '🟡 Medium';
-        case 'low':
-            return '🟢 Low';
-        default:
-            return priority;
+function getBackLink(collection?: "myprojects" | "archived") {
+  return collection ? `/projects/${collection}` : "/projects";
+}
+
+export default function ProjectCommonRoute({ loaderData, userInfo, collection }: ProjectRouteParams) {
+  const { projectId } = useParams();
+  const { data: project, error } = loaderData;
+  const actionData = useActionData() as ActionResponseParams;
+  const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+
+  const getMembersFetcher = useFetcher({ key: "get-members" });
+  const addMembersFetcher = useFetcher({ key: "add-members" });
+  const removeMemberFetcher = useFetcher({ key: "remove-member" });
+  const getProjectManagersFetcher = useFetcher({ key: "get-pms" });
+  const assignProjectManagerFetcher = useFetcher({ key: "assign-pm" });
+
+  const getMembersModalRef = useRef<HTMLDialogElement>(null);
+  const removeMemberModalRef = useRef<HTMLDialogElement>(null);
+  const assignProjectManagerModalRef = useRef<HTMLDialogElement>(null);
+
+  const [priority, setPriority] = useState<string>(project?.priority || "");
+
+  function handleEditToggle() {
+    if (project) {
+      setPriority(project.priority);
     }
+    toggleEditMode();
+  }
+
+  function handleOnGetMembersList() {
+    if (getMembersModalRef && projectId) {
+      getMembersModalRef.current?.showModal();
+      getMembersFetcher.load(`/projects/${projectId}/unassigned-members`);
+    }
+  }
+
+  function handleOnRemoveMembersList() {
+    if (removeMemberModalRef && projectId) {
+      removeMemberModalRef.current?.showModal();
+    }
+  }
+
+  function handleOnGetPMs() {
+    if (assignProjectManagerModalRef && projectId) {
+      assignProjectManagerModalRef.current?.showModal();
+      getProjectManagersFetcher.load(`/projects/${projectId}/get-pms`);
+    }
+  }
+
+  function handleOnRemovePM() {
+    if (projectId && project?.projectManager) {
+      const formData = new FormData();
+      assignProjectManagerFetcher.submit(formData, {
+        method: "post",
+        action: `/projects/${projectId}/assign-pm`,
+      });
+    }
+  }
+
+  if (error || !project) {
+    return (
+      <RouteLayout>
+        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+          {error}
+        </div>
+      </RouteLayout>
+    );
+  }
+
+  const priorityTone = getPriorityTone(project.priority);
+  const deadlineMeta = getDeadlineMeta(project.dueDate);
+  const dueDateDisplay = new Date(project.dueDate).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const teamSize = project.projectManager ? project.members.length + 1 : project.members.length;
+
+  return (
+    <RouteLayout className="space-y-8">
+      <BackButton to={getBackLink(collection)} />
+
+      <section className="border-b border-[var(--app-outline-variant)]/10 pb-8">
+        {isEditing ? (
+          <div className="space-y-6 p-6 sm:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--app-outline-variant)]/10 pb-6">
+              <div>
+                <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">Edit Project</h1>
+                <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                  Update the project details shown to your team.
+                </p>
+              </div>
+            </div>
+
+            <Form className="space-y-8" method="post">
+              {formError ? (
+                <div className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
+                  {formError}
+                </div>
+              ) : null}
+
+              <div className="grid gap-6">
+                <div>
+                  <FormFieldHeader label="Project Name" required />
+                  <input
+                    className={formInputClassName}
+                    defaultValue={project.name}
+                    maxLength={50}
+                    name="name"
+                    required
+                    type="text"
+                  />
+                </div>
+
+                <div>
+                  <FormFieldHeader label="Description" required />
+                  <textarea
+                    className={formTextareaClassName}
+                    defaultValue={project.description}
+                    maxLength={1000}
+                    name="description"
+                    required
+                    rows={5}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <FormFieldHeader label="Priority" required />
+                    <FormSelectControl name="priority" onChange={(event) => setPriority(event.target.value)} required value={priority}>
+                      <option value="">Select priority</option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Urgent">Urgent</option>
+                    </FormSelectControl>
+                  </div>
+
+                  <div>
+                    <FormFieldHeader label="Due Date" required />
+                    <input
+                      className={formInputClassName}
+                      defaultValue={new Date(project.dueDate).toISOString().split("T")[0]}
+                      name="dueDate"
+                      required
+                      type="date"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 pt-5">
+                <button
+                  className="inline-flex min-w-28 items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                  disabled={isSubmitting}
+                  onClick={handleEditToggle}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-5 py-3 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </Form>
+          </div>
+        ) : (
+          <>
+            <div className="px-6 pb-0 pt-6 sm:px-8 sm:pt-8">
+              <div className="flex flex-wrap items-start justify-between gap-8">
+                <div className="min-w-0 max-w-3xl flex-1 space-y-4">
+                  {project.isArchived ? (
+                    <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">Archived</p>
+                  ) : null}
+                  <div className="space-y-3">
+                    <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
+                      {project.name}
+                    </h1>
+                    <p className="max-w-3xl text-sm leading-6 text-[var(--app-on-surface-variant)] sm:text-base sm:leading-7">
+                      {project.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 self-start lg:justify-end">
+                  {project.capabilities.canEdit ? (
+                    <button
+                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                      onClick={handleEditToggle}
+                      type="button"
+                    >
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                      Edit Details
+                    </button>
+                  ) : null}
+
+                  {project.capabilities.canArchive ? (
+                    <Form action={`/projects/${project.id}/archive`} method="post">
+                      <button
+                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors ${project.isArchived
+                          ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
+                          : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
+                          }`}
+                        name="intent"
+                        type="submit"
+                        value={project.isArchived ? "unarchive" : "archive"}
+                      >
+                        <span className="material-symbols-outlined text-lg">folder</span>
+                        {project.isArchived ? "Unarchive" : "Archive"}
+                      </button>
+                    </Form>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
+              <dl className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <div className="space-y-2 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Project Manager</dt>
+                    {project.capabilities.canAssignProjectManager ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-outline)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                          onClick={handleOnGetPMs}
+                          title="Assign project manager"
+                          type="button"
+                        >
+                          <span className="material-symbols-outlined text-base">person_add</span>
+                        </button>
+                        {project.projectManager ? (
+                          <button
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-outline)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-error)]"
+                            onClick={handleOnRemovePM}
+                            title="Remove project manager"
+                            type="button"
+                          >
+                            <span className="material-symbols-outlined text-base">person_remove</span>
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                  {project.projectManager ? (
+                    <dd className="flex items-center gap-3">
+                      <img
+                        alt={project.projectManager.name}
+                        className="h-10 w-10 rounded-full border border-[var(--app-outline-variant)]/20 object-cover"
+                        src={project.projectManager.avatarUrl}
+                      />
+                      <span className="text-sm font-medium text-[var(--app-on-surface)]">{project.projectManager.name}</span>
+                    </dd>
+                  ) : (
+                    <dd className="text-sm text-[var(--app-on-surface-variant)]">Not assigned</dd>
+                  )}
+                </div>
+
+                <div className="space-y-2 border-l-2 border-[var(--app-tertiary)] pl-4">
+                  <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</dt>
+                  <dd className={`flex items-center gap-2 text-sm font-medium ${priorityTone.textClass}`}>
+                    <span className={`h-2.5 w-2.5 rounded-full ${priorityTone.dotClass}`} />
+                    {project.priority}
+                  </dd>
+                </div>
+
+                <div className="space-y-2 border-l-2 border-[var(--app-secondary)] pl-4">
+                  <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Due Date</dt>
+                  <dd className="flex items-center gap-3">
+                    <ProjectDueDateBadge dueDate={project.dueDate} />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-[var(--app-on-surface)]">{dueDateDisplay}</p>
+                      <div className={`flex items-center gap-2 text-xs ${deadlineMeta.textClass}`}>
+                      <span className="material-symbols-outlined text-sm">{deadlineMeta.icon}</span>
+                      {deadlineMeta.label}
+                      </div>
+                    </div>
+                  </dd>
+                </div>
+
+                <div className="px-3 space-y-2 border-l-2 border-[var(--app-success)] pr-4">
+                  <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Team Size</dt>
+                  <dd className="text-sm font-medium text-[var(--app-on-surface)]">{teamSize} members</dd>
+                </div>
+              </dl>
+            </div>
+          </>
+        )}
+      </section>
+
+      {!isEditing ? (
+        <>
+          {project.capabilities.canAssignProjectManager ? (
+            <ProjectManagerListModal
+              actionFetcher={assignProjectManagerFetcher}
+              actionFetcherSubmit={(formData) => {
+                assignProjectManagerFetcher.submit(formData, {
+                  method: "post",
+                  action: `/projects/${projectId}/assign-pm`,
+                });
+              }}
+              buttonText="Assign"
+              currentPM={project.projectManager}
+              loading={getProjectManagersFetcher.state === "loading"}
+              members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
+              modalRef={assignProjectManagerModalRef}
+              modalTitle="Select Project Manager to Assign"
+            />
+          ) : null}
+
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Assigned Members</h2>
+                <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                  People currently assigned to this project.
+                </p>
+              </div>
+
+              {project.capabilities.canManageMembers ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                    onClick={handleOnGetMembersList}
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-lg">person_add</span>
+                    Add
+                  </button>
+                  <button
+                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                    onClick={handleOnRemoveMembersList}
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-lg">person_remove</span>
+                    Remove
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] px-6 py-5 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+              {project.capabilities.canManageMembers ? (
+                <>
+                  <MemberListModal
+                    actionFetcher={addMembersFetcher}
+                    actionFetcherSubmit={(formData) => {
+                      addMembersFetcher.submit(formData, {
+                        method: "post",
+                        action: `/projects/${projectId}/add-members`,
+                      });
+                    }}
+                    loading={getMembersFetcher.state === "loading"}
+                    members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
+                    modalRef={getMembersModalRef}
+                    projectId={projectId}
+                  />
+
+                  <RemoveMemberListModal
+                    actionFetcher={removeMemberFetcher}
+                    actionFetcherSubmit={(formData) => {
+                      removeMemberFetcher.submit(formData, {
+                        method: "post",
+                        action: `/projects/${projectId}/remove-member`,
+                      });
+                    }}
+                    members={project.members.filter((member) => member.id !== userInfo.memberId)}
+                    modalRef={removeMemberModalRef}
+                    projectId={projectId}
+                  />
+                </>
+              ) : null}
+
+              <MembersListTable members={project.members} />
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Tickets</h2>
+                <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                  Active and historical work tracked against this project.
+                </p>
+              </div>
+
+              {project.capabilities.canCreateTicket ? (
+                <Link
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2 text-xs font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95"
+                  to={`/tickets/new?projectId=${project.id}`}
+                >
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  New Ticket
+                </Link>
+              ) : null}
+            </div>
+
+            <TicketTable enableFiltering={false} tickets={project.tickets} />
+          </section>
+        </>
+      ) : null}
+    </RouteLayout>
+  );
 }
