@@ -3,6 +3,14 @@
 Goal: turn Zap into a polished, portfolio-quality internal business app that feels real, complete, and interview-ready.
 
 
+Redesign TODO:
+- Finish pagination on dashboard ticket table
+- change TIcket title column name to "Ticket"
+- Polish company details page
+- Start ticket view (last page)
+- Review everything for a final polish
+
+
 === MUST HAVE ===
 
 - [ ] Real ticket attachments
