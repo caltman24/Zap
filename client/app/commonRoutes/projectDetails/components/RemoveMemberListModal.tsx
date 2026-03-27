@@ -1,7 +1,6 @@
 import { FetcherWithComponents } from "@remix-run/react"
 import { RefObject, useState } from "react"
-import { BasicUserInfo, CompanyMemberPerRole } from "~/services/api.server/types"
-import MemberListSkeleton from "./MemberListSkeleton"
+import { BasicUserInfo } from "~/services/api.server/types"
 
 export type RemoveMemberListModalProps = {
   projectId?: string,
@@ -12,31 +11,36 @@ export type RemoveMemberListModalProps = {
   modalRef: RefObject<HTMLDialogElement> | undefined
 }
 
+const secondaryButtonClassName =
+  "inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]";
+
+const destructiveButtonClassName =
+  "inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-[var(--app-error-container)]/85 px-4 py-2.5 text-sm font-semibold text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/15 transition-colors hover:bg-[var(--app-error-container)] disabled:cursor-not-allowed disabled:opacity-60";
+
 export default function RemoveMemberListModal({
-  projectId,
   members,
   error,
   actionFetcher,
   actionFetcherSubmit,
-  modalRef }: RemoveMemberListModalProps) {
+  modalRef,
+}: RemoveMemberListModalProps) {
   const [selectedMember, setSelectedMember] = useState<{ id: string, name: string } | null>(null)
 
-  const memberSelectItemClassName = (memberId: string) =>
-    selectedMember?.id === memberId
-      ? "bg-base-200"
-      : ""
+  function resetSelection() {
+    setSelectedMember(null)
+  }
 
   function handleOnMemberSelect(member: { id: string, name: string }) {
     if (selectedMember?.id === member.id) {
       setSelectedMember(null)
       return;
     }
+
     setSelectedMember(member)
   }
 
   function handleOnModalClose() {
     modalRef?.current?.close();
-    setSelectedMember(null)
   }
 
   function handleOnActionSubmit() {
@@ -45,64 +49,111 @@ export default function RemoveMemberListModal({
     const formData = new FormData()
     formData.append("memberId", selectedMember.id)
     actionFetcherSubmit(formData)
-    setSelectedMember(null)
     modalRef?.current?.close()
   }
 
-
   return (
-    <dialog id="member-modal" className="modal" ref={modalRef}>
-      {error || !members && <p className="text-error text-sm">{error}</p>}
-      <div className="modal-box ">
-        <h3 className="font-bold text-lg mb-2">Select Members</h3>
-        {selectedMember && (
-          <li key={selectedMember.id}
-            className="flex items-center gap-1 cursor-pointer"
-            onClick={() => setSelectedMember(null)}>
-            <span className="text-error">X</span>
-            <p className="badge badge-neutral cursor-pointer hover:bg-neutral-900">
-              {selectedMember.name}
+    <dialog
+      className="m-auto w-full max-w-2xl overflow-visible border-0 bg-transparent p-0 text-left text-[var(--app-on-surface)] shadow-none backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      id="member-modal"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          handleOnModalClose();
+        }
+      }}
+      onClose={resetSelection}
+      ref={modalRef}
+    >
+      <div className="w-full rounded-[2rem] bg-[var(--app-surface-container-low)] p-0 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+        <div className="border-b border-[var(--app-outline-variant)]/10 px-6 py-5 sm:px-8">
+          <div>
+            <h3 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Remove Member</h3>
+            <p className="mt-1 text-sm text-[var(--app-on-surface-variant)]">
+              Select a member to remove from this project roster.
             </p>
-          </li>
-        )}
-        <div className="mt-4">
-          <>
-            {members?.length === 0
-              ? <p>No more members to remove</p>
-              : (<ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto">
-                {members?.map(m => {
-                  return (
-                    <li key={`${m.id}-${m.name}`}
-                      className={`list-row flex w-fullitems-center cursor-pointer hover:bg-base-200 rounded ${memberSelectItemClassName(m.id)}`}
-                      onClick={() => handleOnMemberSelect(m)}>
-                      <div className="flex gap-4 items-center">
-                        <div className="avatar rounded-full w-10 h-10">
-                          <img src={m.avatarUrl} className="w-full h-auto rounded-full" />
-                        </div>
-                      </div>
-                      <div className="w-full flex justify-between items-center">
-                        <p className="">{m.name}</p>
-                        <p className="text-neutral-content/40">{m.role}</p>
-                      </div>
-                    </li>)
-                })}
-              </ul>
-              )}
-          </>
+          </div>
         </div>
-        <div className="modal-action">
-          <button
-            disabled={selectedMember === null}
-            onClick={() => handleOnActionSubmit()}
-            type="submit"
-            className={`btn  ${selectedMember === null ? "btn-soft" : "btn-error text-error-content"}`}>
-            {actionFetcher.state === "submitting" ?
-              <span className={"loading loading-spinner loading-sm"}></span> :
-              <>Remove Member</>}
+
+        <div className="space-y-5 px-6 py-6 sm:px-8">
+          {error && !members ? (
+            <p className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
+              {error}
+            </p>
+          ) : null}
+
+          {selectedMember ? (
+            <button
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--app-error-container)]/20 px-3 py-1.5 text-sm font-medium text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10 transition-colors hover:bg-[var(--app-error-container)]/30"
+              onClick={() => setSelectedMember(null)}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+              {selectedMember.name}
+            </button>
+          ) : null}
+
+          {members?.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[var(--app-outline-variant-soft)] px-6 py-10 text-center text-[var(--app-on-surface-variant)]">
+              <span className="material-symbols-outlined mb-3 text-5xl text-[var(--app-outline)]">group_off</span>
+              <p className="text-base font-medium text-[var(--app-on-surface)]">No members to remove</p>
+              <p className="mt-1 text-sm">This project does not have removable members right now.</p>
+            </div>
+          ) : (
+            <div className="app-shell-scroll max-h-[26rem] space-y-3 overflow-y-auto pr-1">
+              {members?.map((member) => {
+                const isSelected = member.id === selectedMember?.id;
+
+                return (
+                  <button
+                    className={`flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left transition-all duration-150 outline outline-1 ${
+                      isSelected
+                        ? "bg-[var(--app-error-container)]/20 text-[var(--app-on-surface)] outline-[var(--app-error)]/15"
+                        : "bg-[var(--app-surface-container-lowest)]/70 text-[var(--app-on-surface)] outline-[var(--app-outline-variant)]/10 hover:bg-[var(--app-surface-container-high)]/20"
+                    }`}
+                    key={`${member.id}-${member.name}`}
+                    onClick={() => handleOnMemberSelect(member)}
+                    type="button"
+                  >
+                    <img
+                      alt={member.name}
+                      className="h-11 w-11 rounded-full border border-[var(--app-outline-variant)]/20 object-cover"
+                      src={member.avatarUrl}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="truncate text-sm font-semibold text-[var(--app-on-surface)]">{member.name}</p>
+                        <span className="text-xs text-[var(--app-on-surface-variant)]">{member.role}</span>
+                      </div>
+                    </div>
+                    {isSelected ? <span className="material-symbols-outlined text-[var(--app-error)]">remove_circle</span> : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 px-6 py-5 sm:px-8">
+          <button className={secondaryButtonClassName} onClick={handleOnModalClose} type="button">
+            Close
           </button>
-          <button className="btn" onClick={() => handleOnModalClose()}>Close</button>
+          <button
+            className={destructiveButtonClassName}
+            disabled={selectedMember === null || actionFetcher.state === "submitting"}
+            onClick={handleOnActionSubmit}
+            type="button"
+          >
+            {actionFetcher.state === "submitting" ? (
+              <>
+                <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                Removing...
+              </>
+            ) : (
+              "Remove Member"
+            )}
+          </button>
         </div>
       </div>
-    </dialog >
+    </dialog>
   )
 }

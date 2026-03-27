@@ -1,5 +1,5 @@
 import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData, useOutletContext } from "@remix-run/react";
+import { Link, useLoaderData, useLocation, useOutletContext } from "@remix-run/react";
 import DashboardTicketTable from "~/components/DashboardTicketTable";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
@@ -105,20 +105,21 @@ export default function DashboardRoute() {
   const { ticketLabel, openTicketLabel, closedTicketLabel } = getDashboardTicketLabels(userInfo.role);
   const deadlineLabel = getDashboardDeadlineLabel(userRole);
   const activityItems = data ? toDashboardActivityItems(data.recentActivity, userInfo) : [];
+  const location = useLocation();
 
   const statCards = data
     ? [
-        { label: projectLabel, value: data.totalProjects, mono: false, accentClass: "border-l-[var(--app-primary-fixed-strong)]" },
-        { label: ticketLabel, value: data.totalTickets, mono: false, accentClass: "border-l-[var(--app-secondary)]" },
-        { label: openTicketLabel, value: data.openTickets, mono: false, accentClass: "border-l-[var(--app-tertiary)]" },
-        { label: closedTicketLabel, value: data.closedTickets, mono: false, accentClass: "border-l-[var(--app-success)]" },
-      ]
+      { label: projectLabel, value: data.totalProjects, mono: false, accentClass: "border-l-[var(--app-primary-fixed-strong)]" },
+      { label: ticketLabel, value: data.totalTickets, mono: false, accentClass: "border-l-[var(--app-secondary)]" },
+      { label: openTicketLabel, value: data.openTickets, mono: false, accentClass: "border-l-[var(--app-tertiary)]" },
+      { label: closedTicketLabel, value: data.closedTickets, mono: false, accentClass: "border-l-[var(--app-success)]" },
+    ]
     : [];
 
   if (error || !data) {
     return (
       <RouteLayout>
-        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline-1 outline-[var(--app-outline-variant-soft)]">
           {error ?? "Unable to load dashboard data."}
         </div>
       </RouteLayout>
@@ -133,7 +134,7 @@ export default function DashboardRoute() {
         {statCards.map((card) => {
           return (
             <article
-              className={`rounded-2xl border-l-2 bg-[var(--app-surface-container-low)] p-5 outline outline-1 outline-[var(--app-outline-variant-soft)] ${card.accentClass}`}
+              className={`rounded-2xl border-l-2 bg-[var(--app-surface-container-low)] p-5 outline-1 outline-[var(--app-outline-variant-soft)] ${card.accentClass}`}
               key={card.label}
             >
               <div className="mb-6 flex items-center justify-between gap-3">
@@ -161,7 +162,7 @@ export default function DashboardRoute() {
             {deadlineLabel}
           </h2>
 
-          <div className="overflow-hidden rounded-2xl bg-[var(--app-surface-container-low)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+          <div className="overflow-hidden rounded-2xl bg-[var(--app-surface-container-low)] outline-1 outline-[var(--app-outline-variant-soft)]">
             <div className="divide-y divide-[color:var(--app-outline-variant)]/5">
               {data.upcomingDeadlines.length > 0 ? (
                 data.upcomingDeadlines.map((deadline) => {
@@ -169,9 +170,11 @@ export default function DashboardRoute() {
                   const { month, day } = formatDashboardDateParts(deadline.dueDate);
 
                   return (
-                    <button
+                    <Link
                       className="group flex w-full items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-[var(--app-surface-container-high)]/30"
                       key={deadline.id}
+                      to={`/projects/${deadline.id}`}
+                      state={{ from: location.pathname }}
                       type="button"
                     >
                       <div className="flex min-w-0 items-center gap-4">
@@ -191,7 +194,7 @@ export default function DashboardRoute() {
                       <span className="material-symbols-outlined text-lg text-[var(--app-outline)] transition-transform group-hover:translate-x-1">
                         chevron_right
                       </span>
-                    </button>
+                    </Link>
                   );
                 })
               ) : (
@@ -207,7 +210,7 @@ export default function DashboardRoute() {
             Recent Activity
           </h2>
 
-          <div className="rounded-2xl bg-[var(--app-surface-container-low)] p-6 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+          <div className="rounded-2xl bg-[var(--app-surface-container-low)] p-6 outline-1 outline-[var(--app-outline-variant-soft)]">
             <div className="space-y-6">
               {activityItems.map((item, index) => {
                 const showLine = index < activityItems.length - 1;

@@ -67,8 +67,8 @@ export default function MyTicketsRoute() {
             </p>
           </div>
         </div>
-        <div className="rounded-full bg-[var(--app-surface-container-low)] px-4 py-2 outline outline-1 outline-[var(--app-outline-variant-soft)]">
-          <span className="app-shell-mono text-xs uppercase tracking-[0.22em] text-[var(--app-outline)]">{totalTickets} in scope</span>
+        <div className="px-4 py-2">
+          <span className="app-shell-mono text-xs uppercase tracking-[0.22em] text-[var(--app-outline)]">{totalTickets} assigned tickets</span>
         </div>
       </div>
 

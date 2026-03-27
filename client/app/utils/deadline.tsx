@@ -2,6 +2,8 @@ import React from 'react';
 
 export type DeadlineStatus = 'overdue' | 'due-soon' | 'normal';
 
+const deadlineBadgeBaseClass = "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold";
+
 // Helper function to get deadline status
 export function getDeadlineStatus(dueDate: string): DeadlineStatus {
   const today = new Date();
@@ -24,11 +26,11 @@ export function getDeadlineIcon(dueDate: string, className: string = ""): JSX.El
 
   switch (status) {
     case 'overdue':
-      return <span className={`material-symbols-outlined text-error ${className}`}>error</span>;
+      return <span className={`material-symbols-outlined text-[var(--app-error)] ${className}`}>error</span>;
     case 'due-soon':
-      return <span className={`material-symbols-outlined text-warning ${className}`}>schedule</span>;
+      return <span className={`material-symbols-outlined text-[var(--app-tertiary)] ${className}`}>schedule</span>;
     default:
-      return <span className={`material-symbols-outlined text-base-content/60 ${className}`}>event</span>;
+      return <span className={`material-symbols-outlined text-[var(--app-outline)] ${className}`}>event</span>;
   }
 }
 
@@ -38,11 +40,11 @@ export function getDeadlineTextClass(dueDate: string): string {
 
   switch (status) {
     case 'overdue':
-      return 'text-error font-semibold';
+      return 'text-[var(--app-error)] font-semibold';
     case 'due-soon':
-      return 'text-warning font-medium';
+      return 'text-[var(--app-tertiary)] font-medium';
     default:
-      return 'text-base-content/80 font-medium';
+      return 'text-[var(--app-on-surface-variant)] font-medium';
   }
 }
 
@@ -61,7 +63,7 @@ export function getDeadlineStatusBadge(dueDate: string, variant: 'compact' | 'de
         ? `${overdueDays}d overdue`
         : overdueDays === 1 ? '1 day overdue' : `${overdueDays} days overdue`;
       return (
-        <span className="badge badge-error badge-sm font-medium shadow-sm">
+        <span className={`${deadlineBadgeBaseClass} bg-[var(--app-error-container)]/20 text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10`}>
           {overdueText}
         </span>
       );
@@ -73,7 +75,7 @@ export function getDeadlineStatusBadge(dueDate: string, variant: 'compact' | 'de
         dueSoonText = diffDays === 0 ? 'Due today' : diffDays === 1 ? 'Due tomorrow' : `Due in ${diffDays} days`;
       }
       return (
-        <span className="badge badge-warning badge-sm font-medium shadow-sm">
+        <span className={`${deadlineBadgeBaseClass} bg-[var(--app-tertiary-container)]/20 text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/10`}>
           {dueSoonText}
         </span>
       );
@@ -96,7 +98,6 @@ export function DeadlineDisplay({
   showLabel = true,
   className = ""
 }: DeadlineDisplayProps) {
-  const status = getDeadlineStatus(dueDate);
   const formattedDate = new Date(dueDate).toLocaleDateString();
 
   if (variant === 'card') {

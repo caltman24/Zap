@@ -1,4 +1,4 @@
-import { Form, Link, useActionData, useFetcher, useNavigation, useParams } from "@remix-run/react";
+import { Form, Link, useActionData, useFetcher, useLocation, useNavigation, useParams } from "@remix-run/react";
 import { useRef, useState } from "react";
 import MembersListTable from "~/components/MembersListTable";
 import {
@@ -10,6 +10,7 @@ import {
 import TicketTable from "~/components/TicketTable";
 import ProjectDueDateBadge from "~/components/ProjectDueDateBadge";
 import RouteLayout from "~/layouts/RouteLayout";
+import { projectPriorityOptions } from "~/data/selectOptions";
 import type {
   CompanyMemberPerRole,
   ProjectManagerInfo,
@@ -87,9 +88,9 @@ function getDeadlineMeta(dueDate: string) {
 
   return {
     containerClass: "bg-[var(--app-surface-container-highest)]/30 border-white/5",
-      textClass: "text-[var(--app-on-surface-variant)]",
-      icon: "event",
-      label: "On track",
+    textClass: "text-[var(--app-on-surface-variant)]",
+    icon: "event",
+    label: "On track",
   };
 }
 
@@ -103,6 +104,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
   const actionData = useActionData() as ActionResponseParams;
   const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
   const navigation = useNavigation();
+  const location = useLocation();
   const isSubmitting = navigation.state === "submitting";
 
   const getMembersFetcher = useFetcher({ key: "get-members" });
@@ -157,7 +159,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
   if (error || !project) {
     return (
       <RouteLayout>
-        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-[var(--app-outline-variant-soft)]">
           {error}
         </div>
       </RouteLayout>
@@ -175,7 +177,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
 
   return (
     <RouteLayout className="space-y-8">
-      <BackButton to={getBackLink(collection)} />
+      <BackButton to={location.state?.from || getBackLink(collection)} />
 
       <section className="border-b border-[var(--app-outline-variant)]/10 pb-8">
         {isEditing ? (
@@ -191,7 +193,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
 
             <Form className="space-y-8" method="post">
               {formError ? (
-                <div className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
+                <div className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline-1 outline-[var(--app-error)]/10">
                   {formError}
                 </div>
               ) : null}
@@ -226,10 +228,11 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                     <FormFieldHeader label="Priority" required />
                     <FormSelectControl name="priority" onChange={(event) => setPriority(event.target.value)} required value={priority}>
                       <option value="">Select priority</option>
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                      <option value="Urgent">Urgent</option>
+                      {projectPriorityOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </FormSelectControl>
                   </div>
 
@@ -286,7 +289,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                 <div className="flex flex-wrap items-center gap-3 self-start lg:justify-end">
                   {project.capabilities.canEdit ? (
                     <button
-                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
                       onClick={handleEditToggle}
                       type="button"
                     >
@@ -299,8 +302,8 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                     <Form action={`/projects/${project.id}/archive`} method="post">
                       <button
                         className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors ${project.isArchived
-                          ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
-                          : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
+                          ? "text-[var(--app-success)] outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
+                          : "text-[var(--app-tertiary)] outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
                           }`}
                         name="intent"
                         type="submit"
@@ -372,8 +375,8 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-[var(--app-on-surface)]">{dueDateDisplay}</p>
                       <div className={`flex items-center gap-2 text-xs ${deadlineMeta.textClass}`}>
-                      <span className="material-symbols-outlined text-sm">{deadlineMeta.icon}</span>
-                      {deadlineMeta.label}
+                        <span className="material-symbols-outlined text-sm">{deadlineMeta.icon}</span>
+                        {deadlineMeta.label}
                       </div>
                     </div>
                   </dd>
@@ -421,7 +424,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
               {project.capabilities.canManageMembers ? (
                 <div className="flex flex-wrap items-center gap-3">
                   <button
-                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
                     onClick={handleOnGetMembersList}
                     type="button"
                   >
@@ -429,7 +432,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                     Add
                   </button>
                   <button
-                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
                     onClick={handleOnRemoveMembersList}
                     type="button"
                   >
@@ -440,7 +443,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
               ) : null}
             </div>
 
-            <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] px-6 py-5 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+            <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] px-6 py-5 outline-1 outline-[var(--app-outline-variant-soft)]">
               {project.capabilities.canManageMembers ? (
                 <>
                   <MemberListModal

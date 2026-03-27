@@ -1,6 +1,7 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { Form, useActionData, useNavigation } from "@remix-run/react";
+import BackButton from "~/components/BackButton";
+import FormShell, { FormFieldHeader, formInputClassName, formTextareaClassName } from "~/components/FormShell";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import { commitSession, getSession } from "~/services/sessions.server";
@@ -76,68 +77,82 @@ export default function SetupCompanyRoute() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
     const actionData = useActionData<typeof action>() as ActionResponseResult;
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (actionData?.error) {
-            setError(actionData.error);
-        }
-    }, [actionData]);
 
     return (
-        <div className="text-center w-full bg-base-300 h-screen p-6">
-            <div className="max-w-md mx-auto">
-                <Link to="/setup" className="btn btn-ghost mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back
-                </Link>
+        <div className="app-shell min-h-screen px-6 py-10 sm:px-10 sm:py-14">
+            <div className="mx-auto w-full max-w-5xl">
+                <FormShell
+                    description="Create the company workspace your team will use for projects, tickets, and collaboration. You can invite everyone else after this step."
+                    error={actionData?.error}
+                    eyebrow="Company Setup"
+                    leading={<BackButton to="/setup" />}
+                    title="Register Your Company"
+                >
+                    <Form className="space-y-8" method="post">
+                        <fieldset className="space-y-6" disabled={isSubmitting}>
+                            <div>
+                                <FormFieldHeader detail="100 max" label="Company Name" required />
+                                <input
+                                    className={formInputClassName}
+                                    maxLength={100}
+                                    name="name"
+                                    placeholder="Acme Inc."
+                                    required
+                                    type="text"
+                                />
+                            </div>
 
-                <h1 className="text-3xl font-bold mb-6">Register Your Company</h1>
+                            <div>
+                                <FormFieldHeader detail="500 max" label="Description" />
+                                <textarea
+                                    className={formTextareaClassName}
+                                    maxLength={500}
+                                    name="description"
+                                    placeholder="Describe the team, company mission, or the type of work this workspace will support."
+                                    rows={5}
+                                />
+                            </div>
 
-                <Form method="post">
-                    <fieldset className="fieldset bg-base-200 border border-base-300 p-6 rounded-box" disabled={isSubmitting}>
-                        {error && <p className="text-error mb-4">{error}</p>}
+                            <div className="rounded-[1.5rem] bg-[var(--app-surface-container-lowest)] p-5 outline outline-1 outline-[var(--app-outline-variant)]/10">
+                                <p className="app-shell-mono text-[10px] uppercase tracking-[0.24em] text-[var(--app-outline)]">What happens next</p>
+                                <div className="mt-4 grid gap-3 text-sm text-[var(--app-on-surface-variant)] sm:grid-cols-3">
+                                    <div className="rounded-2xl bg-[var(--app-surface-container-high)]/60 px-4 py-4">
+                                        <p className="font-semibold text-[var(--app-on-surface)]">1. Workspace created</p>
+                                        <p className="mt-1 leading-6">We attach your account to the new company instantly.</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-[var(--app-surface-container-high)]/60 px-4 py-4">
+                                        <p className="font-semibold text-[var(--app-on-surface)]">2. Dashboard unlocked</p>
+                                        <p className="mt-1 leading-6">You land in the app with company access ready to go.</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-[var(--app-surface-container-high)]/60 px-4 py-4">
+                                        <p className="font-semibold text-[var(--app-on-surface)]">3. Invite your team</p>
+                                        <p className="mt-1 leading-6">Start adding members and projects from inside the workspace.</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div className="form-control mb-4">
-                            <label className="label">
-                                <span className="label-text">Company Name</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                className="input input-bordered w-full"
-                                placeholder="Acme Inc."
-                                required
-                                maxLength={100}
-                            />
-                        </div>
-
-                        <div className="form-control mb-6">
-                            <label className="label">
-                                <span className="label-text">Description</span>
-                            </label>
-                            <textarea
-                                name="description"
-                                className="textarea textarea-bordered w-full"
-                                placeholder="Brief description of your company"
-                                rows={4}
-                                maxLength={500}
-                            ></textarea>
-                        </div>
-
-                        <div className="form-control">
-                            <button
-                                type="submit"
-                                className="btn btn-primary w-full"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? "Registering..." : "Register Company"}
-                            </button>
-                        </div>
-                    </fieldset>
-                </Form>
+                            <div className="flex justify-end border-t border-[var(--app-outline-variant)]/10 pt-5">
+                                <button
+                                    className="inline-flex min-w-40 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-5 py-3 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={isSubmitting}
+                                    type="submit"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                                            Registering...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined text-lg">apartment</span>
+                                            Register Company
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </fieldset>
+                    </Form>
+                </FormShell>
             </div>
         </div>
     );

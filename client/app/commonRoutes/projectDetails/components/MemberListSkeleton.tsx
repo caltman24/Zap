@@ -1,23 +1,29 @@
 export default function MemberListSkeleton({ count = 2 }: { count?: number }) {
   return (
-    <ul className="list rounded bg-base-300 max-h-[450px] overflow-y-auto ">
-      {[...Array(count)].map(_ => (
-        <li key={crypto.randomUUID()} className="list-row flex flex-col">
-          <div className="skeleton w-12 h-6"></div>
-          <ul className="list">
-            {[...Array(4)].map(_ => (
-              <li key={crypto.randomUUID()} className={`list-row flex items-center cursor-pointer hover:bg-base-200 rounded`}>
-                <div className="flex gap-4 items-center">
-                  <div className="avatar rounded-full w-10 h-10 skeleton">
-                    <div className="w-full h-auto rounded-full"></div>
-                  </div>
-                  <p className="skeleton w-24 h-6"></p>
+    <div className="app-shell-scroll max-h-[26rem] space-y-5 overflow-y-auto pr-1">
+      {Array.from({ length: count }).map(() => (
+        <section className="space-y-3" key={crypto.randomUUID()}>
+          <div className="flex items-center gap-3">
+            <div className="h-3 w-24 animate-pulse rounded-full bg-[var(--app-surface-container-high)]" />
+            <div className="h-px flex-1 bg-[var(--app-outline-variant)]/10" />
+          </div>
+
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map(() => (
+              <div
+                className="flex items-center gap-4 rounded-2xl bg-[var(--app-surface-container-lowest)]/70 px-4 py-4 outline outline-1 outline-[var(--app-outline-variant)]/10"
+                key={crypto.randomUUID()}
+              >
+                <div className="h-11 w-11 animate-pulse rounded-full bg-[var(--app-surface-container-high)]" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 animate-pulse rounded-full bg-[var(--app-surface-container-high)]" />
+                  <div className="h-3 w-24 animate-pulse rounded-full bg-[var(--app-surface-container-highest)]" />
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
-        </li>
+          </div>
+        </section>
       ))}
-    </ul>
+    </div>
   )
 }

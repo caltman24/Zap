@@ -249,7 +249,7 @@ export default function TicketTable({ tickets, enableFiltering = true }: TicketT
         <table className="w-full min-w-[1050px] border-collapse text-left">
           <thead className="border-b border-[color:var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]">
             <tr>
-              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Title &amp; Preview</th>
+              <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Ticket</th>
               <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Status</th>
               <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Priority</th>
               <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--app-outline)]">Assignee</th>

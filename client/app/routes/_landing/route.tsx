@@ -18,7 +18,7 @@ export default function LandingRoute() {
     const isHomepage = location.pathname === "/";
 
     return (
-        <div>
+        <div className="landing-page min-h-screen">
             {!isHomepage && <MainNavbar isAuthenticated={Boolean(isAuthenticated)} />}
             <Outlet context={{ isAuthenticated: Boolean(isAuthenticated) }} />
         </div>

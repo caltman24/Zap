@@ -18,6 +18,11 @@ import FormShell, {
   FormSelectControl,
   formTextareaClassName,
 } from "~/components/FormShell";
+import {
+  ticketPriorityOptions,
+  ticketStatusOptions,
+  ticketTypeOptions,
+} from "~/data/selectOptions";
 
 export const handle = {
     breadcrumb: () => <Link to="/tickets/new">New</Link>,
@@ -143,20 +148,22 @@ export default function NewTicketRoute() {
                     <option disabled value="">
                       Select priority
                     </option>
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
+                    {ticketPriorityOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </FormSelectControl>
                 </div>
 
                 <div>
                   <FormFieldHeader label="Status" required />
                   <FormSelectControl defaultValue="New" name="status" required>
-                    <option value="New">New</option>
-                    <option value="In Development">In Development</option>
-                    <option value="Testing">Testing</option>
-                    <option value="Resolved">Resolved</option>
+                    {ticketStatusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </FormSelectControl>
                 </div>
 
@@ -166,12 +173,11 @@ export default function NewTicketRoute() {
                     <option disabled value="">
                       Select type
                     </option>
-                    <option value="Defect">Defect</option>
-                    <option value="Feature">Feature</option>
-                    <option value="General Task">General Task</option>
-                    <option value="Work Task">Work Task</option>
-                    <option value="Change Request">Change Request</option>
-                    <option value="Enhancement">Enhancement</option>
+                    {ticketTypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </FormSelectControl>
                 </div>
               </div>
@@ -185,7 +191,7 @@ export default function NewTicketRoute() {
               >
                 {isSubmitting ? (
                   <>
-                    <span className="loading loading-spinner loading-sm" />
+                    <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
                     Creating...
                   </>
                 ) : (

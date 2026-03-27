@@ -11,46 +11,46 @@ import TicketTable from "~/components/TicketTable";
 import { getResolvedTickets } from "./server.get-resolved-tickets";
 
 function ResolvedTicketsBreadcrumb() {
-    const location = useLocation();
+  const location = useLocation();
 
-    return <Link to={{ pathname: "/tickets/resolved", search: location.search }}>Resolved</Link>;
+  return <Link to={{ pathname: "/tickets/resolved", search: location.search }}>Resolved</Link>;
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const session = await getSession(request);
-    const {
-        data: tokenResponse,
-        error: tokenError
-    } = await tryCatch(apiClient.auth.getValidToken(session));
+  const session = await getSession(request);
+  const {
+    data: tokenResponse,
+    error: tokenError
+  } = await tryCatch(apiClient.auth.getValidToken(session));
 
-    if (tokenError) {
-        return redirect("/logout");
+  if (tokenError) {
+    return redirect("/logout");
+  }
+
+  try {
+    const response = await getResolvedTickets(tokenResponse.token);
+
+    return JsonResponse({
+      data: response,
+      error: null,
+      headers: tokenResponse.headers
+    });
+  } catch (error: any) {
+    if (error instanceof AuthenticationError) {
+      return redirect("/logout");
     }
 
-    try {
-        const response = await getResolvedTickets(tokenResponse.token);
-
-        return JsonResponse({
-            data: response,
-            error: null,
-            headers: tokenResponse.headers
-        });
-    } catch (error: any) {
-        if (error instanceof AuthenticationError) {
-            return redirect("/logout");
-        }
-
-        return JsonResponse({
-            data: null,
-            error: error.message,
-            headers: tokenResponse.headers
-        });
-    }
+    return JsonResponse({
+      data: null,
+      error: error.message,
+      headers: tokenResponse.headers
+    });
+  }
 }
 
 export const handle = {
-    breadcrumb: () => <ResolvedTicketsBreadcrumb />,
-    breadcrumbLabel: "Resolved",
+  breadcrumb: () => <ResolvedTicketsBreadcrumb />,
+  breadcrumbLabel: "Resolved",
 };
 
 export default function ResolvedTicketsRoute() {
@@ -78,7 +78,7 @@ export default function ResolvedTicketsRoute() {
             </p>
           </div>
         </div>
-        <div className="rounded-full bg-[var(--app-surface-container-low)] px-4 py-2 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+        <div className="px-4 py-2">
           <span className="app-shell-mono text-xs uppercase tracking-[0.22em] text-[var(--app-outline)]">{totalTickets} resolved</span>
         </div>
       </div>

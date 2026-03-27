@@ -1,4 +1,5 @@
 import type { ReactNode, SelectHTMLAttributes } from "react";
+import SelectControl from "./SelectControl";
 
 type FormShellProps = {
   eyebrow?: string;
@@ -25,9 +26,6 @@ export const formInputClassName =
 export const formTextareaClassName =
   "min-h-36 w-full rounded-xl border border-[var(--app-outline-variant-soft)] bg-[var(--app-surface-container-lowest)] px-4 py-3 text-sm text-[var(--app-on-surface)] outline-none transition-colors placeholder:text-[var(--app-outline)] focus:border-[var(--app-primary-fixed)]";
 
-export const formSelectClassName =
-  "h-12 w-full rounded-xl border border-[var(--app-outline-variant-soft)] bg-[var(--app-surface-container-lowest)] px-4 text-sm text-[var(--app-on-surface)] outline-none transition-colors focus:border-[var(--app-primary-fixed)]";
-
 export function FormFieldHeader({ label, required = false, detail }: FormFieldHeaderProps) {
   return (
     <div className="mb-2 flex items-center justify-between gap-3">
@@ -41,16 +39,7 @@ export function FormFieldHeader({ label, required = false, detail }: FormFieldHe
 }
 
 export function FormSelectControl({ children, className = "", ...props }: FormSelectControlProps) {
-  return (
-    <div className="relative">
-      <select className={`${formSelectClassName} appearance-none pr-12 ${className}`.trim()} {...props}>
-        {children}
-      </select>
-      <span className="material-symbols-outlined pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-lg text-[var(--app-outline)]">
-        expand_more
-      </span>
-    </div>
-  );
+  return <SelectControl className={className} controlSize="md" {...props}>{children}</SelectControl>;
 }
 
 export default function FormShell({ eyebrow, title, description, error, leading, children }: FormShellProps) {

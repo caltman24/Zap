@@ -1,27 +1,75 @@
-
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigation, useOutletContext, useParams } from "@remix-run/react"; import RouteLayout from "~/layouts/RouteLayout";
-import apiClient from "~/services/api.server/apiClient"; import { ApiError, AuthenticationError } from "~/services/api.server/errors";
-import { getSession } from "~/services/sessions.server"; import { ActionResponse, ActionResponseParams, ForbiddenResponse, JsonResponse, JsonResponseResult } from "~/utils/response";
+import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigation, useOutletContext, useParams } from "@remix-run/react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import RouteLayout from "~/layouts/RouteLayout";
+import SelectControl from "~/components/SelectControl";
+import { FormFieldHeader, formInputClassName, formTextareaClassName } from "~/components/FormShell";
+import BackButton from "~/components/BackButton";
+import ArchiveWarningModal from "~/components/ArchiveWarningModal";
+import { ticketPriorityOptions, ticketStatusOptions, ticketTypeOptions } from "~/data/selectOptions";
+import apiClient from "~/services/api.server/apiClient";
+import { ApiError, AuthenticationError } from "~/services/api.server/errors";
+import type { ActionResponseParams, JsonResponseResult } from "~/utils/response";
+import { ActionResponse, ForbiddenResponse, JsonResponse } from "~/utils/response";
+import { getSession } from "~/services/sessions.server";
+import type { BasicTicketInfo, BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
+import { useEditMode } from "~/utils/editMode";
 import tryCatch from "~/utils/tryCatch";
 import { getTicketById } from "./server.get-ticket";
-import BackButton from "~/components/BackButton";
-import { useEffect, useRef, useState } from "react";
 import DeveloperListModal from "./DeveloperListModal";
-import { BasicTicketInfo, BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
-import { useEditMode } from "~/utils/editMode";
-import { EditModeForm } from "~/components/EditModeForm";
 import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
-import ArchiveWarningModal from "~/components/ArchiveWarningModal";
-
 import AttachmentSection from "./AttachmentSection";
+import {
+  getTicketPriorityDotClass,
+  getTicketStatusChipClass,
+  getTicketTypeChipClass,
+} from "~/components/ticketTableUtils";
 
 type InlineToast = {
     message: string;
     tone: "success" | "error" | "warning";
 };
+
+const panelClass = "rounded-[1.75rem] bg-[var(--app-surface-container-low)] outline outline-1 outline-[var(--app-outline-variant-soft)]";
+const secondaryButtonClass =
+  "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]";
+const primaryButtonClass =
+  "inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2.5 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95";
+const inlineSelectClass = "h-auto border-transparent bg-transparent px-0 pr-8 font-medium text-[var(--app-on-surface)] focus:border-transparent";
+
+function PersonIdentity({
+  label,
+  person,
+  fallback,
+}: {
+  label: string;
+  person?: BasicUserInfo | null;
+  fallback: string;
+}) {
+  const displayName = person?.name ?? fallback;
+
+  return (
+    <div className="space-y-2 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
+      <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">{label}</dt>
+      <dd className="flex items-center gap-3">
+        {person?.avatarUrl ? (
+          <img
+            alt={displayName}
+            className="h-10 w-10 rounded-full border border-[var(--app-outline-variant)]/20 object-cover"
+            src={person.avatarUrl}
+          />
+        ) : (
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-surface-container-high)] text-sm font-semibold text-[var(--app-outline)]">
+            {displayName.slice(0, 1).toUpperCase()}
+          </span>
+        )}
+        <span className="text-sm font-medium text-[var(--app-on-surface)]">{displayName}</span>
+      </dd>
+    </div>
+  );
+}
 
 export const handle = {
     breadcrumb: (match: any) => {
@@ -201,14 +249,26 @@ export default function TicketDetailsRoute() {
     };
 
     if (error) {
-        return <p className="text-error">{error}</p>;
+        return (
+            <RouteLayout>
+                <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+                    {error}
+                </div>
+            </RouteLayout>
+        );
     }
 
     if (!ticket) {
-        return <p className="text-error">Ticket details could not be loaded.</p>;
+        return (
+            <RouteLayout>
+                <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+                    Ticket details could not be loaded.
+                </div>
+            </RouteLayout>
+        );
     }
 
-    const handleArchiveClick = (e: React.FormEvent) => {
+    const handleArchiveClick = (e: FormEvent) => {
         if (ticket.isArchived && ticket.projectIsArchived) {
             e.preventDefault();
             setShowArchiveWarning(true);
@@ -235,466 +295,432 @@ export default function TicketDetailsRoute() {
         }
     };
 
-    // TODO: Add confirm modal on delete
+    const priorityDisplay = (
+        <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-on-surface)]">
+            <span className={`h-2.5 w-2.5 rounded-full ${getTicketPriorityDotClass(ticket.priority)}`} />
+            {ticket.priority}
+        </div>
+    );
 
-    const TicketDetails = (
-        <>
-            {/* Header Section */}
-            <div className="border-b border-base-300/30 p-6">
-                <div className="flex justify-between items-start">
-                    <div className="flex flex-col space-y-3">
-                        {ticket.isArchived && (
-                            <div className="font-semibold text-lg text-warning">
-                                📁 Archived
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <h1 className="text-3xl font-bold text-base-content leading-tight">
-                                {ticket.name}
-                            </h1>
-                            <p className="text-base-content/70 text-lg leading-relaxed max-w-3xl">
-                                {ticket.description}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex gap-3 items-center flex-shrink-0 ml-6">
-                        {canEdit && (
-                            <button
-                                onClick={handleEditToggle}
-                                className="btn btn-soft btn-sm gap-2 shadow-sm"
-                            >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                                Edit Details
-                            </button>
-                        )}
-                        {/* Show archive/unarchive button based on permissions */}
-                        {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
-                            <Form method="post" action={`/tickets/${ticketId}/archive`} onSubmit={handleArchiveClick}>
-                                <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
-                                <button
-                                    type="submit"
-                                    name="intent"
-                                    value={ticket.isArchived ? "unarchive" : "archive"}
-                                    className={`btn btn-sm gap-2 shadow-sm ${ticket.isArchived ? 'btn-success' : 'btn-warning'}`}
-                                >
-                                    <span className="material-symbols-outlined text-sm">folder</span>
-                                    {ticket.isArchived ? "Unarchive" : "Archive"}
-                                </button>
-                            </Form>
-                        ) : null}
-                        {/* Only show delete button if user has delete permissions */}
-                        {canDelete && (
-                            <Form method="post" action={`/tickets/${ticketId}/delete`}>
-                                <input type="text" name="projectId" defaultValue={ticket.projectId} className="hidden" hidden aria-hidden />
-                                <button
-                                    type="submit"
-                                    className="btn btn-sm btn-error gap-2 shadow-sm"
-                                >
-                                    <span className="material-symbols-outlined text-sm">delete</span>
-                                    Delete
-                                </button>
-                            </Form>
-                        )}
+    const statusDisplay = (
+        <span className={`app-shell-mono inline-flex rounded-md px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] ${getTicketStatusChipClass(ticket.status)}`}>
+            {ticket.status}
+        </span>
+    );
+
+    const typeDisplay = (
+        <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${getTicketTypeChipClass(ticket.type)}`}>
+            {ticket.type}
+        </span>
+    );
+
+    return (
+        <RouteLayout className="space-y-8">
+            {toast ? (
+                <div className="fixed left-1/2 top-20 z-50 -translate-x-1/2">
+                    <div
+                        className={`rounded-2xl px-4 py-3 text-sm font-medium shadow-lg backdrop-blur-md ${
+                            toast.tone === "success"
+                                ? "bg-emerald-500/15 text-emerald-200 outline outline-1 outline-emerald-500/15"
+                                : toast.tone === "error"
+                                  ? "bg-[var(--app-error-container)]/35 text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10"
+                                  : "bg-[var(--app-tertiary-container)]/25 text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/10"
+                        }`}
+                    >
+                        {toast.message}
                     </div>
                 </div>
-            </div>
+            ) : null}
 
-            {/* Developer Modal */}
+            <BackButton />
+
             <DeveloperListModal
-                modalRef={developersModalRef}
-                members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
-                currentMember={ticket.assignee ?? undefined}
                 actionFetcher={assignDeveloperFetcher}
                 actionFetcherSubmit={(formData) => {
                     assignDeveloperFetcher.submit(formData, {
                         method: "post",
-                        action: `/tickets/${ticketId}/update-dev`
-                    })
+                        action: `/tickets/${ticketId}/update-dev`,
+                    });
                 }}
+                currentMember={ticket.assignee ?? undefined}
+                members={(getDevelopersFetcher.data as JsonResponseResult<BasicUserInfo[]>)?.data}
+                modalRef={developersModalRef}
             />
 
-
-            {/* Ticket Stats Section */}
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                            Submitter
+            <section className={`${panelClass} overflow-hidden`}>
+                {isEditing ? (
+                    <div className="space-y-6 p-6 sm:p-8">
+                        <div className="border-b border-[var(--app-outline-variant)]/10 pb-6">
+                            <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">Edit Ticket</h1>
+                            <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                                Update the core ticket details shown to the team.
+                            </p>
                         </div>
-                        {ticket.submitter && (
-                            <div className="flex gap-3 items-center">
-                                <div className="avatar">
-                                    <div className="w-10 rounded-full ring-2 ring-base-300/50">
-                                        <img src={ticket.submitter.avatarUrl} alt="Submitter" />
+
+                        <Form className="space-y-8" method="post">
+                            {formError ? (
+                                <div className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
+                                    {formError}
+                                </div>
+                            ) : null}
+
+                            <div className="grid gap-6">
+                                <div>
+                                    <FormFieldHeader label="Ticket Name" required />
+                                    <input
+                                        className={formInputClassName}
+                                        defaultValue={ticket.name}
+                                        disabled={!canEditNameDescriptionField}
+                                        maxLength={50}
+                                        name="name"
+                                        required
+                                        type="text"
+                                    />
+                                </div>
+
+                                <div>
+                                    <FormFieldHeader label="Description" required />
+                                    <textarea
+                                        className={formTextareaClassName}
+                                        defaultValue={ticket.description}
+                                        disabled={!canEditNameDescriptionField}
+                                        maxLength={1000}
+                                        name="description"
+                                        required
+                                        rows={5}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                    <div>
+                                        <FormFieldHeader label="Priority" required />
+                                        <SelectControl controlSize="md" defaultValue={ticket.priority} disabled={!canUpdatePriorityField} name="priority">
+                                            {ticketPriorityOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </SelectControl>
+                                    </div>
+
+                                    <div>
+                                        <FormFieldHeader label="Status" required />
+                                        <SelectControl controlSize="md" defaultValue={ticket.status} disabled={!canUpdateStatusField} name="status">
+                                            {ticketStatusOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </SelectControl>
+                                    </div>
+
+                                    <div>
+                                        <FormFieldHeader label="Type" required />
+                                        <SelectControl controlSize="md" defaultValue={ticket.type} disabled={!canUpdateTypeField} name="type">
+                                            {ticketTypeOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </SelectControl>
                                     </div>
                                 </div>
-                                <div className="text-base font-semibold text-base-content">
-                                    {ticket.submitter.name}
-                                </div>
                             </div>
-                        )}
-                    </div>
 
-                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                            Priority
-                        </div>
-                        <div className="text-base font-semibold">
-                            {updatePriorityFetcher.state === "submitting" ? (
-                                <span className="loading loading-spinner loading-sm"></span>
-                            ) : (
-                                <select
-                                    onChange={(e) => {
-                                        const formData = new FormData();
-                                        formData.append("priority", e.currentTarget.value)
-                                        updatePriorityFetcher.submit(formData, {
-                                            method: "post",
-                                            action: `/tickets/${ticketId}/update-priority`,
-                                        })
-                                    }}
-                                    onClick={(e) => {
-                                        if (!canUpdatePriorityField) {
-                                            e.preventDefault();
-                                            handleDisabledFieldClick("priority");
-                                        }
-                                    }}
-                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none enabled:cursor-pointer disabled:cursor-not-allowed"
-                                    value={ticket.priority}
-                                    disabled={!canUpdatePriorityField}
-                                    title={!canUpdatePriorityField ? "You don't have permission to update priority" : ""}
-                                >
-                                    <option value="Low">🟢 Low</option>
-                                    <option value="Medium">🟡 Medium</option>
-                                    <option value="High">🟠 High</option>
-                                    <option value="Urgent">🔴 Urgent</option>
-                                </select>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                            Status
-                        </div>
-                        <div className="text-base font-semibold">
-                            {updateStatusFetcher.state === "submitting" ? (
-                                <span className="loading loading-spinner loading-sm"></span>
-                            ) : (
-                                <select
-                                    onChange={(e) => {
-                                        const formData = new FormData();
-                                        formData.append("status", e.target.value)
-                                        updateStatusFetcher.submit(formData, {
-                                            method: "post",
-                                            action: `/tickets/${ticketId}/update-status`,
-                                        })
-                                    }}
-                                    onClick={(e) => {
-                                        if (!canUpdateStatusField) {
-                                            e.preventDefault();
-                                            handleDisabledFieldClick("status");
-                                        }
-                                    }}
-                                    name="status"
-                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none enabled:cursor-pointer disabled:cursor-not-allowed"
-                                    value={ticket.status}
-                                    disabled={!canUpdateStatusField}
-                                    title={!canUpdateStatusField ? "You don't have permission to update status" : ""}
-                                >
-                                    <option value="New">🆕 New</option>
-                                    <option value="In Development">⚙️ In Development</option>
-                                    <option value="Testing">🧪 Testing</option>
-                                    <option value="Resolved">✅ Resolved</option>
-                                </select>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                        <div className="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
-                            Type
-                        </div>
-                        <div className="text-base font-semibold">
-                            {updateTypeFetcher.state === "submitting" ? (
-                                <span className="loading loading-spinner loading-sm"></span>
-                            ) : (
-                                <select
-                                    onChange={(e) => {
-                                        const formData = new FormData();
-                                        formData.append("type", e.target.value)
-                                        updateTypeFetcher.submit(formData, {
-                                            method: "post",
-                                            action: `/tickets/${ticketId}/update-type`,
-                                        })
-                                    }}
-                                    onClick={(e) => {
-                                        if (!canUpdateTypeField) {
-                                            e.preventDefault();
-                                            handleDisabledFieldClick("type");
-                                        }
-                                    }}
-                                    name="type"
-                                    className="select shadow-none border-none p-0 text-base font-semibold w-full focus:outline-none enabled:cursor-pointer disabled:cursor-not-allowed"
-                                    value={ticket.type}
-                                    disabled={!canUpdateTypeField}
-                                    title={!canUpdateTypeField ? "You don't have permission to update type" : ""}
-                                >
-                                    <option value="Defect">🐛 Defect</option>
-                                    <option value="Feature">✨ Feature</option>
-                                    <option value="General Task">📋 General Task</option>
-                                    <option value="Change Request">🔄 Change Request</option>
-                                    <option value="Work Task">💼 Work Task</option>
-                                    <option value="Enhancement">⚡ Enhancement</option>
-                                </select>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Developer Assignment Section */}
-            <div className="p-6 border-b border-base-300/30">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-base-content">Assigned Developer</h3>
-                    {canAssign && (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleOnGetDevelopers()}
-                                className="btn btn-soft btn-sm gap-2 shadow-sm"
-                                title="Assign Developer"
-                            >
-                                <span className="material-symbols-outlined text-sm">person_add</span>
-                                Assign
-                            </button>
-                            {ticket.assignee && (
-                                <button
-                                    onClick={() => handleOnUnassignDeveloper()}
-                                    className="btn btn-soft btn-sm gap-2 shadow-sm"
-                                    title="Unassign Developer"
-                                >
-                                    <span className="material-symbols-outlined text-sm">person_remove</span>
-                                    Unassign
+                            <div className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 pt-5">
+                                <button className={`${secondaryButtonClass} cursor-pointer`} disabled={navigation.state === "submitting"} onClick={handleEditToggle} type="button">
+                                    Cancel
                                 </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-                {ticket.assignee ? (
-                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                        <div className="flex gap-3 items-center">
-                            <div className="avatar">
-                                <div className="w-10 rounded-full ring-2 ring-base-300/50">
-                                    <img src={ticket.assignee.avatarUrl} alt="Assigned Developer" />
-                                </div>
+                                <button
+                                    className="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-5 py-3 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={navigation.state === "submitting"}
+                                    type="submit"
+                                >
+                                    {navigation.state === "submitting" ? "Saving..." : "Save Changes"}
+                                </button>
                             </div>
-                            <div className="text-base font-semibold text-base-content">
-                                {ticket.assignee.name}
-                            </div>
-                        </div>
+                        </Form>
                     </div>
                 ) : (
-                    <div className="bg-base-50 rounded-lg p-4 border border-base-300/30">
-                        <div className="text-base font-medium text-base-content/50">
-                            Not assigned
-                        </div>
-                    </div>
-                )}
-            </div>
-        </>
-    )
+                    <>
+                        <div className="space-y-6 px-6 pb-0 pt-6 sm:px-8 sm:pt-8">
+                            <div className="flex flex-wrap items-start justify-between gap-8">
+                                <div className="min-w-0 max-w-4xl flex-1 space-y-4">
+                                    {ticket.isArchived ? (
+                                        <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">Archived</p>
+                                    ) : null}
 
-
-    return (
-        <RouteLayout>
-            {toast && (
-                <div className="toast toast-top toast-center z-50 mt-4">
-                    <div className={`alert ${toast.tone === "success" ? "alert-success" : toast.tone === "error" ? "alert-error" : "alert-warning"} shadow-lg py-2 px-4 min-h-0`}>
-                        <span>{toast.message}</span>
-                    </div>
-                </div>
-            )}
-            {ticket ? (
-                <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <BackButton />
-                    </div>
-                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 overflow-hidden">
-                        {isEditing ? (
-                            <div className="p-6">
-                                <EditModeForm
-                                    error={formError}
-                                    isSubmitting={navigation.state === "submitting"}
-                                    onCancel={handleEditToggle}
-                                >
-                                    <div className="form-control mb-4">
-                                        <label className="label">
-                                            <span className="label-text">Ticket Name</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            className="input input-bordered w-full"
-                                            defaultValue={ticket.name}
-                                            required
-                                            maxLength={50}
-                                            disabled={!canEditNameDescriptionField}
-                                        />
+                                    <div className="space-y-3">
+                                        <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
+                                            {ticket.name}
+                                        </h1>
+                                        <p className="max-w-4xl text-sm leading-6 text-[var(--app-on-surface-variant)] sm:text-base sm:leading-7">
+                                            {ticket.description}
+                                        </p>
                                     </div>
+                                </div>
 
-                                    <div className="form-control mb-4">
-                                        <label className="label">
-                                            <span className="label-text">Description</span>
-                                        </label>
-                                        <textarea
-                                            name="description"
-                                            className="textarea textarea-bordered w-full"
-                                            defaultValue={ticket.description}
-                                            rows={4}
-                                            required
-                                            maxLength={1000}
-                                            disabled={!canEditNameDescriptionField}
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="flex gap-3">
-                                        <div className="flex flex-col gap-1">
-                                            <label className="label" htmlFor="priority">Priority</label>
-                                            <select
-                                                name="priority"
-                                                className="select w-max enabled:cursor-pointer disabled:cursor-not-allowed"
-                                                defaultValue={ticket.priority}
-                                                disabled={!canUpdatePriorityField}
-                                            >
-                                                <option value="Low">🟢 Low</option>
-                                                <option value="Medium">🟡 Medium</option>
-                                                <option value="High">🟠 High</option>
-                                                <option value="Urgent">🔴 Urgent</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <label className="label" htmlFor="status">Status</label>
-                                            <select
-                                                name="status"
-                                                className="select w-max enabled:cursor-pointer disabled:cursor-not-allowed"
-                                                defaultValue={ticket.status}
-                                                disabled={!canUpdateStatusField}
-                                            >
-                                                <option value="New">🆕 New</option>
-                                                <option value="In Development">⚙️ In Development</option>
-                                                <option value="Testing">🧪 Testing</option>
-                                                <option value="Resolved">✅ Resolved</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <label className="label" htmlFor="type">Type</label>
-                                            <select
-                                                name="type"
-                                                className="select w-max enabled:cursor-pointer disabled:cursor-not-allowed"
-                                                defaultValue={ticket.type}
-                                                disabled={!canUpdateTypeField}
-                                            >
-                                                <option value="Defect">🐛 Defect</option>
-                                                <option value="Feature">✨ Feature</option>
-                                                <option value="General Task">📋 General Task</option>
-                                                <option value="Change Request">🔄 Change Request</option>
-                                                <option value="Work Task">💼 Work Task</option>
-                                                <option value="Enhancement">⚡ Enhancement</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </EditModeForm>
-                            </div>
-                        ) : (<>{TicketDetails}</>)}
-                    </div>
-
-                    {/* Comments and Attachments Side by Side */}
-                    <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-                        <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6">
-                            <h2 className="text-xl font-bold mb-4">Comments</h2>
-                            <div className={`max-w-full flex flex-col justify-end h-[450px]`}>
-                                <ChatBox
-                                    className={`p-4 flex flex-col w-full ${(getCommentsFetcher.state !== "loading" && (!(getCommentsFetcher.data as any)?.data || (getCommentsFetcher.data as any)?.data?.length === 0)) ? 'flex-1 justify-center' : 'col-reverse max-h-[450px] overflow-y-auto'}`}
-                                    onDeleteComment={handleOnDeleteComment}
-                                    onEditComment={handleOnEditComment}
-                                    comments={(getCommentsFetcher.data as any)?.data}
-                                    loading={getCommentsFetcher.state === "loading"}
-                                    userId={userInfo.memberId ?? ""}
-                                />
-
-                                <Form
-                                    className="mt-4"
-                                    method="post"
-                                    navigate={false}
-                                    fetcherKey="create-comment"
-                                    ref={commentsFormRef}
-                                    action={`/tickets/${ticketId}/create-comment`}>
-                                    <div className="flex gap-2">
-                                        <button 
-                                            type="submit" 
-                                            className="btn btn-primary"
-                                            disabled={!canComment}
-                                        >
-                                            Send
+                                <div className="flex flex-wrap items-center gap-3 self-start lg:justify-end">
+                                    {canEdit ? (
+                                        <button className={`${secondaryButtonClass} cursor-pointer`} onClick={handleEditToggle} type="button">
+                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                            Edit Details
                                         </button>
-                                        <textarea
-                                            placeholder={canComment ? "Message" : "You cannot comment on this ticket"}
-                                            name="message"
-                                            className="textarea w-full resize-none field-sizing-content min-h-auto"
-                                            disabled={!canComment}
-                                        />
-                                    </div>
-                                </Form>
+                                    ) : null}
+
+                                    {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
+                                        <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={handleArchiveClick}>
+                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                            <button
+                                                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                                                    ticket.isArchived
+                                                        ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
+                                                        : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
+                                                }`}
+                                                name="intent"
+                                                type="submit"
+                                                value={ticket.isArchived ? "unarchive" : "archive"}
+                                            >
+                                                <span className="material-symbols-outlined text-lg">folder</span>
+                                                {ticket.isArchived ? "Unarchive" : "Archive"}
+                                            </button>
+                                        </Form>
+                                    ) : null}
+
+                                    {canDelete ? (
+                                        <Form action={`/tickets/${ticketId}/delete`} method="post">
+                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                            <button
+                                                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/15 transition-colors hover:bg-[var(--app-error-container)]/15"
+                                                type="submit"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                Delete
+                                            </button>
+                                        </Form>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6">
-                            <h2 className="text-xl font-bold mb-4">Attachments</h2>
-                            <AttachmentSection
-                                ticketId={ticketId!}
-                                userInfo={userInfo}
-                                ticket={ticket}
-                            />
-                        </div>
-                    </div>
+                        <div className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
+                            <dl className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                                <PersonIdentity fallback="Unknown submitter" label="Submitter" person={ticket.submitter} />
 
-                    <div className="bg-base-100 rounded-xl shadow-sm border border-base-300/50 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold">History</h2>
-                            <button
-                                onClick={() => getHistoryFetcher.load(`/tickets/${ticketId}/get-history`)}
-                                disabled={getHistoryFetcher.state === "loading"}
-                                className="btn btn-sm btn-ghost btn-circle shadow-sm"
-                                title="Refresh history"
-                            >
-                                {getHistoryFetcher.state === "loading" ? (
-                                    <span className="loading loading-spinner loading-sm"></span>
+                                <div className="space-y-2 border-l-2 border-[var(--app-tertiary)] pl-4">
+                                    <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</dt>
+                                    <dd>
+                                        {updatePriorityFetcher.state === "submitting" ? (
+                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle" />
+                                        ) : canUpdatePriorityField ? (
+                                            <SelectControl
+                                                className={inlineSelectClass}
+                                                controlSize="sm"
+                                                onChange={(event) => {
+                                                    const formData = new FormData();
+                                                    formData.append("priority", event.currentTarget.value);
+                                                    updatePriorityFetcher.submit(formData, {
+                                                        method: "post",
+                                                        action: `/tickets/${ticketId}/update-priority`,
+                                                    });
+                                                }}
+                                                value={ticket.priority}
+                                            >
+                                                {ticketPriorityOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </SelectControl>
+                                        ) : (
+                                            priorityDisplay
+                                        )}
+                                    </dd>
+                                </div>
+
+                                <div className="space-y-2 border-l-2 border-[var(--app-primary-fixed)] pl-4">
+                                    <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Status</dt>
+                                    <dd>
+                                        {updateStatusFetcher.state === "submitting" ? (
+                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle" />
+                                        ) : canUpdateStatusField ? (
+                                            <SelectControl
+                                                className={inlineSelectClass}
+                                                controlSize="sm"
+                                                onChange={(event) => {
+                                                    const formData = new FormData();
+                                                    formData.append("status", event.currentTarget.value);
+                                                    updateStatusFetcher.submit(formData, {
+                                                        method: "post",
+                                                        action: `/tickets/${ticketId}/update-status`,
+                                                    });
+                                                }}
+                                                value={ticket.status}
+                                            >
+                                                {ticketStatusOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </SelectControl>
+                                        ) : (
+                                            statusDisplay
+                                        )}
+                                    </dd>
+                                </div>
+
+                                <div className="space-y-2 border-l-2 border-[var(--app-secondary)] pl-4">
+                                    <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Type</dt>
+                                    <dd>
+                                        {updateTypeFetcher.state === "submitting" ? (
+                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle" />
+                                        ) : canUpdateTypeField ? (
+                                            <SelectControl
+                                                className={inlineSelectClass}
+                                                controlSize="sm"
+                                                onChange={(event) => {
+                                                    const formData = new FormData();
+                                                    formData.append("type", event.currentTarget.value);
+                                                    updateTypeFetcher.submit(formData, {
+                                                        method: "post",
+                                                        action: `/tickets/${ticketId}/update-type`,
+                                                    });
+                                                }}
+                                                value={ticket.type}
+                                            >
+                                                {ticketTypeOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </SelectControl>
+                                        ) : (
+                                            typeDisplay
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div className="border-t border-[var(--app-outline-variant)]/10 px-6 py-6 sm:px-8">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Assigned Developer</h2>
+                                    <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                                        Ownership and active implementation responsibility for this ticket.
+                                    </p>
+                                </div>
+
+                                {canAssign ? (
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <button className={`${secondaryButtonClass} cursor-pointer`} onClick={() => handleOnGetDevelopers()} type="button">
+                                            <span className="material-symbols-outlined text-lg">person_add</span>
+                                            Assign
+                                        </button>
+                                        {ticket.assignee ? (
+                                            <button className={`${secondaryButtonClass} cursor-pointer`} onClick={() => handleOnUnassignDeveloper()} type="button">
+                                                <span className="material-symbols-outlined text-lg">person_remove</span>
+                                                Unassign
+                                            </button>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                            </div>
+
+                            <div className="mt-5 rounded-2xl bg-[var(--app-surface-container-lowest)]/70 px-5 py-4 outline outline-1 outline-[var(--app-outline-variant)]/10">
+                                {ticket.assignee ? (
+                                    <div className="flex items-center gap-3">
+                                        <img
+                                            alt="Assigned Developer"
+                                            className="h-11 w-11 rounded-full border border-[var(--app-outline-variant)]/20 object-cover"
+                                            src={ticket.assignee.avatarUrl}
+                                        />
+                                        <div>
+                                            <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Assigned Developer</p>
+                                            <p className="text-base font-semibold text-[var(--app-on-surface)]">{ticket.assignee.name}</p>
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
+                                    <div className="text-sm text-[var(--app-on-surface-variant)]">Not assigned</div>
                                 )}
-                            </button>
+                            </div>
                         </div>
-                        <div className="w-2xl">
-                            <TicketTimeline
-                                history={(getHistoryFetcher.data as any)?.data || []}
-                                loading={getHistoryFetcher.state === "loading"}
-                            />
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex justify-center items-center h-full">
-                    <p>Loading ticket details...</p>
-                </div>
-            )}
+                    </>
+                )}
+            </section>
 
-            {/* Archive Warning Modal */}
+            <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
+                <section className={`${panelClass} p-6`}>
+                    <div className="mb-4 border-b border-[var(--app-outline-variant)]/10 pb-4">
+                        <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Comments</h2>
+                    </div>
+                    <div className="flex h-[450px] max-w-full flex-col justify-end">
+                        <ChatBox
+                            className={`w-full p-4 ${(getCommentsFetcher.state !== "loading" && (!(getCommentsFetcher.data as any)?.data || (getCommentsFetcher.data as any)?.data?.length === 0)) ? "flex-1 justify-center" : "col-reverse max-h-[450px] overflow-y-auto"}`}
+                            comments={(getCommentsFetcher.data as any)?.data}
+                            loading={getCommentsFetcher.state === "loading"}
+                            onDeleteComment={handleOnDeleteComment}
+                            onEditComment={handleOnEditComment}
+                            userId={userInfo.memberId ?? ""}
+                        />
+
+                        <Form action={`/tickets/${ticketId}/create-comment`} className="mt-4 border-t border-[var(--app-outline-variant)]/10 pt-4" fetcherKey="create-comment" method="post" navigate={false} ref={commentsFormRef}>
+                            <div className="flex items-start gap-3">
+                                <button
+                                    className="inline-flex min-w-24 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-3 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={!canComment}
+                                    type="submit"
+                                >
+                                    Send
+                                </button>
+                                <textarea
+                                    className="min-h-[3.25rem] w-full resize-none rounded-xl border border-[var(--app-outline-variant-soft)] bg-[var(--app-surface-container-lowest)] px-4 py-3 text-sm text-[var(--app-on-surface)] outline-none transition-colors placeholder:text-[var(--app-outline)] focus:border-[var(--app-primary-fixed)]"
+                                    disabled={!canComment}
+                                    name="message"
+                                    placeholder={canComment ? "Message" : "You cannot comment on this ticket"}
+                                />
+                            </div>
+                        </Form>
+                    </div>
+                </section>
+
+                <section className={`${panelClass} p-6`}>
+                    <div className="mb-4 border-b border-[var(--app-outline-variant)]/10 pb-4">
+                        <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Attachments</h2>
+                    </div>
+                    <AttachmentSection ticket={ticket} ticketId={ticketId!} userInfo={userInfo} />
+                </section>
+            </div>
+
+            <section className={`${panelClass} p-6`}>
+                <div className="mb-4 flex items-center justify-between border-b border-[var(--app-outline-variant)]/10 pb-4">
+                    <div>
+                        <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">History</h2>
+                        <p className="mt-1 text-sm text-[var(--app-on-surface-variant)]">A running record of edits and assignment changes.</p>
+                    </div>
+                    <button
+                        className={`${secondaryButtonClass} cursor-pointer px-3 py-2`}
+                        disabled={getHistoryFetcher.state === "loading"}
+                        onClick={() => getHistoryFetcher.load(`/tickets/${ticketId}/get-history`)}
+                        title="Refresh history"
+                        type="button"
+                    >
+                        {getHistoryFetcher.state === "loading" ? (
+                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                        ) : (
+                            <span className="material-symbols-outlined text-lg">refresh</span>
+                        )}
+                    </button>
+                </div>
+
+                <TicketTimeline history={(getHistoryFetcher.data as any)?.data || []} loading={getHistoryFetcher.state === "loading"} />
+            </section>
+
             <ArchiveWarningModal
                 isOpen={showArchiveWarning}
+                message="Cannot unarchive this ticket because its project is archived. Please unarchive the project first before unarchiving individual tickets."
                 onClose={() => setShowArchiveWarning(false)}
                 title="Cannot Unarchive Ticket"
-                message="Cannot unarchive this ticket because its project is archived. Please unarchive the project first before unarchiving individual tickets."
             />
         </RouteLayout>
     );

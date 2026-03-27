@@ -1,207 +1,179 @@
 import { useEffect, useRef, useState } from "react";
-import { AttachmentFile } from "./AttachmentSection";
+import type { AttachmentFile } from "./AttachmentSection";
 
 interface AttachmentModalProps {
-    attachment: AttachmentFile | null;
-    isOpen: boolean;
-    onClose: () => void;
-    onDownload: (attachment: AttachmentFile) => void;
+  attachment: AttachmentFile | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onDownload: (attachment: AttachmentFile) => void;
 }
 
-export default function AttachmentModal({ 
-    attachment, 
-    isOpen, 
-    onClose, 
-    onDownload 
-}: AttachmentModalProps) {
-    const modalRef = useRef<HTMLDialogElement>(null);
-    const [textContent, setTextContent] = useState<string>('');
-    const [isLoading, setIsLoading] = useState(false);
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
 
-    useEffect(() => {
-        if (isOpen && attachment) {
-            modalRef.current?.showModal();
-            
-            // Load text content for text files
-            if (attachment.type === 'text/plain') {
-                setIsLoading(true);
-                // In real implementation, fetch the file content from server
-                // For now, simulate loading
-                setTimeout(() => {
-                    setTextContent(`This is a preview of ${attachment.name}\n\nIn a real implementation, this would show the actual file content loaded from the server.`);
-                    setIsLoading(false);
-                }, 500);
-            }
-        } else {
-            modalRef.current?.close();
-            setTextContent('');
-        }
-    }, [isOpen, attachment]);
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
 
-    const handleClose = () => {
-        onClose();
-    };
+export default function AttachmentModal({ attachment, isOpen, onClose, onDownload }: AttachmentModalProps) {
+  const modalRef = useRef<HTMLDialogElement>(null);
+  const [textContent, setTextContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-    const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
+  useEffect(() => {
+    if (isOpen && attachment) {
+      modalRef.current?.showModal();
 
-    const formatDate = (date: Date): string => {
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
-    };
+      if (attachment.type === "text/plain") {
+        setIsLoading(true);
+        setTimeout(() => {
+          setTextContent(`This is a preview of ${attachment.name}\n\nIn a real implementation, this would show the actual file content loaded from the server.`);
+          setIsLoading(false);
+        }, 500);
+      }
+    } else {
+      modalRef.current?.close();
+      setTextContent("");
+    }
+  }, [attachment, isOpen]);
 
-    const renderPreview = () => {
-        if (!attachment) return null;
+  function handleClose() {
+    onClose();
+  }
 
-        if (attachment.type.startsWith('image/')) {
-            return (
-                <div className="flex justify-center">
-                    <img 
-                        src={attachment.url || `data:${attachment.type};base64,`} 
-                        alt={attachment.name}
-                        className="max-w-full max-h-[60vh] object-contain rounded-lg"
-                        onError={(e) => {
-                            // Fallback for demo - show placeholder
-                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFByZXZpZXc8L3RleHQ+PC9zdmc+';
-                        }}
-                    />
-                </div>
-            );
-        }
-
-        if (attachment.type === 'application/pdf') {
-            return (
-                <div className="text-center py-8">
-                    <div className="text-6xl text-error mb-4">
-                        <span className="material-symbols-outlined text-6xl">picture_as_pdf</span>
-                    </div>
-                    <p className="text-lg font-medium mb-2">PDF Preview</p>
-                    <p className="text-base-content/60 mb-4">
-                        PDF preview would be displayed here in a real implementation
-                    </p>
-                    <button 
-                        onClick={() => attachment && onDownload(attachment)}
-                        className="btn btn-primary"
-                    >
-                        <span className="material-symbols-outlined">download</span>
-                        Download to View
-                    </button>
-                </div>
-            );
-        }
-
-        if (attachment.type === 'text/plain') {
-            return (
-                <div className="bg-base-200 rounded-lg p-4 max-h-[60vh] overflow-auto">
-                    {isLoading ? (
-                        <div className="flex justify-center items-center py-8">
-                            <span className="loading loading-spinner loading-md"></span>
-                        </div>
-                    ) : (
-                        <pre className="whitespace-pre-wrap text-sm font-mono">
-                            {textContent}
-                        </pre>
-                    )}
-                </div>
-            );
-        }
-
-        // Fallback for other file types
-        return (
-            <div className="text-center py-8">
-                <div className="text-6xl text-base-content/40 mb-4">
-                    <span className="material-symbols-outlined text-6xl">attach_file</span>
-                </div>
-                <p className="text-lg font-medium mb-2">Preview not available</p>
-                <p className="text-base-content/60 mb-4">
-                    This file type cannot be previewed in the browser
-                </p>
-                <button 
-                    onClick={() => attachment && onDownload(attachment)}
-                    className="btn btn-primary"
-                >
-                    <span className="material-symbols-outlined">download</span>
-                    Download File
-                </button>
-            </div>
-        );
-    };
-
+  function renderPreview() {
     if (!attachment) return null;
 
-    return (
-        <dialog ref={modalRef} className="modal" onClose={handleClose}>
-            <div className="modal-box max-w-4xl w-full">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg truncate">{attachment.name}</h3>
-                        <div className="flex items-center gap-4 text-sm text-base-content/60 mt-1">
-                            <span>{formatFileSize(attachment.size)}</span>
-                            <span>•</span>
-                            <div className="flex items-center gap-1">
-                                <div className="avatar">
-                                    <div className="w-4 rounded-full">
-                                        <img src={attachment.uploadedBy.avatarUrl} alt={attachment.uploadedBy.name} />
-                                    </div>
-                                </div>
-                                <span>{attachment.uploadedBy.name}</span>
-                            </div>
-                            <span>•</span>
-                            <span>{formatDate(attachment.uploadedAt)}</span>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                        <button
-                            onClick={() => onDownload(attachment)}
-                            className="btn btn-sm btn-ghost"
-                            title="Download"
-                        >
-                            <span className="material-symbols-outlined">download</span>
-                        </button>
-                        <button
-                            onClick={handleClose}
-                            className="btn btn-sm btn-ghost btn-circle"
-                        >
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                    </div>
-                </div>
+    if (attachment.type.startsWith("image/")) {
+      return (
+        <div className="flex justify-center">
+          <img
+            alt={attachment.name}
+            className="max-h-[60vh] max-w-full rounded-2xl object-contain"
+            onError={(event) => {
+              event.currentTarget.src =
+                "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjdjYWZmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzEwMTAxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFByZXZpZXc8L3RleHQ+PC9zdmc+";
+            }}
+            src={attachment.url || `data:${attachment.type};base64,`}
+          />
+        </div>
+      );
+    }
 
-                {/* Preview Content */}
-                <div className="mb-4">
-                    {renderPreview()}
-                </div>
+    if (attachment.type === "application/pdf") {
+      return (
+        <div className="rounded-2xl bg-[var(--app-surface-container-lowest)] px-6 py-10 text-center outline outline-1 outline-[var(--app-outline-variant)]/10">
+          <span className="material-symbols-outlined text-6xl text-[var(--app-error)]">picture_as_pdf</span>
+          <p className="mt-4 text-lg font-semibold text-[var(--app-on-surface)]">PDF Preview</p>
+          <p className="mt-2 text-sm text-[var(--app-on-surface-variant)]">
+            PDF preview would be displayed here in a real implementation.
+          </p>
+        </div>
+      );
+    }
 
-                {/* Footer Actions */}
-                <div className="modal-action">
-                    <button 
-                        onClick={() => onDownload(attachment)}
-                        className="btn btn-primary"
-                    >
-                        <span className="material-symbols-outlined">download</span>
-                        Download
-                    </button>
-                    <button className="btn btn-ghost" onClick={handleClose}>
-                        Close
-                    </button>
-                </div>
+    if (attachment.type === "text/plain") {
+      return (
+        <div className="rounded-2xl bg-[var(--app-surface-container-lowest)] p-4 outline outline-1 outline-[var(--app-outline-variant)]/10">
+          {isLoading ? (
+            <div className="grid min-h-[220px] place-items-center">
+              <span className="inline-flex h-6 w-6 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent" />
             </div>
-            
-            <form method="dialog" className="modal-backdrop">
-                <button onClick={handleClose}>close</button>
-            </form>
-        </dialog>
+          ) : (
+            <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap text-sm leading-6 text-[var(--app-on-surface)]">{textContent}</pre>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-2xl bg-[var(--app-surface-container-lowest)] px-6 py-10 text-center outline outline-1 outline-[var(--app-outline-variant)]/10">
+        <span className="material-symbols-outlined text-6xl text-[var(--app-outline)]">attach_file</span>
+        <p className="mt-4 text-lg font-semibold text-[var(--app-on-surface)]">Preview not available</p>
+        <p className="mt-2 text-sm text-[var(--app-on-surface-variant)]">This file type cannot be previewed in the browser.</p>
+      </div>
     );
+  }
+
+  if (!attachment) return null;
+
+  return (
+    <dialog
+      className="m-auto w-full max-w-4xl overflow-visible border-0 bg-transparent p-0 text-left text-[var(--app-on-surface)] shadow-none backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          handleClose();
+        }
+      }}
+      onClose={handleClose}
+      ref={modalRef}
+    >
+      <div className="w-full rounded-[2rem] bg-[var(--app-surface-container-low)] p-0 outline outline-1 outline-[var(--app-outline-variant-soft)]">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--app-outline-variant)]/10 px-6 py-5 sm:px-8">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-xl font-bold text-[var(--app-on-surface)]">{attachment.name}</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--app-on-surface-variant)]">
+              <span>{formatFileSize(attachment.size)}</span>
+              <span className="h-1 w-1 rounded-full bg-[var(--app-outline)]/50" />
+              <div className="flex items-center gap-2">
+                <img alt={attachment.uploadedBy.name} className="h-5 w-5 rounded-full border border-[var(--app-outline-variant)]/20 object-cover" src={attachment.uploadedBy.avatarUrl} />
+                <span>{attachment.uploadedBy.name}</span>
+              </div>
+              <span className="h-1 w-1 rounded-full bg-[var(--app-outline)]/50" />
+              <span>{formatDate(attachment.uploadedAt)}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+              onClick={() => onDownload(attachment)}
+              title="Download"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-lg">download</span>
+            </button>
+            <button
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+              onClick={handleClose}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-6 sm:px-8">{renderPreview()}</div>
+
+        <div className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 px-6 py-5 sm:px-8">
+          <button
+            className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+            onClick={handleClose}
+            type="button"
+          >
+            Close
+          </button>
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2.5 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95"
+            onClick={() => onDownload(attachment)}
+            type="button"
+          >
+            <span className="material-symbols-outlined text-lg">download</span>
+            Download
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
 }

@@ -7,6 +7,7 @@ import FormShell, {
   FormSelectControl,
   formTextareaClassName,
 } from "~/components/FormShell";
+import { projectPriorityOptions } from "~/data/selectOptions";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
 import type { CreateProjectRequest, UserInfoResponse } from "~/services/api.server/types";
@@ -169,10 +170,11 @@ export default function NewProjectRoute() {
                     value={priority}
                   >
                     <option value="">Select priority</option>
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
+                    {projectPriorityOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </FormSelectControl>
                 </div>
 
@@ -197,7 +199,7 @@ export default function NewProjectRoute() {
               >
                 {isSubmitting ? (
                   <>
-                    <span className="loading loading-spinner loading-sm" />
+                    <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
                     Creating...
                   </>
                 ) : (

@@ -1,5 +1,8 @@
 import { Form } from "@remix-run/react";
 import { ReactNode } from "react";
+import { projectPriorityOptions } from "~/data/selectOptions";
+import { FormFieldHeader } from "./FormShell";
+import SelectControl from "./SelectControl";
 
 interface EditModeFormProps {
   method?: "post" | "get" | "put" | "delete";
@@ -22,14 +25,18 @@ export function EditModeForm({
 }: EditModeFormProps) {
   return (
     <Form method={method} encType={encType} action={action}>
-      {error && <p className="text-error mb-4">{error}</p>}
+      {error ? (
+        <div className="mb-4 rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
+          {error}
+        </div>
+      ) : null}
 
       {children}
 
       <div className="flex justify-end gap-2 mt-4">
         <button
           type="button"
-          className="btn btn-ghost"
+          className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)] disabled:cursor-not-allowed disabled:opacity-60"
           onClick={onCancel}
           disabled={isSubmitting}
         >
@@ -37,7 +44,7 @@ export function EditModeForm({
         </button>
         <button
           type="submit"
-          className="btn btn-primary"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2.5 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Saving..." : "Save Changes"}
@@ -59,25 +66,23 @@ export function PrioritySelect({
   required?: boolean;
 }) {
   return (
-    <div className="form-control">
-      <label className="label">
-        <span className="label-text">Priority</span>
-      </label>
-      <div className="relative w-full">
-        <select
-          name="priority"
-          className={`select select-bordered w-full ${className}`}
-          required={required}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          <option value="">Select priority</option>
-          <option value="Low">🟢 Low</option>
-          <option value="Medium">🟡 Medium</option>
-          <option value="High">🟠 High</option>
-          <option value="Urgent">🔴 Urgent</option>
-        </select>
-      </div>
+    <div>
+      <FormFieldHeader label="Priority" required={required} />
+      <SelectControl
+        className={className}
+        controlSize="md"
+        name="priority"
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        value={value}
+      >
+        <option value="">Select priority</option>
+        {projectPriorityOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </SelectControl>
     </div>
   );
 }
