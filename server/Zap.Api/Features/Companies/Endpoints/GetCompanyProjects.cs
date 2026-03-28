@@ -17,9 +17,9 @@ public class GetCompanyProjects : IEndpoint
 
     private static async Task<Results<BadRequest<string>, Ok<List<CompanyProjectDto>>>> Handle(
         ICompanyService companyService, CurrentUser currentUser, ILogger<Program> logger,
-        [FromQuery] bool? isArchived = null)
+        [FromQuery] bool isArchived = false)
     {
-        var projects = await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId!);
+        var projects = await companyService.GetAllCompanyProjectsAsync(currentUser.CompanyId!, isArchived);
 
         return TypedResults.Ok(projects);
     }

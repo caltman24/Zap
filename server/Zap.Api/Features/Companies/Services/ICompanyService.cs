@@ -9,8 +9,7 @@ public interface ICompanyService
     Task<bool> UpdateCompanyInfoAsync(UpdateCompanyInfoDto updateCompanyDto);
 
     Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(string companyId, string memberId, string roleName, bool? isArchived);
-    Task<List<CompanyProjectDto>> GetCompanyProjectsAsync(string companyId, bool isArchived);
-    Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId);
+    Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId, bool isArchived);
     Task CreateCompanyAsync(CreateCompanyDto company);
     Task DeleteCompanyByIdAsync(string companyId);
     Task<string?> GetMemberRoleAsync(string memberId);

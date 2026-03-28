@@ -86,16 +86,6 @@ public sealed class CompanyService : ICompanyService
         return true;
     }
 
-    public async Task<List<CompanyProjectDto>> GetCompanyProjectsAsync(string companyId, bool isArchived)
-    {
-        var result = await ProjectSummaryQuery(_db.Projects
-            .Where(p => p.CompanyId == companyId)
-            .Where(p => p.IsArchived == isArchived))
-            .ToListAsync();
-
-        return ProjectSummaryResult(result);
-    }
-
     public async Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(
         string companyId,
         string memberId,
@@ -121,10 +111,11 @@ public sealed class CompanyService : ICompanyService
         return ProjectSummaryResult(result);
     }
 
-    public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId)
+    public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId, bool isArchived)
     {
         var result = await ProjectSummaryQuery(_db.Projects
-            .Where(p => p.CompanyId == companyId))
+            .Where(p => p.CompanyId == companyId)
+            .Where(p => p.IsArchived == isArchived))
             .ToListAsync();
 
         return ProjectSummaryResult(result);
