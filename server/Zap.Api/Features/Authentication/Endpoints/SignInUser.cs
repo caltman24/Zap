@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Zap.Api.Common;
+using Zap.Api.Common.Filters;
 using Zap.Api.Data.Models;
 
 namespace Zap.Api.Features.Authentication.Endpoints;
@@ -9,7 +11,8 @@ public class SignInUser : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app)
     {
-        app.MapPost("/signin", Handle);
+        app.MapPost("/signin", Handle)
+            .WithRequestValidation<Request>();
     }
 
     private static async Task<Results<BadRequest<string>, EmptyHttpResult>> Handle(Request request,
@@ -23,4 +26,12 @@ public class SignInUser : IEndpoint
     }
 
     public record Request(string Email, string Password);
+    public class RequestValidator : AbstractValidator<Request>
+    {
+        public RequestValidator()
+        {
+            RuleFor(r => r.Email).EmailAddress();
+            RuleFor(r => r.Password).NotEmpty();
+        }
+    }
 }

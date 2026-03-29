@@ -15,7 +15,7 @@ public class RemoveMember : IEndpoint
         app.MapDelete("/{memberId}", Handle)
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithProjectAccessValidation()
-            .WithProjectArchiveValidation();
+            .WithActiveProjectValidation();
     }
 
     public static async Task<Results<NotFound, ForbidHttpResult, NoContent>> Handle(

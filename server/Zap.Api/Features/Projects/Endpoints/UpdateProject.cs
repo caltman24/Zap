@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Common.Filters;
 using Zap.Api.Data;
 using Zap.Api.Features.Projects.Filters;
 using Zap.Api.Features.Projects.Services;
@@ -17,6 +18,7 @@ public class UpdateProject : IEndpoint
     {
         app.MapPut("/{projectId}", Handle)
             .Accepts<Request>("application/json")
+            .WithRequestValidation<Request>()
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithProjectAccessValidation();
     }

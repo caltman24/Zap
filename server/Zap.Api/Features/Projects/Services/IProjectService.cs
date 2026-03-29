@@ -28,6 +28,12 @@ public interface IProjectService
     Task<bool> ValidateCompanyAsync(string projectId, string companyId);
     Task<bool> ValidateAssignedMemberAsync(string projectId, string memberId);
 
+    /// <summary>
+    ///     Validate if members are assigned to the same company as the project to prevent cross tenant assignment
+    /// </summary>
+    Task<bool> AreMembersInProjectCompanyAsync(string projectId, IEnumerable<string> memberIds);
+
+
     // Assign Members
     Task<SortedDictionary<string, List<MemberInfoDto>>?> GetUnassignedMembersAsync(string projectId, string memberId);
     Task<bool> AddMembersToProjectAsync(string projectId, IEnumerable<string> memberIds);

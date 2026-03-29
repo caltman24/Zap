@@ -19,7 +19,7 @@ public class AddMembers : IEndpoint
             .WithRequestValidation<Request>()
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithProjectAccessValidation()
-            .WithProjectArchiveValidation();
+            .WithActiveProjectValidation();
     }
 
     public static async Task<Results<BadRequest<string>, ForbidHttpResult, NoContent>> Handle(
@@ -31,19 +31,24 @@ public class AddMembers : IEndpoint
         var isPm = await projectService.ValidateProjectManagerAsync(projectId, currentUser.Member!.Id);
         if (!isPm && currentUser.Member!.Role.Name != RoleNames.Admin) return TypedResults.Forbid();
 
-        var success = await projectService.AddMembersToProjectAsync(projectId, request.memberIds);
+        // TODO: Maybe put this inside the mutation method instead. Use a enum that named AddMembersResult, return an enum
+        // from the mutation method and use that to determine the Result response to send.
+        var sameProjectCompany = await projectService.AreMembersInProjectCompanyAsync(projectId, request.MemberIds);
+        if (!sameProjectCompany) return TypedResults.BadRequest("Members are not in the same company as project");
+
+        var success = await projectService.AddMembersToProjectAsync(projectId, request.MemberIds);
         if (success) return TypedResults.NoContent();
 
         return TypedResults.BadRequest("Failed to add members to project");
     }
 
-    public record Request(IEnumerable<string> memberIds);
+    public record Request(IEnumerable<string> MemberIds);
 
     public class RequestValidator : AbstractValidator<Request>
     {
         public RequestValidator()
         {
-            RuleFor(x => x.memberIds).NotEmpty();
+            RuleFor(x => x.MemberIds).NotEmpty();
         }
     }
 }

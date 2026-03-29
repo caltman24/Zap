@@ -19,7 +19,7 @@ public class UpdateStatus : IEndpoint
             .WithName("UpdateTicketStatus")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager, RoleNames.Developer)
             .WithTicketAccessValidation()
-            .WithTicketArchiveValidation()
+            .WithActiveTicketValidation()
             .WithRequestValidation<Request>();
     }
 

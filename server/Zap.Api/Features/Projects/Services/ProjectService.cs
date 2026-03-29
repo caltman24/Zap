@@ -385,4 +385,27 @@ public sealed class ProjectService : IProjectService
             .Select(am => am.Id)
             .FirstOrDefaultAsync() == memberId;
     }
+
+    public async Task<bool> AreMembersInProjectCompanyAsync(string projectId, IEnumerable<string> memberIds)
+    {
+        var ids = memberIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
+            .ToArray();
+
+        if (ids.Length == 0) return false;
+
+        var projectCompanyId = await _db.Projects
+            .Where(p => p.Id == projectId)
+            .Select(p => p.CompanyId)
+            .SingleOrDefaultAsync();
+
+        if (projectCompanyId == null) return false;
+
+        var assignableMemberCount = await _db.CompanyMembers
+            .Where(cm => cm.CompanyId == projectCompanyId && ids.Contains(cm.Id))
+            .CountAsync();
+
+        return ids.Length == assignableMemberCount;
+    }
 }

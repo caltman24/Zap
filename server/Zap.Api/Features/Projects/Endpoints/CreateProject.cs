@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Common.Filters;
 using Zap.Api.Features.Projects.Services;
 
 namespace Zap.Api.Features.Projects.Endpoints;
@@ -13,6 +14,7 @@ public class CreateProject : IEndpoint
     {
         app.MapPost("/", Handle)
             .WithName("CreateProject")
+            .WithRequestValidation<Request>()
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager);
     }
 

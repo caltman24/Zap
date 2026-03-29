@@ -1,8 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
 using Zap.Api.Common.Constants;
+using Zap.Api.Common.Filters;
 using Zap.Api.Features.Tickets.Filters;
 using Zap.Api.Features.Tickets.Services;
 
@@ -14,14 +16,15 @@ public class UpdateAssignee : IEndpoint
     {
         app.MapPut("/{ticketId}/developer", Handle)
             .WithName("UpdateDeveloper")
+            .WithRequestValidation<Request>()
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketAccessValidation()
-            .WithTicketArchiveValidation();
+            .WithActiveTicketValidation();
     }
 
     private static async Task<Results<NotFound, BadRequest<string>, ForbidHttpResult, NoContent>> Handle(
         [FromRoute] string ticketId,
-        Request? request,
+        Request request,
         ITicketService ticketService,
         CurrentUser currentUser,
         ITicketAuthorizationService ticketAuthorizationService
@@ -30,7 +33,7 @@ public class UpdateAssignee : IEndpoint
         if (!await ticketAuthorizationService.CanAssignDeveloperAsync(ticketId, currentUser))
             return TypedResults.Forbid();
 
-        var memberId = request?.MemberId ?? request?.DeveloperId;
+        var memberId = request.MemberId ?? request.DeveloperId;
 
         if (memberId != null)
         {
@@ -50,4 +53,16 @@ public class UpdateAssignee : IEndpoint
     }
 
     public record Request(string? MemberId, string? DeveloperId);
+    public class RequestValidator : AbstractValidator<Request>
+    {
+        public RequestValidator()
+        {
+            RuleFor(x => x)
+                .Must(x =>
+                    x.MemberId == null ||
+                    x.DeveloperId == null ||
+                    x.MemberId == x.DeveloperId)
+                .WithMessage("Provide only one assignee field, or make both values the same.");
+        }
+    }
 }

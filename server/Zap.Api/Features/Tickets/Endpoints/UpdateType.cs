@@ -19,7 +19,7 @@ public class UpdateType : IEndpoint
             .WithName("UpdateTicketType")
             .WithCompanyMember(RoleNames.Admin, RoleNames.ProjectManager)
             .WithTicketAccessValidation()
-            .WithTicketArchiveValidation()
+            .WithActiveTicketValidation()
             .WithRequestValidation<Request>();
     }
 

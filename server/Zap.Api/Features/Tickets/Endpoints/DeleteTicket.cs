@@ -18,7 +18,7 @@ public class DeleteTicket : IEndpoint
             // This endpoint filter checks the ticketId parm, to validate if the requesting user is in the same company
             // as the ticket. Only works on endpoints with exisiting ticket id
             .WithTicketAccessValidation()
-            .WithTicketArchiveValidation();
+            .WithActiveTicketValidation();
     }
 
     private static async Task<Results<ForbidHttpResult, NoContent>> Handle(

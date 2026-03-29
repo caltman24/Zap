@@ -16,7 +16,7 @@ public class AssignProjectManager : IEndpoint
         app.MapPut("/{projectId}/pm", Handle)
             .WithCompanyMember(RoleNames.Admin)
             .WithProjectAccessValidation()
-            .WithProjectArchiveValidation();
+            .WithActiveProjectValidation();
     }
 
     public static async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> Handle(
@@ -26,22 +26,28 @@ public class AssignProjectManager : IEndpoint
         IProjectService projectService,
         ICompanyService companyService)
     {
-        // HACK:: When no memberId is present, remove the project manager. too lazy to make another endpoint
-        if (request.memberId == null)
+        // HACK:: When no memberId is present, remove the project manager.
+        if (request.MemberId == null)
         {
-            var success = await projectService.UpdateProjectManagerAsync(projectId, request.memberId);
+            var success = await projectService.UpdateProjectManagerAsync(projectId, request.MemberId);
 
             return success ? TypedResults.NoContent() : TypedResults.NotFound("Project not found");
         }
 
-        var memberRole = await companyService.GetMemberRoleAsync(request.memberId);
+        var memberRole = await companyService.GetMemberRoleAsync(request.MemberId);
         if (memberRole != RoleNames.ProjectManager)
-            return TypedResults.BadRequest("Assigned member is not a project manager");
+            return TypedResults.BadRequest("Member is not a project manager");
 
-        var result = await projectService.UpdateProjectManagerAsync(projectId, request.memberId);
+        var memberInSameProjectCompany = await projectService
+            .AreMembersInProjectCompanyAsync(projectId, [request.MemberId]);
+
+        if (!memberInSameProjectCompany)
+            return TypedResults.BadRequest("Member is not in the same company");
+
+        var result = await projectService.UpdateProjectManagerAsync(projectId, request.MemberId);
 
         return result ? TypedResults.NoContent() : TypedResults.NotFound("Project not found");
     }
 
-    public record Request(string? memberId);
+    public record Request(string? MemberId);
 }
