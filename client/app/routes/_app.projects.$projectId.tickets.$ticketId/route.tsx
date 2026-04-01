@@ -6,6 +6,7 @@ import SelectControl from "~/components/SelectControl";
 import { FormFieldHeader, formInputClassName, formTextareaClassName } from "~/components/FormShell";
 import BackButton from "~/components/BackButton";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
+import DropdownMenu from "~/components/DropdownMenu";
 import { ticketPriorityOptions, ticketStatusOptions, ticketTypeOptions } from "~/data/selectOptions";
 import apiClient from "~/services/api.server/apiClient";
 import { ApiError, AuthenticationError } from "~/services/api.server/errors";
@@ -51,7 +52,7 @@ function PersonIdentity({
   const displayName = person?.name ?? fallback;
 
   return (
-    <div className="space-y-2 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
+    <div className="space-y-3 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
       <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">{label}</dt>
       <dd className="flex items-center gap-3">
         {person?.avatarUrl ? (
@@ -285,6 +286,7 @@ export default function TicketDetailsRoute() {
     const canUnarchive = ticket.capabilities.canUnarchive;
     const canComment = ticket.capabilities.canComment;
     const canEditNameDescriptionField = ticket.capabilities.canEditNameDescription;
+    const hasToolbarActions = canEdit || canDelete || canArchive || canUnarchive;
 
     // Handler for disabled field clicks
     const handleDisabledFieldClick = (fieldName: string) => {
@@ -332,7 +334,120 @@ export default function TicketDetailsRoute() {
                 </div>
             ) : null}
 
-            <BackButton />
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <BackButton />
+
+                {!isEditing && hasToolbarActions ? (
+                    <>
+                        <DropdownMenu
+                            className="sm:hidden"
+                            menuClassName="min-w-56"
+                            triggerAriaLabel="Open actions menu"
+                            triggerClassName={secondaryButtonClass}
+                            trigger={
+                                <>
+                                    <span className="material-symbols-outlined text-lg">more_horiz</span>
+                                    Actions
+                                </>
+                            }
+                        >
+                            {({ close }) => (
+                                <>
+                                {canEdit ? (
+                                    <button
+                                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                                        onClick={() => {
+                                            close();
+                                            handleEditToggle();
+                                        }}
+                                        type="button"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">edit</span>
+                                        <span>Edit Details</span>
+                                    </button>
+                                ) : null}
+
+                                {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
+                                    <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={(event) => {
+                                        close();
+                                        handleArchiveClick(event);
+                                    }}>
+                                        <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                        <button
+                                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                                                ticket.isArchived
+                                                    ? "text-[var(--app-success)] hover:bg-emerald-500/10"
+                                                    : "text-[var(--app-tertiary)] hover:bg-[var(--app-tertiary-container)]/15"
+                                            }`}
+                                            name="intent"
+                                            type="submit"
+                                            value={ticket.isArchived ? "unarchive" : "archive"}
+                                        >
+                                            <span className="material-symbols-outlined text-lg">folder</span>
+                                            <span>{ticket.isArchived ? "Unarchive" : "Archive"}</span>
+                                        </button>
+                                    </Form>
+                                ) : null}
+
+                                {canDelete ? (
+                                    <Form action={`/tickets/${ticketId}/delete`} method="post" onSubmit={close}>
+                                        <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                        <button
+                                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-error)] transition-colors hover:bg-[var(--app-error-container)]/15"
+                                            type="submit"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                            <span>Delete</span>
+                                        </button>
+                                    </Form>
+                                ) : null}
+                                </>
+                            )}
+                        </DropdownMenu>
+
+                        <div className="hidden flex-wrap items-center justify-end gap-3 sm:flex">
+                            {canEdit ? (
+                                <button className={`${secondaryButtonClass} cursor-pointer`} onClick={handleEditToggle} type="button">
+                                    <span className="material-symbols-outlined text-lg">edit</span>
+                                    Edit Details
+                                </button>
+                            ) : null}
+
+                            {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
+                                <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={handleArchiveClick}>
+                                    <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                    <button
+                                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                                            ticket.isArchived
+                                                ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
+                                                : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
+                                        }`}
+                                        name="intent"
+                                        type="submit"
+                                        value={ticket.isArchived ? "unarchive" : "archive"}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">folder</span>
+                                        {ticket.isArchived ? "Unarchive" : "Archive"}
+                                    </button>
+                                </Form>
+                            ) : null}
+
+                            {canDelete ? (
+                                <Form action={`/tickets/${ticketId}/delete`} method="post">
+                                    <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                    <button
+                                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/15 transition-colors hover:bg-[var(--app-error-container)]/15"
+                                        type="submit"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                        Delete
+                                    </button>
+                                </Form>
+                            ) : null}
+                        </div>
+                    </>
+                ) : null}
+            </div>
 
             <DeveloperListModal
                 actionFetcher={assignDeveloperFetcher}
@@ -347,7 +462,7 @@ export default function TicketDetailsRoute() {
                 modalRef={developersModalRef}
             />
 
-            <section className={`${panelClass} overflow-hidden`}>
+            <section className="overflow-hidden border-b border-[var(--app-outline-variant)]/10 pb-8">
                 {isEditing ? (
                     <div className="space-y-6 p-6 sm:p-8">
                         <div className="border-b border-[var(--app-outline-variant)]/10 pb-6">
@@ -444,70 +559,27 @@ export default function TicketDetailsRoute() {
                 ) : (
                     <>
                         <div className="space-y-6 px-6 pb-0 pt-6 sm:px-8 sm:pt-8">
-                            <div className="flex flex-wrap items-start justify-between gap-8">
-                                <div className="min-w-0 max-w-4xl flex-1 space-y-4">
-                                    {ticket.isArchived ? (
-                                        <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">Archived</p>
-                                    ) : null}
+                            <div className="min-w-0 max-w-4xl space-y-4">
+                                {ticket.isArchived ? (
+                                    <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">Archived</p>
+                                ) : null}
 
-                                    <div className="space-y-3">
-                                        <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
-                                            {ticket.name}
-                                        </h1>
-                                        <p className="max-w-4xl text-sm leading-6 text-[var(--app-on-surface-variant)] sm:text-base sm:leading-7">
-                                            {ticket.description}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3 self-start lg:justify-end">
-                                    {canEdit ? (
-                                        <button className={`${secondaryButtonClass} cursor-pointer`} onClick={handleEditToggle} type="button">
-                                            <span className="material-symbols-outlined text-lg">edit</span>
-                                            Edit Details
-                                        </button>
-                                    ) : null}
-
-                                    {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
-                                        <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={handleArchiveClick}>
-                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
-                                            <button
-                                                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                                                    ticket.isArchived
-                                                        ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
-                                                        : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
-                                                }`}
-                                                name="intent"
-                                                type="submit"
-                                                value={ticket.isArchived ? "unarchive" : "archive"}
-                                            >
-                                                <span className="material-symbols-outlined text-lg">folder</span>
-                                                {ticket.isArchived ? "Unarchive" : "Archive"}
-                                            </button>
-                                        </Form>
-                                    ) : null}
-
-                                    {canDelete ? (
-                                        <Form action={`/tickets/${ticketId}/delete`} method="post">
-                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
-                                            <button
-                                                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/15 transition-colors hover:bg-[var(--app-error-container)]/15"
-                                                type="submit"
-                                            >
-                                                <span className="material-symbols-outlined text-lg">delete</span>
-                                                Delete
-                                            </button>
-                                        </Form>
-                                    ) : null}
+                                <div className="space-y-3">
+                                    <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
+                                        {ticket.name}
+                                    </h1>
+                                    <p className="max-w-4xl text-sm leading-6 text-[var(--app-on-surface-variant)] sm:text-base sm:leading-7">
+                                        {ticket.description}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
-                            <dl className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                            <dl className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
                                 <PersonIdentity fallback="Unknown submitter" label="Submitter" person={ticket.submitter} />
 
-                                <div className="space-y-2 border-l-2 border-[var(--app-tertiary)] pl-4">
+                                <div className="space-y-3 border-l-2 border-[var(--app-tertiary)] pl-4">
                                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</dt>
                                     <dd>
                                         {updatePriorityFetcher.state === "submitting" ? (
@@ -538,7 +610,7 @@ export default function TicketDetailsRoute() {
                                     </dd>
                                 </div>
 
-                                <div className="space-y-2 border-l-2 border-[var(--app-primary-fixed)] pl-4">
+                                <div className="space-y-3 border-l-2 border-[var(--app-primary-fixed)] pl-4">
                                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Status</dt>
                                     <dd>
                                         {updateStatusFetcher.state === "submitting" ? (
@@ -569,7 +641,7 @@ export default function TicketDetailsRoute() {
                                     </dd>
                                 </div>
 
-                                <div className="space-y-2 border-l-2 border-[var(--app-secondary)] pl-4">
+                                <div className="space-y-3 border-l-2 border-[var(--app-secondary)] pl-4">
                                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Type</dt>
                                     <dd>
                                         {updateTypeFetcher.state === "submitting" ? (

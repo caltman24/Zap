@@ -1,5 +1,6 @@
 import { Form, useMatches, type UIMatch } from "@remix-run/react";
 import type { ReactNode } from "react";
+import DropdownMenu from "~/components/DropdownMenu";
 
 type DashboardNavbarProps = {
   avatarUrl: string;
@@ -103,50 +104,53 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
 
           <div className="hidden h-6 w-px bg-[color:var(--app-outline-variant)]/20 sm:block" />
 
-          <details className="relative">
-            <summary className="flex list-none">
-              <span className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-[var(--app-surface-container-high)]">
-                <span className="inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-[var(--app-avatar-border)] transition-transform hover:-translate-y-0.5">
-                  {avatarUrl ? (
-                    <img alt="Developer avatar" className="h-full w-full object-cover" src={avatarUrl} />
-                  ) : (
-                    <span className={`${monoClass} text-[11px] font-medium text-[var(--app-on-surface)]`}>ZA</span>
-                  )}
-                </span>
+          <DropdownMenu
+            menuClassName="w-56"
+            triggerAriaLabel="Open account menu"
+            triggerClassName="inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-[var(--app-surface-container-high)]"
+            trigger={
+              <span className="inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-[var(--app-avatar-border)] transition-transform hover:-translate-y-0.5">
+                {avatarUrl ? (
+                  <img alt="Developer avatar" className="h-full w-full object-cover" src={avatarUrl} />
+                ) : (
+                  <span className={`${monoClass} text-[11px] font-medium text-[var(--app-on-surface)]`}>ZA</span>
+                )}
               </span>
-            </summary>
-
-            <div
-              className="absolute right-0 mt-3 w-56 rounded-2xl bg-[var(--app-surface-container-menu)] p-2.5 outline outline-1 outline-[var(--app-outline-variant-strong)] shadow-[var(--app-menu-shadow)]"
-            >
-              <button
-                className={accountMenuItemClass}
-                type="button"
-              >
-                <span className="material-symbols-outlined text-lg">person</span>
-                <span>Profile</span>
-              </button>
-
-              <button
-                className={accountMenuItemClass}
-                type="button"
-              >
-                <span className="material-symbols-outlined text-lg">settings</span>
-                <span>Settings</span>
-              </button>
-
-              <Form method="post">
+            }
+          >
+            {({ close }) => (
+              <>
                 <button
                   className={accountMenuItemClass}
-                  formAction="/logout"
-                  type="submit"
+                  onClick={close}
+                  type="button"
                 >
-                  <span className="material-symbols-outlined text-lg">logout</span>
-                  <span>Logout</span>
+                  <span className="material-symbols-outlined text-lg">person</span>
+                  <span>Profile</span>
                 </button>
-              </Form>
-            </div>
-          </details>
+
+                <button
+                  className={accountMenuItemClass}
+                  onClick={close}
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-lg">settings</span>
+                  <span>Settings</span>
+                </button>
+
+                <Form method="post" onSubmit={close}>
+                  <button
+                    className={accountMenuItemClass}
+                    formAction="/logout"
+                    type="submit"
+                  >
+                    <span className="material-symbols-outlined text-lg">logout</span>
+                    <span>Logout</span>
+                  </button>
+                </Form>
+              </>
+            )}
+          </DropdownMenu>
         </div>
       </div>
     </header>

@@ -21,6 +21,7 @@ import { useEditMode } from "~/utils/editMode";
 import type { ActionResponseParams, JsonResponseResult } from "~/utils/response";
 import { getDeadlineStatus } from "~/utils/deadline";
 import BackButton from "~/components/BackButton";
+import DropdownMenu from "~/components/DropdownMenu";
 import MemberListModal from "./components/MemberListModal";
 import ProjectManagerListModal from "./components/ProjectManagerListModal";
 import RemoveMemberListModal from "./components/RemoveMemberListModal";
@@ -174,10 +175,95 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
     year: "numeric",
   });
   const teamSize = project.projectManager ? project.members.length + 1 : project.members.length;
+  const hasToolbarActions = project.capabilities.canEdit || project.capabilities.canArchive;
 
   return (
     <RouteLayout className="space-y-8">
-      <BackButton to={location.state?.from || getBackLink(collection)} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <BackButton to={location.state?.from || getBackLink(collection)} />
+
+        {!isEditing && hasToolbarActions ? (
+          <>
+            <DropdownMenu
+              className="sm:hidden"
+              menuClassName="min-w-56"
+              triggerAriaLabel="Open actions menu"
+              triggerClassName="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+              trigger={
+                <>
+                  <span className="material-symbols-outlined text-lg">more_horiz</span>
+                  Actions
+                </>
+              }
+            >
+              {({ close }) => (
+                <>
+                {project.capabilities.canEdit ? (
+                  <button
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                    onClick={() => {
+                      close();
+                      handleEditToggle();
+                    }}
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-lg">edit</span>
+                    <span>Edit Details</span>
+                  </button>
+                ) : null}
+
+                {project.capabilities.canArchive ? (
+                  <Form action={`/projects/${project.id}/archive`} method="post" onSubmit={close}>
+                    <button
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${project.isArchived
+                        ? "text-[var(--app-success)] hover:bg-emerald-500/10"
+                        : "text-[var(--app-tertiary)] hover:bg-[var(--app-tertiary-container)]/15"
+                        }`}
+                      name="intent"
+                      type="submit"
+                      value={project.isArchived ? "unarchive" : "archive"}
+                    >
+                      <span className="material-symbols-outlined text-lg">folder</span>
+                      <span>{project.isArchived ? "Unarchive" : "Archive"}</span>
+                    </button>
+                  </Form>
+                ) : null}
+                </>
+              )}
+            </DropdownMenu>
+
+            <div className="hidden flex-wrap items-center justify-end gap-3 sm:flex">
+              {project.capabilities.canEdit ? (
+                <button
+                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                  onClick={handleEditToggle}
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-lg">edit</span>
+                  Edit Details
+                </button>
+              ) : null}
+
+              {project.capabilities.canArchive ? (
+                <Form action={`/projects/${project.id}/archive`} method="post">
+                  <button
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors ${project.isArchived
+                      ? "text-[var(--app-success)] outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
+                      : "text-[var(--app-tertiary)] outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
+                      }`}
+                    name="intent"
+                    type="submit"
+                    value={project.isArchived ? "unarchive" : "archive"}
+                  >
+                    <span className="material-symbols-outlined text-lg">folder</span>
+                    {project.isArchived ? "Unarchive" : "Archive"}
+                  </button>
+                </Form>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      </div>
 
       <section className="border-b border-[var(--app-outline-variant)]/10 pb-8">
         {isEditing ? (
@@ -271,56 +357,24 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
         ) : (
           <>
             <div className="px-6 pb-0 pt-6 sm:px-8 sm:pt-8">
-              <div className="flex flex-wrap items-start justify-between gap-8">
-                <div className="min-w-0 max-w-3xl flex-1 space-y-4">
-                  {project.isArchived ? (
-                    <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">Archived</p>
-                  ) : null}
-                  <div className="space-y-3">
-                    <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
-                      {project.name}
-                    </h1>
-                    <p className="max-w-3xl text-sm leading-6 text-[var(--app-on-surface-variant)] sm:text-base sm:leading-7">
-                      {project.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3 self-start lg:justify-end">
-                  {project.capabilities.canEdit ? (
-                    <button
-                      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
-                      onClick={handleEditToggle}
-                      type="button"
-                    >
-                      <span className="material-symbols-outlined text-lg">edit</span>
-                      Edit Details
-                    </button>
-                  ) : null}
-
-                  {project.capabilities.canArchive ? (
-                    <Form action={`/projects/${project.id}/archive`} method="post">
-                      <button
-                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors ${project.isArchived
-                          ? "text-[var(--app-success)] outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
-                          : "text-[var(--app-tertiary)] outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
-                          }`}
-                        name="intent"
-                        type="submit"
-                        value={project.isArchived ? "unarchive" : "archive"}
-                      >
-                        <span className="material-symbols-outlined text-lg">folder</span>
-                        {project.isArchived ? "Unarchive" : "Archive"}
-                      </button>
-                    </Form>
-                  ) : null}
+              <div className="min-w-0 max-w-3xl space-y-4">
+                {project.isArchived ? (
+                  <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-archive)]">Archived</p>
+                ) : null}
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
+                    {project.name}
+                  </h1>
+                  <p className="max-w-3xl text-sm leading-6 text-[var(--app-on-surface-variant)] sm:text-base sm:leading-7">
+                    {project.description}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
-              <dl className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <div className="space-y-2 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
+              <dl className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+                <div className="space-y-3 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
                   <div className="flex items-center justify-between gap-3">
                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Project Manager</dt>
                     {project.capabilities.canAssignProjectManager ? (
@@ -360,7 +414,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                   )}
                 </div>
 
-                <div className="space-y-2 border-l-2 border-[var(--app-tertiary)] pl-4">
+                <div className="space-y-3 border-l-2 border-[var(--app-tertiary)] pl-4">
                   <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</dt>
                   <dd className={`flex items-center gap-2 text-sm font-medium ${priorityTone.textClass}`}>
                     <span className={`h-2.5 w-2.5 rounded-full ${priorityTone.dotClass}`} />
@@ -368,7 +422,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                   </dd>
                 </div>
 
-                <div className="space-y-2 border-l-2 border-[var(--app-secondary)] pl-4">
+                <div className="space-y-3 border-l-2 border-[var(--app-secondary)] pl-4">
                   <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Due Date</dt>
                   <dd className="flex items-center gap-3">
                     <ProjectDueDateBadge dueDate={project.dueDate} />
@@ -382,7 +436,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                   </dd>
                 </div>
 
-                <div className="px-3 space-y-2 border-l-2 border-[var(--app-success)] pr-4">
+                <div className="space-y-3 border-l-2 border-[var(--app-success)] pl-4">
                   <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Team Size</dt>
                   <dd className="text-sm font-medium text-[var(--app-on-surface)]">{teamSize} members</dd>
                 </div>
@@ -392,117 +446,113 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
         )}
       </section>
 
-      {!isEditing ? (
-        <>
-          {project.capabilities.canAssignProjectManager ? (
-            <ProjectManagerListModal
-              actionFetcher={assignProjectManagerFetcher}
-              actionFetcherSubmit={(formData) => {
-                assignProjectManagerFetcher.submit(formData, {
-                  method: "post",
-                  action: `/projects/${projectId}/assign-pm`,
-                });
-              }}
-              buttonText="Assign"
-              currentPM={project.projectManager}
-              loading={getProjectManagersFetcher.state === "loading"}
-              members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
-              modalRef={assignProjectManagerModalRef}
-              modalTitle="Select Project Manager to Assign"
-            />
+      {project.capabilities.canAssignProjectManager ? (
+        <ProjectManagerListModal
+          actionFetcher={assignProjectManagerFetcher}
+          actionFetcherSubmit={(formData) => {
+            assignProjectManagerFetcher.submit(formData, {
+              method: "post",
+              action: `/projects/${projectId}/assign-pm`,
+            });
+          }}
+          buttonText="Assign"
+          currentPM={project.projectManager}
+          loading={getProjectManagersFetcher.state === "loading"}
+          members={(getProjectManagersFetcher.data as JsonResponseResult<ProjectManagerInfo[]>)?.data}
+          modalRef={assignProjectManagerModalRef}
+          modalTitle="Select Project Manager to Assign"
+        />
+      ) : null}
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Assigned Members</h2>
+            <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+              People currently assigned to this project.
+            </p>
+          </div>
+
+          {project.capabilities.canManageMembers ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                onClick={handleOnGetMembersList}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-lg">person_add</span>
+                Add
+              </button>
+              <button
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                onClick={handleOnRemoveMembersList}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-lg">person_remove</span>
+                Remove
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] px-6 py-5 outline-1 outline-[var(--app-outline-variant-soft)]">
+          {project.capabilities.canManageMembers ? (
+            <>
+              <MemberListModal
+                actionFetcher={addMembersFetcher}
+                actionFetcherSubmit={(formData) => {
+                  addMembersFetcher.submit(formData, {
+                    method: "post",
+                    action: `/projects/${projectId}/add-members`,
+                  });
+                }}
+                loading={getMembersFetcher.state === "loading"}
+                members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
+                modalRef={getMembersModalRef}
+                projectId={projectId}
+              />
+
+              <RemoveMemberListModal
+                actionFetcher={removeMemberFetcher}
+                actionFetcherSubmit={(formData) => {
+                  removeMemberFetcher.submit(formData, {
+                    method: "post",
+                    action: `/projects/${projectId}/remove-member`,
+                  });
+                }}
+                members={project.members.filter((member) => member.id !== userInfo.memberId)}
+                modalRef={removeMemberModalRef}
+                projectId={projectId}
+              />
+            </>
           ) : null}
 
-          <section className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Assigned Members</h2>
-                <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
-                  People currently assigned to this project.
-                </p>
-              </div>
+          <MembersListTable members={project.members} />
+        </div>
+      </section>
 
-              {project.capabilities.canManageMembers ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
-                    onClick={handleOnGetMembersList}
-                    type="button"
-                  >
-                    <span className="material-symbols-outlined text-lg">person_add</span>
-                    Add
-                  </button>
-                  <button
-                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
-                    onClick={handleOnRemoveMembersList}
-                    type="button"
-                  >
-                    <span className="material-symbols-outlined text-lg">person_remove</span>
-                    Remove
-                  </button>
-                </div>
-              ) : null}
-            </div>
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Tickets</h2>
+            <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+              Active and historical work tracked against this project.
+            </p>
+          </div>
 
-            <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] px-6 py-5 outline-1 outline-[var(--app-outline-variant-soft)]">
-              {project.capabilities.canManageMembers ? (
-                <>
-                  <MemberListModal
-                    actionFetcher={addMembersFetcher}
-                    actionFetcherSubmit={(formData) => {
-                      addMembersFetcher.submit(formData, {
-                        method: "post",
-                        action: `/projects/${projectId}/add-members`,
-                      });
-                    }}
-                    loading={getMembersFetcher.state === "loading"}
-                    members={(getMembersFetcher.data as JsonResponseResult<CompanyMemberPerRole>)?.data}
-                    modalRef={getMembersModalRef}
-                    projectId={projectId}
-                  />
+          {project.capabilities.canCreateTicket ? (
+            <Link
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2 text-xs font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95"
+              to={`/tickets/new?projectId=${project.id}`}
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              New Ticket
+            </Link>
+          ) : null}
+        </div>
 
-                  <RemoveMemberListModal
-                    actionFetcher={removeMemberFetcher}
-                    actionFetcherSubmit={(formData) => {
-                      removeMemberFetcher.submit(formData, {
-                        method: "post",
-                        action: `/projects/${projectId}/remove-member`,
-                      });
-                    }}
-                    members={project.members.filter((member) => member.id !== userInfo.memberId)}
-                    modalRef={removeMemberModalRef}
-                    projectId={projectId}
-                  />
-                </>
-              ) : null}
-
-              <MembersListTable members={project.members} />
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Tickets</h2>
-                <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
-                  Active and historical work tracked against this project.
-                </p>
-              </div>
-
-              {project.capabilities.canCreateTicket ? (
-                <Link
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2 text-xs font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95"
-                  to={`/tickets/new?projectId=${project.id}`}
-                >
-                  <span className="material-symbols-outlined text-sm">add</span>
-                  New Ticket
-                </Link>
-              ) : null}
-            </div>
-
-            <TicketTable enableFiltering={false} tickets={project.tickets} />
-          </section>
-        </>
-      ) : null}
+        <TicketTable enableFiltering={false} tickets={project.tickets} />
+      </section>
     </RouteLayout>
   );
 }

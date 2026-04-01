@@ -75,6 +75,27 @@ body:has(.app-shell) {
   cursor: pointer;
 }
 
+.app-shell select {
+  color-scheme: dark;
+}
+
+.app-shell select option,
+.app-shell select optgroup {
+  background-color: var(--app-surface-container-menu);
+  color: var(--app-on-surface-variant);
+}
+
+.app-shell select option:checked,
+.app-shell select option:hover,
+.app-shell select option:focus {
+  background: linear-gradient(var(--app-hover-overlay), var(--app-hover-overlay)), var(--app-surface-container-menu);
+  color: var(--app-on-surface);
+}
+
+.app-shell select optgroup {
+  color: var(--app-on-surface);
+}
+
 .app-shell-scroll::-webkit-scrollbar {
   width: 6px;
 }

@@ -65,7 +65,7 @@ export default function MemberListModal({
 
   return (
     <dialog
-      className="m-auto w-full max-w-3xl overflow-visible border-0 bg-transparent p-0 text-left text-[var(--app-on-surface)] shadow-none backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      className="m-auto w-full max-w-3xl overflow-visible border-0 bg-transparent px-4 py-0 text-left text-[var(--app-on-surface)] shadow-none backdrop:bg-black/70 backdrop:backdrop-blur-sm sm:px-6 lg:px-0"
       id="member-modal"
       onClick={(event) => {
         if (event.target === event.currentTarget) {

@@ -205,7 +205,7 @@ export default function CompanyRoute() {
               ) : null}
 
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-                <div className="flex flex-col gap-4 lg:w-72">
+                <div className="flex w-full max-w-xs self-start flex-col gap-4 lg:w-72">
                   <div className="overflow-hidden rounded-2xl bg-[var(--app-surface-container-low)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
                     <div className="aspect-square w-full bg-[var(--app-surface-container-lowest)]">
                       {!removeLogo ? (
@@ -222,7 +222,7 @@ export default function CompanyRoute() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="mt-4 space-y-3">
                     <input
                       accept="image/jpg, image/jpeg, image/png, image/svg+xml, image/webp"
                       className="block w-full cursor-pointer text-sm text-[var(--app-on-surface)] file:mr-4 file:cursor-pointer file:rounded-xl file:border-0 file:bg-[var(--app-surface-container-high)] file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-[var(--app-on-surface)] hover:file:bg-[var(--app-surface-container-highest)]"
@@ -297,8 +297,8 @@ export default function CompanyRoute() {
         ) : (
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 flex-1 flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="overflow-hidden rounded-2xl bg-[var(--app-surface-container-low)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
-                <div className="h-24 w-24 bg-[var(--app-surface-container-lowest)] sm:h-28 sm:w-28">
+              <div className="w-fit shrink-0 self-start overflow-hidden rounded-2xl bg-[var(--app-surface-container-lowest)] p-1.5 outline outline-1 outline-[var(--app-outline-variant)]/10">
+                <div className="h-20 w-20 overflow-hidden rounded-[1.05rem] bg-[var(--app-surface-container-low)] sm:h-24 sm:w-24">
                   <img alt={`${companyInfo.name} logo`} className="h-full w-full object-cover" src={companyInfo.logoUrl ?? companyPlaceholderLogo} />
                 </div>
               </div>

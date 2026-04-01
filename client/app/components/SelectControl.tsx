@@ -6,7 +6,7 @@ type SelectControlProps = SelectHTMLAttributes<HTMLSelectElement> & {
 };
 
 const baseClassName =
-  "w-full appearance-none rounded-xl border border-[var(--app-outline-variant-soft)] bg-[var(--app-surface-container-lowest)] text-[var(--app-on-surface)] outline-none transition-colors focus:border-[var(--app-primary-fixed)]";
+  "w-full appearance-none rounded-xl border border-[var(--app-outline-variant-soft)] bg-[var(--app-surface-container-lowest)] text-[var(--app-on-surface)] outline-none transition-colors focus:border-[var(--app-primary-fixed)] [color-scheme:dark]";
 
 const sizeClassNames = {
   sm: {
