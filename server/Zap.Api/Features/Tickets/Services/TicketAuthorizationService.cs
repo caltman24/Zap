@@ -142,7 +142,7 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
             ticket.Assignee?.Id,
             currentUser);
         var canEditNameDescription = isAdmin || isProjectManager ||
-            !ticket.isArchived && isSubmitter && ticket.Status == TicketStatuses.New;
+            (!ticket.isArchived && isSubmitter && ticket.Status == TicketStatuses.New);
         var canUpdatePriority = !ticket.isArchived && canManageTicket;
         var canUpdateStatus = !ticket.isArchived &&
             (canManageTicket || member.Role.Name == RoleNames.Developer && isAssignedDeveloper);

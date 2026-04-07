@@ -23,9 +23,9 @@ import ChatBox from "./ChatBox";
 import TicketTimeline from "./TicketTimeline";
 import AttachmentSection from "./AttachmentSection";
 import {
-  getTicketPriorityDotClass,
-  getTicketStatusChipClass,
-  getTicketTypeChipClass,
+    getTicketPriorityDotClass,
+    getTicketStatusChipClass,
+    getTicketTypeChipClass,
 } from "~/components/ticketTableUtils";
 
 type InlineToast = {
@@ -35,41 +35,41 @@ type InlineToast = {
 
 const panelClass = "rounded-[1.75rem] bg-[var(--app-surface-container-low)] outline outline-1 outline-[var(--app-outline-variant-soft)]";
 const secondaryButtonClass =
-  "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]";
+    "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-on-surface-variant)] outline outline-1 outline-[var(--app-outline-variant-soft)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]";
 const primaryButtonClass =
-  "inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2.5 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95";
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-2.5 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95";
 const inlineSelectClass = "h-auto border-transparent bg-transparent px-0 pr-8 font-medium text-[var(--app-on-surface)] focus:border-transparent";
 
 function PersonIdentity({
-  label,
-  person,
-  fallback,
+    label,
+    person,
+    fallback,
 }: {
-  label: string;
-  person?: BasicUserInfo | null;
-  fallback: string;
+    label: string;
+    person?: BasicUserInfo | null;
+    fallback: string;
 }) {
-  const displayName = person?.name ?? fallback;
+    const displayName = person?.name ?? fallback;
 
-  return (
-    <div className="space-y-3 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
-      <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">{label}</dt>
-      <dd className="flex items-center gap-3">
-        {person?.avatarUrl ? (
-          <img
-            alt={displayName}
-            className="h-10 w-10 rounded-full border border-[var(--app-outline-variant)]/20 object-cover"
-            src={person.avatarUrl}
-          />
-        ) : (
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-surface-container-high)] text-sm font-semibold text-[var(--app-outline)]">
-            {displayName.slice(0, 1).toUpperCase()}
-          </span>
-        )}
-        <span className="text-sm font-medium text-[var(--app-on-surface)]">{displayName}</span>
-      </dd>
-    </div>
-  );
+    return (
+        <div className="space-y-3 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
+            <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">{label}</dt>
+            <dd className="flex items-center gap-3">
+                {person?.avatarUrl ? (
+                    <img
+                        alt={displayName}
+                        className="h-10 w-10 rounded-full border border-[var(--app-outline-variant)]/20 object-cover"
+                        src={person.avatarUrl}
+                    />
+                ) : (
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-surface-container-high)] text-sm font-semibold text-[var(--app-outline)]">
+                        {displayName.slice(0, 1).toUpperCase()}
+                    </span>
+                )}
+                <span className="text-sm font-medium text-[var(--app-on-surface)]">{displayName}</span>
+            </dd>
+        </div>
+    );
 }
 
 export const handle = {
@@ -321,13 +321,12 @@ export default function TicketDetailsRoute() {
             {toast ? (
                 <div className="fixed left-1/2 top-20 z-50 -translate-x-1/2">
                     <div
-                        className={`rounded-2xl px-4 py-3 text-sm font-medium shadow-lg backdrop-blur-md ${
-                            toast.tone === "success"
-                                ? "bg-emerald-500/15 text-emerald-200 outline outline-1 outline-emerald-500/15"
-                                : toast.tone === "error"
-                                  ? "bg-[var(--app-error-container)]/35 text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10"
-                                  : "bg-[var(--app-tertiary-container)]/25 text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/10"
-                        }`}
+                        className={`rounded-2xl px-4 py-3 text-sm font-medium shadow-lg backdrop-blur-md ${toast.tone === "success"
+                            ? "bg-emerald-500/15 text-emerald-200 outline outline-1 outline-emerald-500/15"
+                            : toast.tone === "error"
+                                ? "bg-[var(--app-error-container)]/35 text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10"
+                                : "bg-[var(--app-tertiary-container)]/25 text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/10"
+                            }`}
                     >
                         {toast.message}
                     </div>
@@ -353,60 +352,59 @@ export default function TicketDetailsRoute() {
                         >
                             {({ close }) => (
                                 <>
-                                {canEdit ? (
-                                    <button
-                                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
-                                        onClick={() => {
-                                            close();
-                                            handleEditToggle();
-                                        }}
-                                        type="button"
-                                    >
-                                        <span className="material-symbols-outlined text-lg">edit</span>
-                                        <span>Edit Details</span>
-                                    </button>
-                                ) : null}
-
-                                {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
-                                    <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={(event) => {
-                                        close();
-                                        handleArchiveClick(event);
-                                    }}>
-                                        <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                    {canEditNameDescriptionField ? (
                                         <button
-                                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                                                ticket.isArchived
+                                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                                            onClick={() => {
+                                                close();
+                                                handleEditToggle();
+                                            }}
+                                            type="button"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                            <span>Edit Details</span>
+                                        </button>
+                                    ) : null}
+
+                                    {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
+                                        <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={(event) => {
+                                            close();
+                                            handleArchiveClick(event);
+                                        }}>
+                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                            <button
+                                                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${ticket.isArchived
                                                     ? "text-[var(--app-success)] hover:bg-emerald-500/10"
                                                     : "text-[var(--app-tertiary)] hover:bg-[var(--app-tertiary-container)]/15"
-                                            }`}
-                                            name="intent"
-                                            type="submit"
-                                            value={ticket.isArchived ? "unarchive" : "archive"}
-                                        >
-                                            <span className="material-symbols-outlined text-lg">folder</span>
-                                            <span>{ticket.isArchived ? "Unarchive" : "Archive"}</span>
-                                        </button>
-                                    </Form>
-                                ) : null}
+                                                    }`}
+                                                name="intent"
+                                                type="submit"
+                                                value={ticket.isArchived ? "unarchive" : "archive"}
+                                            >
+                                                <span className="material-symbols-outlined text-lg">folder</span>
+                                                <span>{ticket.isArchived ? "Unarchive" : "Archive"}</span>
+                                            </button>
+                                        </Form>
+                                    ) : null}
 
-                                {canDelete ? (
-                                    <Form action={`/tickets/${ticketId}/delete`} method="post" onSubmit={close}>
-                                        <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
-                                        <button
-                                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-error)] transition-colors hover:bg-[var(--app-error-container)]/15"
-                                            type="submit"
-                                        >
-                                            <span className="material-symbols-outlined text-lg">delete</span>
-                                            <span>Delete</span>
-                                        </button>
-                                    </Form>
-                                ) : null}
+                                    {canDelete ? (
+                                        <Form action={`/tickets/${ticketId}/delete`} method="post" onSubmit={close}>
+                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                            <button
+                                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-error)] transition-colors hover:bg-[var(--app-error-container)]/15"
+                                                type="submit"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                <span>Delete</span>
+                                            </button>
+                                        </Form>
+                                    ) : null}
                                 </>
                             )}
                         </DropdownMenu>
 
                         <div className="hidden flex-wrap items-center justify-end gap-3 sm:flex">
-                            {canEdit ? (
+                            {canEditNameDescriptionField ? (
                                 <button className={`${secondaryButtonClass} cursor-pointer`} onClick={handleEditToggle} type="button">
                                     <span className="material-symbols-outlined text-lg">edit</span>
                                     Edit Details
@@ -417,11 +415,10 @@ export default function TicketDetailsRoute() {
                                 <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={handleArchiveClick}>
                                     <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
                                     <button
-                                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                                            ticket.isArchived
-                                                ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
-                                                : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
-                                        }`}
+                                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${ticket.isArchived
+                                            ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
+                                            : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
+                                            }`}
                                         name="intent"
                                         type="submit"
                                         value={ticket.isArchived ? "unarchive" : "archive"}
@@ -506,40 +503,42 @@ export default function TicketDetailsRoute() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                    <div>
-                                        <FormFieldHeader label="Priority" required />
-                                        <SelectControl controlSize="md" defaultValue={ticket.priority} disabled={!canUpdatePriorityField} name="priority">
-                                            {ticketPriorityOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </SelectControl>
-                                    </div>
+                                {canUpdatePriorityField &&
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                        <div>
+                                            <FormFieldHeader label="Priority" required />
+                                            <SelectControl controlSize="md" defaultValue={ticket.priority} disabled={!canUpdatePriorityField} name="priority">
+                                                {ticketPriorityOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </SelectControl>
+                                        </div>
 
-                                    <div>
-                                        <FormFieldHeader label="Status" required />
-                                        <SelectControl controlSize="md" defaultValue={ticket.status} disabled={!canUpdateStatusField} name="status">
-                                            {ticketStatusOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </SelectControl>
-                                    </div>
+                                        <div>
+                                            <FormFieldHeader label="Status" required />
+                                            <SelectControl controlSize="md" defaultValue={ticket.status} disabled={!canUpdateStatusField} name="status">
+                                                {ticketStatusOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </SelectControl>
+                                        </div>
 
-                                    <div>
-                                        <FormFieldHeader label="Type" required />
-                                        <SelectControl controlSize="md" defaultValue={ticket.type} disabled={!canUpdateTypeField} name="type">
-                                            {ticketTypeOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </SelectControl>
+                                        <div>
+                                            <FormFieldHeader label="Type" required />
+                                            <SelectControl controlSize="md" defaultValue={ticket.type} disabled={!canUpdateTypeField} name="type">
+                                                {ticketTypeOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </SelectControl>
+                                        </div>
                                     </div>
-                                </div>
+                                }
                             </div>
 
                             <div className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 pt-5">
@@ -587,7 +586,7 @@ export default function TicketDetailsRoute() {
                                         ) : canUpdatePriorityField ? (
                                             <SelectControl
                                                 className={inlineSelectClass}
-                                                controlSize="sm"
+                                                controlSize="md"
                                                 onChange={(event) => {
                                                     const formData = new FormData();
                                                     formData.append("priority", event.currentTarget.value);
@@ -618,7 +617,7 @@ export default function TicketDetailsRoute() {
                                         ) : canUpdateStatusField ? (
                                             <SelectControl
                                                 className={inlineSelectClass}
-                                                controlSize="sm"
+                                                controlSize="md"
                                                 onChange={(event) => {
                                                     const formData = new FormData();
                                                     formData.append("status", event.currentTarget.value);
@@ -649,7 +648,7 @@ export default function TicketDetailsRoute() {
                                         ) : canUpdateTypeField ? (
                                             <SelectControl
                                                 className={inlineSelectClass}
-                                                controlSize="sm"
+                                                controlSize="md"
                                                 onChange={(event) => {
                                                     const formData = new FormData();
                                                     formData.append("type", event.currentTarget.value);

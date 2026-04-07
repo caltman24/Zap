@@ -47,7 +47,8 @@ public class UpdateTicket : IEndpoint
                 t.Description,
                 PriorityName = t.Priority.Name,
                 StatusName = t.Status.Name,
-                TypeName = t.Type.Name
+                TypeName = t.Type.Name,
+                t.SubmitterId
             })
             .FirstOrDefaultAsync();
 
@@ -73,7 +74,7 @@ public class UpdateTicket : IEndpoint
             return TypedResults.NoContent();
         }
 
-        if (currentUser.Member!.Role.Name == RoleNames.Submitter)
+        if (currentUser.Member!.Id == ticket.SubmitterId)
         {
             if (request.Priority != ticket.PriorityName ||
                 request.Status != ticket.StatusName ||

@@ -198,36 +198,36 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
             >
               {({ close }) => (
                 <>
-                {project.capabilities.canEdit ? (
-                  <button
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
-                    onClick={() => {
-                      close();
-                      handleEditToggle();
-                    }}
-                    type="button"
-                  >
-                    <span className="material-symbols-outlined text-lg">edit</span>
-                    <span>Edit Details</span>
-                  </button>
-                ) : null}
-
-                {project.capabilities.canArchive ? (
-                  <Form action={`/projects/${project.id}/archive`} method="post" onSubmit={close}>
+                  {project.capabilities.canEdit ? (
                     <button
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${project.isArchived
-                        ? "text-[var(--app-success)] hover:bg-emerald-500/10"
-                        : "text-[var(--app-tertiary)] hover:bg-[var(--app-tertiary-container)]/15"
-                        }`}
-                      name="intent"
-                      type="submit"
-                      value={project.isArchived ? "unarchive" : "archive"}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-on-surface-variant)] transition-colors hover:bg-[var(--app-hover-overlay)] hover:text-[var(--app-on-surface)]"
+                      onClick={() => {
+                        close();
+                        handleEditToggle();
+                      }}
+                      type="button"
                     >
-                      <span className="material-symbols-outlined text-lg">folder</span>
-                      <span>{project.isArchived ? "Unarchive" : "Archive"}</span>
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                      <span>Edit Details</span>
                     </button>
-                  </Form>
-                ) : null}
+                  ) : null}
+
+                  {project.capabilities.canArchive ? (
+                    <Form action={`/projects/${project.id}/archive`} method="post" onSubmit={close}>
+                      <button
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${project.isArchived
+                          ? "text-[var(--app-success)] hover:bg-emerald-500/10"
+                          : "text-[var(--app-tertiary)] hover:bg-[var(--app-tertiary-container)]/15"
+                          }`}
+                        name="intent"
+                        type="submit"
+                        value={project.isArchived ? "unarchive" : "archive"}
+                      >
+                        <span className="material-symbols-outlined text-lg">folder</span>
+                        <span>{project.isArchived ? "Unarchive" : "Archive"}</span>
+                      </button>
+                    </Form>
+                  ) : null}
                 </>
               )}
             </DropdownMenu>
@@ -374,8 +374,8 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
 
             <div className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
               <dl className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-                <div className="space-y-3 border-l-2 border-[var(--app-primary-fixed-strong)] pl-4">
-                  <div className="flex items-center justify-between gap-3">
+                <div className={`border-l-2 border-[var(--app-primary-fixed-strong)] pl-4 ${!project.capabilities.canAssignProjectManager && "flex flex-col gap-4"}`}>
+                  <div className="flex justify-between gap-4">
                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Project Manager</dt>
                     {project.capabilities.canAssignProjectManager ? (
                       <div className="flex items-center gap-1">
@@ -414,8 +414,8 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                   )}
                 </div>
 
-                <div className="space-y-3 border-l-2 border-[var(--app-tertiary)] pl-4">
-                  <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</dt>
+                <div className="border-l-2 border-[var(--app-tertiary)] pl-4 flex flex-col gap-5">
+                  <div className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</div>
                   <dd className={`flex items-center gap-2 text-sm font-medium ${priorityTone.textClass}`}>
                     <span className={`h-2.5 w-2.5 rounded-full ${priorityTone.dotClass}`} />
                     {project.priority}
@@ -436,7 +436,7 @@ export default function ProjectCommonRoute({ loaderData, userInfo, collection }:
                   </dd>
                 </div>
 
-                <div className="space-y-3 border-l-2 border-[var(--app-success)] pl-4">
+                <div className="border-l-2 border-[var(--app-success)] pl-4 flex flex-col gap-5">
                   <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Team Size</dt>
                   <dd className="text-sm font-medium text-[var(--app-on-surface)]">{teamSize} members</dd>
                 </div>

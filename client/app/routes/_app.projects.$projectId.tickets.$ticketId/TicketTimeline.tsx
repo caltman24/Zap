@@ -69,11 +69,11 @@ function removeCreatorNamePrefix(message: string, creatorName: string): string {
 
 export default function TicketTimeline({ history, loading = false }: TicketTimelineProps) {
   if (loading) {
-      return (
-        <div className="grid min-h-[220px] place-items-center py-8">
+    return (
+      <div className="grid min-h-[220px] place-items-center py-8">
         <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent" />
-        </div>
-      );
+      </div>
+    );
   }
 
   if (!history || history.length === 0) {
@@ -87,7 +87,7 @@ export default function TicketTimeline({ history, loading = false }: TicketTimel
 
   return (
     <div className="max-h-[30rem] overflow-y-auto pr-1">
-      <div className="space-y-5">
+      <div className="gap-5 flex flex-col-reverse">
         {history.map((entry, index) => {
           const iconMeta = getHistoryIconMeta(entry.type);
           const showConnector = index < history.length - 1;

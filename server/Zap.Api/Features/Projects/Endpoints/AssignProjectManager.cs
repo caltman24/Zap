@@ -34,15 +34,16 @@ public class AssignProjectManager : IEndpoint
             return success ? TypedResults.NoContent() : TypedResults.NotFound("Project not found");
         }
 
-        var memberRole = await companyService.GetMemberRoleAsync(request.MemberId);
-        if (memberRole != RoleNames.ProjectManager)
-            return TypedResults.BadRequest("Member is not a project manager");
-
         var memberInSameProjectCompany = await projectService
             .AreMembersInProjectCompanyAsync(projectId, [request.MemberId]);
 
         if (!memberInSameProjectCompany)
             return TypedResults.BadRequest("Member is not in the same company");
+
+        var memberRole = await companyService.GetMemberRoleAsync(request.MemberId);
+        if (memberRole != RoleNames.ProjectManager)
+            return TypedResults.BadRequest("Member is not a project manager");
+
 
         var result = await projectService.UpdateProjectManagerAsync(projectId, request.MemberId);
 

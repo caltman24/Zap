@@ -5,13 +5,18 @@ Goal: turn Zap into a polished, portfolio-quality internal business app that fee
 
 Redesign TODO:
 - Review everything for a final polish
-  + Align rows of text in project and ticket view (PM, priority, due date, status, ect...)
-    ++ Make select bigger so its easier to click. Change cursor style
+  (done) + Align rows of text in project and ticket view (PM, priority, due date, status, ect...)
+    (done)++ Make select bigger so its easier to click. Change cursor style
   + Maybe: Replace selects with custom dropdownms for customized styles for options (os/chrome dependent right now)
   + For submitters, remove the dropdowns from the ticket edit mode since they cant be clicked anyway
 - Polish company details page
 - Chat box alignment and spacing
 - Finish pagination on dashboard ticket table
+
+BUG: When PM is editing a ticket they submitted but not apart of the project of the ticket,
+client gets a 400 bad request from the server.
+Expected: PM should only be able to edit a ticket from a project they are not assigned to
+when they are the submitters
 
 Functionality for new design:
  - Recent Activity data

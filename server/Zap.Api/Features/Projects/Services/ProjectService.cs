@@ -391,9 +391,9 @@ public sealed class ProjectService : IProjectService
         var ids = memberIds
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct()
-            .ToArray();
+            .ToList();
 
-        if (ids.Length == 0) return false;
+        if (ids.Count == 0) return false;
 
         var projectCompanyId = await _db.Projects
             .Where(p => p.Id == projectId)
@@ -404,8 +404,10 @@ public sealed class ProjectService : IProjectService
 
         var assignableMemberCount = await _db.CompanyMembers
             .Where(cm => cm.CompanyId == projectCompanyId && ids.Contains(cm.Id))
+            .Select(cm => cm.Id)
+            .Distinct()
             .CountAsync();
 
-        return ids.Length == assignableMemberCount;
+        return ids.Count == assignableMemberCount;
     }
 }
