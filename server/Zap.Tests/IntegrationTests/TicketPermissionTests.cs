@@ -130,6 +130,29 @@ public class TicketPermissionTests : IAsyncDisposable
         return (company, project, ticket, admin, pm, developer, submitter);
     }
 
+    private async Task<(Company company, Project project, Ticket ticket, CompanyMember admin, CompanyMember projectPm, CompanyMember submitterPm, CompanyMember developer)> SetupProjectManagerSubmitterOutsideProjectScenario()
+    {
+        var (company, project, ticket, admin, projectPm, developer, _) = await SetupTestScenario();
+
+        var submitterPmUserId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(submitterPmUserId);
+
+        var submitterPm = new CompanyMember
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = submitterPmUserId,
+            CompanyId = company.Id,
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.ProjectManager).Select(r => r.Id).FirstAsync()
+        };
+
+        _db.CompanyMembers.Add(submitterPm);
+        ticket.SubmitterId = submitterPm.Id;
+
+        await _db.SaveChangesAsync();
+
+        return (company, project, ticket, admin, projectPm, submitterPm, developer);
+    }
+
     #endregion
 
     #region Read Ticket Tests
@@ -751,6 +774,66 @@ public class TicketPermissionTests : IAsyncDisposable
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateTicket_AsSubmitterProjectManagerOutsideProject_UpdatesNameDescriptionOnly_ReturnsSuccess()
+    {
+        // Arrange
+        var (_, _, ticket, _, _, submitterPm, _) = await SetupProjectManagerSubmitterOutsideProjectScenario();
+        var client = _app.CreateClient(submitterPm.UserId, RoleNames.ProjectManager);
+
+        // Act
+        var response = await client.PutAsJsonAsync(
+            $"/tickets/{ticket.Id}",
+            new
+            {
+                Name = "Updated Name",
+                Description = "Updated Description",
+                Priority = "Low",
+                Status = "New",
+                Type = "Defect"
+            }
+        );
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        _db.ChangeTracker.Clear();
+        var updatedTicket = await _db.Tickets
+            .Include(t => t.Priority)
+            .Include(t => t.Status)
+            .Include(t => t.Type)
+            .FirstAsync(t => t.Id == ticket.Id);
+        Assert.Equal("Updated Name", updatedTicket.Name);
+        Assert.Equal("Updated Description", updatedTicket.Description);
+        Assert.Equal("Low", updatedTicket.Priority.Name);
+        Assert.Equal("New", updatedTicket.Status.Name);
+        Assert.Equal("Defect", updatedTicket.Type.Name);
+    }
+
+    [Fact]
+    public async Task UpdateTicket_AsSubmitterProjectManagerOutsideProject_ChangingStatus_ReturnsBadRequest()
+    {
+        // Arrange
+        var (_, _, ticket, _, _, submitterPm, _) = await SetupProjectManagerSubmitterOutsideProjectScenario();
+        var client = _app.CreateClient(submitterPm.UserId, RoleNames.ProjectManager);
+
+        // Act
+        var response = await client.PutAsJsonAsync(
+            $"/tickets/{ticket.Id}",
+            new
+            {
+                Name = "Updated Name",
+                Description = "Updated Description",
+                Priority = "Low",
+                Status = "In Development",
+                Type = "Defect"
+            }
+        );
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

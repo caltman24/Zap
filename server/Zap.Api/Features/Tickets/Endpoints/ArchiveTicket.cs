@@ -39,9 +39,11 @@ public class ArchiveTicket : IEndpoint
 
         if (ticketInfo == null) return TypedResults.NotFound();
 
+        var isBlockedUnarchive = ticketInfo.IsArchived && ticketInfo.ProjectIsArchived;
+
         // If the ticket is currently archived (meaning we're trying to unarchive it)
         // and the project is archived, prevent the operation
-        if (ticketInfo.IsArchived && ticketInfo.ProjectIsArchived)
+        if (isBlockedUnarchive)
             return TypedResults.BadRequest(
                 "Cannot unarchive a ticket when its project is archived. Please unarchive the project first.");
 

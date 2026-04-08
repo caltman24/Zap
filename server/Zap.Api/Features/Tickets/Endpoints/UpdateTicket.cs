@@ -54,13 +54,16 @@ public class UpdateTicket : IEndpoint
 
         if (ticket == null) return TypedResults.NotFound("Ticket not found");
 
+        var isChangingRestrictedFields = request.Priority != ticket.PriorityName ||
+            request.Status != ticket.StatusName ||
+            request.Type != ticket.TypeName;
+
+        var isSubmitterEditingOwnTicket = currentUser.Member!.Id == ticket.SubmitterId;
+
         // If ticket is archived, only allow name and description updates
         if (ticket.IsArchived)
         {
-            // Check if priority, status, or type are being changed
-            if (request.Priority != ticket.PriorityName ||
-                request.Status != ticket.StatusName ||
-                request.Type != ticket.TypeName)
+            if (isChangingRestrictedFields)
                 return TypedResults.BadRequest("Archived tickets can only have their name and description updated.");
 
             // Only update name and description for archived tickets
@@ -74,11 +77,9 @@ public class UpdateTicket : IEndpoint
             return TypedResults.NoContent();
         }
 
-        if (currentUser.Member!.Id == ticket.SubmitterId)
+        if (isSubmitterEditingOwnTicket)
         {
-            if (request.Priority != ticket.PriorityName ||
-                request.Status != ticket.StatusName ||
-                request.Type != ticket.TypeName)
+            if (isChangingRestrictedFields)
                 return TypedResults.BadRequest("Submitters can only update ticket name and description.");
 
             var submitterUpdateSuccess = await ticketService.UpdateTicketAsync(ticketId, new UpdateTicketDto(

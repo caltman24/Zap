@@ -476,6 +476,10 @@ export default function TicketDetailsRoute() {
                                 </div>
                             ) : null}
 
+                            {!canUpdatePriorityField ? <input name="priority" type="hidden" value={ticket.priority} /> : null}
+                            {!canUpdateStatusField ? <input name="status" type="hidden" value={ticket.status} /> : null}
+                            {!canUpdateTypeField ? <input name="type" type="hidden" value={ticket.type} /> : null}
+
                             <div className="grid gap-6">
                                 <div>
                                     <FormFieldHeader label="Ticket Name" required />

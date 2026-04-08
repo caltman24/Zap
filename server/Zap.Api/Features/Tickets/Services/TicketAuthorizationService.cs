@@ -53,11 +53,14 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
         var context = await GetTicketAccessContextAsync(ticketId);
         if (context == null || !IsSameCompany(context, currentUser)) return false;
 
+        var isSubmitterWithEditableStatus = context.SubmitterId == currentUser.Member!.Id &&
+            context.Status == TicketStatuses.New;
+
         return currentUser.Member!.Role.Name switch
         {
             RoleNames.Admin => true,
-            RoleNames.ProjectManager => context.ProjectManagerId == currentUser.Member.Id,
-            RoleNames.Submitter => context.SubmitterId == currentUser.Member.Id && context.Status == TicketStatuses.New,
+            RoleNames.ProjectManager => context.ProjectManagerId == currentUser.Member.Id || isSubmitterWithEditableStatus,
+            RoleNames.Submitter => isSubmitterWithEditableStatus,
             _ => false
         };
     }
