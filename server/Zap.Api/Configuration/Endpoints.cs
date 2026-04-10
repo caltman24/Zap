@@ -57,7 +57,8 @@ public static class Endpoints
 
         group.MapEndpoint<GetCompanyInfo>()
             .MapEndpoint<UpdateCompanyInfo>()
-            .MapEndpoint<RegisterCompany>();
+            .MapEndpoint<RegisterCompany>()
+            .MapEndpoint<GetCompanySearch>();
 
         group.MapGroup("/projects")
             .WithTags("CompanyProjects")

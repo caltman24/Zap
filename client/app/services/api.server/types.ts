@@ -111,6 +111,14 @@ export type CompanyProjectsResponse = {
   avatarUrls: string[];
 };
 
+export type CompanySearchResult = {
+  type: "ticket" | "project";
+  id: string;
+  projectId: string | null;
+  name: string;
+  displayId: string | null;
+};
+
 export type CreateTicketRequest = {
   name: string;
   description: string;

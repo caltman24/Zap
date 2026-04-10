@@ -86,6 +86,59 @@ public sealed class CompanyService : ICompanyService
         return true;
     }
 
+    public async Task<List<ProjectSearchDto>> SearchVisibleProjectsAsync(
+        string companyId,
+        string memberId,
+        string roleName,
+        string searchTerm,
+        int limit = 5)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || limit <= 0)
+        {
+            return [];
+        }
+
+        var trimmedSearchTerm = searchTerm.Trim();
+        var searchTerms = GetSearchTerms(trimmedSearchTerm);
+
+        var query = _db.Projects
+            .AsNoTracking()
+            .Where(p => p.CompanyId == companyId)
+            .Where(p => !p.IsArchived);
+
+        foreach (var term in searchTerms)
+        {
+            var likePattern = $"%{term}%";
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Name, likePattern) ||
+                EF.Functions.ILike(p.Description, likePattern));
+        }
+
+        query = roleName switch
+        {
+            RoleNames.Admin => query,
+            RoleNames.ProjectManager => query.Where(p => p.ProjectManagerId == memberId),
+            RoleNames.Developer => query.Where(p => p.AssignedMembers.Any(m => m.Id == memberId)),
+            RoleNames.Submitter => query.Where(p => p.AssignedMembers.Any(m => m.Id == memberId)),
+            _ => query.Where(_ => false)
+        };
+
+        return await query
+            .OrderBy(project => project.Name)
+            .Take(limit)
+            .Select(project => new ProjectSearchDto(
+                project.Id,
+                project.Name))
+            .ToListAsync();
+    }
+
+    private static List<string> GetSearchTerms(string searchTerm)
+    {
+        return searchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
     public async Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(
         string companyId,
         string memberId,

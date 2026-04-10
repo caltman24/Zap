@@ -2,6 +2,7 @@ import tryCatch from "~/utils/tryCatch";
 import { AuthClient } from "./authClient";
 import { BaseApiClient } from "./baseClient";
 import {
+  CompanySearchResult,
   CompanyInfoResponse,
   CompanyMemberPerRole,
   CompanyProjectsResponse,
@@ -74,6 +75,17 @@ export class ApiService extends BaseApiClient {
   ): Promise<CompanyProjectsResponse[]> {
     return this.requestJson<CompanyProjectsResponse[]>(
       "/company/projects?isArchived=false",
+      { method: "GET" },
+      accessToken
+    );
+  }
+
+  public async getCompanySearch(
+    searchQuery: string,
+    accessToken: string
+  ): Promise<CompanySearchResult[]> {
+    return this.requestJson<CompanySearchResult[]>(
+      `/company/search?query=${encodeURIComponent(searchQuery)}`,
       { method: "GET" },
       accessToken
     );

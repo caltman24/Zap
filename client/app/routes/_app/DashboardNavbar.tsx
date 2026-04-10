@@ -1,6 +1,7 @@
-import { Form, useMatches, type UIMatch } from "@remix-run/react";
-import type { ReactNode } from "react";
+import { Form, Link, useFetcher, useMatches, type UIMatch } from "@remix-run/react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import DropdownMenu from "~/components/DropdownMenu";
+import type { CompanySearchResult } from "~/services/api.server/types";
 
 type DashboardNavbarProps = {
   avatarUrl: string;
@@ -36,6 +37,7 @@ function getBreadcrumbLabel(match: BreadcrumbMatch) {
 
 export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNavbarProps) {
   const matches = useMatches() as BreadcrumbMatch[];
+  const searchFetcher = useFetcher<{ data: CompanySearchResult[]; error: string | null }>();
   const breadcrumbMatches = matches
     .filter((match) => match.handle && match.handle.breadcrumb)
     .filter((match, index, allMatches) => {
@@ -48,6 +50,81 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
         normalizeBreadcrumbLabel(getBreadcrumbLabel(allMatches[index - 1]))
       );
     });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRootRef = useRef<HTMLDivElement>(null);
+  const searchFetcherRef = useRef(searchFetcher);
+  const trimmedSearchQuery = searchQuery.trim();
+  const searchResults = searchFetcher.data?.data ?? [];
+  const shouldShowSearchDropdown = searchOpen && trimmedSearchQuery.length >= 2;
+  const searchError = searchFetcher.data?.error;
+
+  useEffect(() => {
+    searchFetcherRef.current = searchFetcher;
+  }, [searchFetcher]);
+
+  useEffect(() => {
+    if (trimmedSearchQuery.length < 2) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      searchFetcherRef.current.load(`/search?query=${encodeURIComponent(trimmedSearchQuery)}`);
+    }, 200);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [trimmedSearchQuery]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      if (!searchRootRef.current?.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, []);
+
+  function getSearchResultHref(result: CompanySearchResult) {
+    return result.type === "ticket" && result.projectId
+      ? `/projects/${result.projectId}/tickets/${result.id}`
+      : `/projects/${result.id}`;
+  }
+
+  function getSearchResultTypeLabel(result: CompanySearchResult) {
+    return result.type === "ticket" ? "Ticket" : "Project";
+  }
+
+  function handleSearchFocus() {
+    if (trimmedSearchQuery.length >= 2) {
+      setSearchOpen(true);
+    }
+  }
+
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    setSearchOpen(value.trim().length >= 2);
+  }
+
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Escape") {
+      setSearchOpen(false);
+      event.currentTarget.blur();
+    }
+  }
+
+  function handleSearchResultClick() {
+    setSearchQuery("");
+    setSearchOpen(false);
+  }
 
   return (
     <header
@@ -66,16 +143,68 @@ export default function DashboardNavbar({ avatarUrl, onMenuToggle }: DashboardNa
           </button>
 
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="group relative w-full min-w-0 max-w-md rounded-lg bg-[var(--app-surface-container-lowest)] shadow-[var(--app-search-shadow)] transition-[background-color,box-shadow] duration-200 focus-within:shadow-[var(--app-search-focus-shadow)]">
-              <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[color:var(--app-outline)]">
-                search
-              </span>
-              <input
-                aria-label="Search tickets and projects"
-                className={`${monoClass} h-9 w-full rounded-lg border-none bg-transparent pl-10 pr-4 text-xs tracking-wide text-[var(--app-on-surface)] outline-none placeholder:text-[color:var(--app-outline)]`}
-                placeholder="Search tickets, projects..."
-                type="text"
-              />
+            <div className="relative w-full max-w-md" ref={searchRootRef}>
+              <div className="group relative w-full min-w-0 rounded-lg bg-[var(--app-surface-container-lowest)] shadow-[var(--app-search-shadow)] transition-[background-color,box-shadow] duration-200 focus-within:shadow-[var(--app-search-focus-shadow)]">
+                <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[color:var(--app-outline)]">
+                  search
+                </span>
+                <input
+                  aria-label="Search tickets and projects"
+                  aria-controls="dashboard-navbar-search-results"
+                  className={`${monoClass} h-9 w-full rounded-lg border-none bg-transparent pl-10 pr-10 text-xs tracking-wide text-[var(--app-on-surface)] outline-none placeholder:text-[color:var(--app-outline)]`}
+                  onChange={(event) => handleSearchChange(event.target.value)}
+                  onFocus={handleSearchFocus}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search tickets, projects..."
+                  type="text"
+                  value={searchQuery}
+                />
+                {searchFetcher.state !== "idle" ? (
+                  <span className="absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[var(--app-primary)] animate-pulse" />
+                ) : null}
+              </div>
+
+              {shouldShowSearchDropdown ? (
+                <div
+                  className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-2xl bg-[var(--app-surface-container-menu)] outline outline-1 outline-[var(--app-outline-variant-strong)] shadow-[var(--app-menu-shadow)]"
+                  id="dashboard-navbar-search-results"
+                  role="listbox"
+                >
+                  {searchError ? (
+                    <div className="px-4 py-3 text-sm text-[var(--app-error)]">{searchError}</div>
+                  ) : null}
+
+                  {!searchError && searchFetcher.state !== "idle" && searchResults.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-[var(--app-on-surface-variant)]">Searching...</div>
+                  ) : null}
+
+                  {!searchError && searchFetcher.state === "idle" && searchResults.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-[var(--app-on-surface-variant)]">No tickets or projects found.</div>
+                  ) : null}
+
+                  {searchResults.length > 0 ? (
+                    <div className="divide-y divide-[color:var(--app-outline-variant)]/10">
+                      {searchResults.map((result) => (
+                        <Link
+                          className="flex items-start justify-between gap-3 px-4 py-3 transition-colors hover:bg-[var(--app-surface-container-high)]"
+                          key={`${result.type}-${result.id}`}
+                          onClick={handleSearchResultClick}
+                          to={getSearchResultHref(result)}
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">
+                              <span className={monoClass}>{getSearchResultTypeLabel(result)}</span>
+                              {result.displayId ? <span className={monoClass}>{result.displayId}</span> : null}
+                            </div>
+                            <div className="mt-1 truncate text-sm font-medium text-[var(--app-on-surface)]">{result.name}</div>
+                          </div>
+                          <span className="material-symbols-outlined mt-0.5 text-base text-[var(--app-outline)]">arrow_outward</span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-xs lg:flex">

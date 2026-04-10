@@ -8,6 +8,22 @@ public interface ICompanyService
 
     Task<bool> UpdateCompanyInfoAsync(UpdateCompanyInfoDto updateCompanyDto);
 
+    /// <summary>
+    ///     Searches active projects visible to the current member.
+    /// </summary>
+    /// <param name="companyId">The current company identifier.</param>
+    /// <param name="memberId">The current member identifier.</param>
+    /// <param name="roleName">The current member role name.</param>
+    /// <param name="searchTerm">The raw search term entered by the user.</param>
+    /// <param name="limit">The maximum number of results to return.</param>
+    /// <returns>A list of visible active projects matching the search term.</returns>
+    Task<List<ProjectSearchDto>> SearchVisibleProjectsAsync(
+        string companyId,
+        string memberId,
+        string roleName,
+        string searchTerm,
+        int limit = 5);
+
     Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(string companyId, string memberId, string roleName, bool? isArchived);
     Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId, bool isArchived);
     Task CreateCompanyAsync(CreateCompanyDto company);
@@ -42,3 +58,5 @@ public record CompanyProjectDto(
     bool IsArchived,
     int MemberCount,
     IEnumerable<string> AvatarUrls);
+
+public record ProjectSearchDto(string Id, string Name);

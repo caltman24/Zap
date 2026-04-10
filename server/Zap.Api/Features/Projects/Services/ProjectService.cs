@@ -62,7 +62,10 @@ public sealed class ProjectService : IProjectService
                             $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
                             t.Assignee.User.AvatarUrl,
                             t.Assignee.Role.Name)
-                )),
+                )
+                {
+                    StoredDisplayId = t.DisplayId
+                }),
                 p.AssignedMembers.Select(m => new MemberInfoDto(
                     m.Id,
                     $"{m.User.FirstName} {m.User.LastName}",

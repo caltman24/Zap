@@ -44,6 +44,8 @@ public class AppDbContext : IdentityUserContext<AppUser>
     {
         base.OnModelCreating(builder);
 
+        builder.HasPostgresExtension("pg_trgm");
+
         // Set default value for CreatedAt on all entities that inherit from BaseEntity
         foreach (var entityType in builder.Model.GetEntityTypes())
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
@@ -83,6 +85,14 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithMany(cm => cm.AssignedProjects)
             .UsingEntity(j => j.ToTable("ProjectMembers"));
         builder.Entity<Project>()
+            .HasIndex(p => p.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+        builder.Entity<Project>()
+            .HasIndex(p => p.Description)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+        builder.Entity<Project>()
             .HasOne(p => p.ProjectManager)
             .WithMany()
             .HasForeignKey(p => p.ProjectManagerId)
@@ -94,6 +104,21 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .WithMany(p => p.Tickets)
             .HasForeignKey(p => p.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<Ticket>()
+            .Property(t => t.DisplayId)
+            .HasMaxLength(9);
+        builder.Entity<Ticket>()
+            .HasIndex(t => t.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+        builder.Entity<Ticket>()
+            .HasIndex(t => t.Description)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+        builder.Entity<Ticket>()
+            .HasIndex(t => t.DisplayId)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
         builder.Entity<Ticket>()
             .HasOne(t => t.Priority)
             .WithMany()
@@ -177,9 +202,27 @@ public class AppDbContext : IdentityUserContext<AppUser>
 
         foreach (var entry in entries)
         {
-            if (entry.State == EntityState.Added) ((BaseEntity)entry.Entity).CreatedAt = currentTime;
+            if (entry.State == EntityState.Added)
+            {
+                ((BaseEntity)entry.Entity).CreatedAt = currentTime;
+
+                if (entry.Entity is Ticket ticket && string.IsNullOrWhiteSpace(ticket.DisplayId))
+                {
+                    ticket.DisplayId = FormatTicketDisplayId(ticket.Id);
+                }
+            }
 
             if (entry.State == EntityState.Modified) ((BaseEntity)entry.Entity).UpdatedAt = currentTime;
         }
+    }
+
+    private static string FormatTicketDisplayId(string ticketId)
+    {
+        var compactId = ticketId.Replace("-", string.Empty);
+        var suffix = compactId.Length >= 4
+            ? compactId[^4..]
+            : compactId.PadLeft(4, '0');
+
+        return $"#ZAP-{suffix.ToUpperInvariant()}";
     }
 }

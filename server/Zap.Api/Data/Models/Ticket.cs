@@ -5,6 +5,7 @@ namespace Zap.Api.Data.Models;
 public class Ticket : BaseEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    [StringLength(9)] public string DisplayId { get; set; } = string.Empty;
     [StringLength(50)] public required string Name { get; set; }
     [StringLength(1000)] public required string Description { get; set; }
     public bool IsArchived { get; set; } = false;

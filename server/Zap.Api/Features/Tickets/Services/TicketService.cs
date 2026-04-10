@@ -85,6 +85,61 @@ public class TicketService : ITicketService
             .ToListAsync();
     }
 
+    public async Task<List<TicketSearchDto>> SearchVisibleTicketsAsync(
+        string memberId,
+        string roleName,
+        string companyId,
+        string searchTerm,
+        int limit = 5)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || limit <= 0)
+        {
+            return [];
+        }
+
+        var trimmedSearchTerm = searchTerm.Trim();
+        var searchTerms = GetSearchTerms(trimmedSearchTerm);
+        var normalizedDisplayIdSearch = NormalizeDisplayIdSearchTerm(trimmedSearchTerm);
+        var baseQuery = GetVisibleTicketsQuery(memberId, roleName, companyId)
+            .Where(ticket => !ticket.IsArchived && !ticket.Project.IsArchived);
+
+        var textQuery = baseQuery;
+
+        foreach (var term in searchTerms)
+        {
+            var likePattern = $"%{term}%";
+            textQuery = textQuery.Where(ticket =>
+                EF.Functions.ILike(ticket.Name, likePattern) ||
+                EF.Functions.ILike(ticket.Description, likePattern));
+        }
+
+        var results = await ProjectTicketSearchResults(textQuery
+            .OrderBy(ticket => ticket.Name)
+            .Take(limit))
+            .ToListAsync();
+
+        if (results.Count >= limit || string.IsNullOrWhiteSpace(normalizedDisplayIdSearch))
+        {
+            return results;
+        }
+
+        var displayIdMatches = await ProjectTicketSearchResults(baseQuery
+                .Where(ticket =>
+                    EF.Functions.ILike(ticket.DisplayId, $"%{trimmedSearchTerm}%") ||
+                    EF.Functions.ILike(
+                        ticket.DisplayId.Replace("#", string.Empty).Replace("-", string.Empty),
+                        $"%{normalizedDisplayIdSearch}%"))
+                .OrderBy(ticket => ticket.Name)
+                .Take(limit))
+            .ToListAsync();
+
+        return results
+            .Concat(displayIdMatches)
+            .DistinctBy(ticket => ticket.Id)
+            .Take(limit)
+            .ToList();
+    }
+
     public async Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId)
     {
         return await ProjectBasicTickets(_db.Tickets
@@ -449,7 +504,9 @@ public class TicketService : ITicketService
 
     private IQueryable<Ticket> GetVisibleTicketsQuery(string memberId, string roleName, string companyId)
     {
-        var query = _db.Tickets.Where(t => t.Project.CompanyId == companyId);
+        var query = _db.Tickets
+            .AsNoTracking()
+            .Where(t => t.Project.CompanyId == companyId);
 
         return roleName switch
         {
@@ -460,6 +517,46 @@ public class TicketService : ITicketService
                 t.Project.AssignedMembers.Any(m => m.Id == memberId) || t.SubmitterId == memberId),
             _ => query.Where(_ => false)
         };
+    }
+
+    private static string NormalizeSearchTerm(string searchTerm)
+    {
+        return new string(searchTerm
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToUpperInvariant)
+            .ToArray());
+    }
+
+    private static List<string> GetSearchTerms(string searchTerm)
+    {
+        return searchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private static string? NormalizeDisplayIdSearchTerm(string searchTerm)
+    {
+        var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
+
+        if (normalizedSearchTerm.StartsWith("ZAP", StringComparison.Ordinal))
+        {
+            normalizedSearchTerm = normalizedSearchTerm[3..];
+        }
+
+        return string.IsNullOrWhiteSpace(normalizedSearchTerm)
+            ? null
+            : normalizedSearchTerm;
+    }
+
+    private static IQueryable<TicketSearchDto> ProjectTicketSearchResults(IQueryable<Ticket> query)
+    {
+        return query.Select(ticket => new TicketSearchDto(
+            ticket.Id,
+            ticket.ProjectId,
+            ticket.Name)
+        {
+            StoredDisplayId = ticket.DisplayId
+        });
     }
 
     private static IQueryable<BasicTicketDto> ProjectBasicTickets(IQueryable<Ticket> query)
@@ -489,6 +586,9 @@ public class TicketService : ITicketService
                     $"{t.Assignee.User.FirstName} {t.Assignee.User.LastName}",
                     t.Assignee.User.AvatarUrl,
                     t.Assignee.Role.Name)
-        ));
+        )
+        {
+            StoredDisplayId = t.DisplayId
+        });
     }
 }
