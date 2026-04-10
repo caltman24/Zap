@@ -2,6 +2,7 @@ import roleNames from "~/data/roles";
 import type {
   BasicTicketInfo,
   CompanyProjectsResponse,
+  RecentActivityInfo,
   UserInfoResponse,
 } from "~/services/api.server/types";
 
@@ -18,30 +19,21 @@ export type DashboardData = {
   totalTickets: number;
   openTickets: number;
   closedTickets: number;
-  recentActivity: BasicTicketInfo[];
+  recentTickets: BasicTicketInfo[];
+  recentEvents: RecentActivityInfo[];
   upcomingDeadlines: DashboardDeadline[];
 };
 
-export type DashboardActivityItem =
-  | {
-      id: string;
-      variant: "ticket";
-      actorName: string;
-      actorAvatarUrl: string | null;
-      action: string;
-      ticketLabel: string;
-      detail: string;
-      timestamp: string;
-    }
-  | {
-      id: string;
-      variant: "commit";
-      actorName: string;
-      branchName: string;
-      detail: string;
-      timestamp: string;
-      icon: string;
-    };
+export type DashboardActivityItem = {
+  id: string;
+  actorName: string;
+  actorAvatarUrl: string | null;
+  action: string;
+  ticketLabel: string;
+  detail: string;
+  timestamp: string;
+  icon: string;
+};
 
 export function getStatusChipClass(status: string): string {
   switch (status.toLowerCase()) {
@@ -151,11 +143,6 @@ export function formatDashboardDateParts(isoDate: string) {
   };
 }
 
-export function formatDashboardTicketId(ticketId: string): string {
-  const compactId = ticketId.replace(/-/g, "").slice(-4).toUpperCase();
-  return `#ZAP-${compactId || ticketId.slice(0, 4).toUpperCase()}`;
-}
-
 export function truncateDashboardText(text: string | null | undefined, maxLength = 68): string {
   if (!text) {
     return "No additional context yet for this issue.";
@@ -185,52 +172,88 @@ export function getDashboardInitials(name: string): string {
 }
 
 export function toDashboardActivityItems(
-  tickets: BasicTicketInfo[],
+  events: RecentActivityInfo[],
   userInfo: UserInfoResponse,
 ): DashboardActivityItem[] {
-  const ticketItems = tickets.slice(0, 3).map((ticket) => {
-    const actor = ticket.assignee ?? ticket.submitter;
-    const actorName = actor.id === userInfo.id ? "You" : actor.name;
-    const status = ticket.status.toLowerCase();
-    let action = "updated";
-
-    if (status === "resolved") {
-      action = "resolved";
-    } else if (status === "new") {
-      action = "opened";
-    } else if (status === "testing") {
-      action = "tested";
-    } else if (status === "in development") {
-      action = "updated";
-    }
+  return events.map((event) => {
+    const actorName = event.actor.id === userInfo.memberId ? "You" : event.actor.name;
 
     return {
-      id: ticket.id,
-      variant: "ticket" as const,
+      id: event.id,
       actorName,
-      actorAvatarUrl: actor.avatarUrl ?? null,
-      action,
-      ticketLabel: formatDashboardTicketId(ticket.id),
-      detail: truncateDashboardText(ticket.description, 84),
-      timestamp: formatRelativeTime(ticket.updatedAt ?? ticket.createdAt),
+      actorAvatarUrl: event.actor.avatarUrl ?? null,
+      action: getDashboardActivityAction(event),
+      ticketLabel: event.displayId,
+      detail: getDashboardActivityDetail(event),
+      timestamp: formatRelativeTime(event.occurredAt),
+      icon: getDashboardActivityIcon(event),
     };
   });
+}
 
-  const commitItem: DashboardActivityItem = {
-    id: "dashboard-static-commit",
-    variant: "commit",
-    actorName: "ZapBot",
-    branchName: "main",
-    detail: "chore(deps): bump version to 2.4.1-rc.2",
-    timestamp: "45m ago",
-    icon: "commit",
-  };
+function getDashboardActivityAction(event: RecentActivityInfo): string {
+  switch (event.type) {
+    case "ticketCreated":
+      return "created";
+    case "statusChanged":
+      return "changed status on";
+    case "priorityChanged":
+      return "changed priority on";
+    case "assigneeChanged":
+      return "updated assignee on";
+    case "commentAdded":
+      return "commented on";
+  }
+}
 
-  if (ticketItems.length === 0) {
-    return [commitItem];
+function getDashboardActivityDetail(event: RecentActivityInfo): string {
+  switch (event.type) {
+    case "ticketCreated":
+      return truncateDashboardText(event.ticketName, 84);
+    case "statusChanged":
+      return formatDashboardValueChange(event.oldValue, event.newValue, "Status");
+    case "priorityChanged":
+      return formatDashboardValueChange(event.oldValue, event.newValue, "Priority");
+    case "assigneeChanged":
+      return formatDashboardValueChange(event.oldValue, event.newValue, "Assignee");
+    case "commentAdded":
+      return truncateDashboardText(event.message, 84);
+  }
+}
+
+function getDashboardActivityIcon(event: RecentActivityInfo): string {
+  switch (event.type) {
+    case "ticketCreated":
+      return "add_circle";
+    case "statusChanged":
+      return "sync_alt";
+    case "priorityChanged":
+      return "flag";
+    case "assigneeChanged":
+      return "person_add";
+    case "commentAdded":
+      return "chat";
+  }
+}
+
+function formatDashboardValueChange(
+  oldValue: string | null,
+  newValue: string | null,
+  label: string,
+): string {
+  if (oldValue && newValue) {
+    return `${label}: ${oldValue} -> ${newValue}`;
   }
 
-  return [ticketItems[0], commitItem, ...ticketItems.slice(1)];
+  if (newValue) {
+    return `${label}: ${newValue}`;
+  }
+
+  if (oldValue) {
+    return `${label}: ${oldValue} removed`;
+  }
+
+  return `${label} updated.`;
 }
 
 export function toUpcomingDeadlines(

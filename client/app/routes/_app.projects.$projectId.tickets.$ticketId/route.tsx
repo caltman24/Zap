@@ -74,10 +74,19 @@ function PersonIdentity({
 
 export const handle = {
     breadcrumb: (match: any) => {
-        const ticketId = match.params.ticketId; const ticketName = match.data?.data?.name || "Ticket Details";
-        return <Link to={`/tickets/mytickets/${ticketId}`}>{ticketName}</Link>;
+        const ticketId = match.params.ticketId;
+        const ticketName = match.data?.data?.name || "Ticket Details";
+        const displayId = match.data?.data?.displayId;
+        const label = displayId ? `${displayId} ${ticketName}` : ticketName;
+
+        return <Link to={`/tickets/mytickets/${ticketId}`}>{label}</Link>;
     },
-    breadcrumbLabel: (match: any) => match.data?.data?.name || "Ticket Details",
+    breadcrumbLabel: (match: any) => {
+        const ticketName = match.data?.data?.name || "Ticket Details";
+        const displayId = match.data?.data?.displayId;
+
+        return displayId ? `${displayId} ${ticketName}` : ticketName;
+    },
 };
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(request);
@@ -461,12 +470,15 @@ export default function TicketDetailsRoute() {
 
             <section className="overflow-hidden border-b border-[var(--app-outline-variant)]/10 pb-8">
                 {isEditing ? (
-                    <div className="space-y-6 p-6 sm:p-8">
-                        <div className="border-b border-[var(--app-outline-variant)]/10 pb-6">
-                            <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">Edit Ticket</h1>
-                            <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
-                                Update the core ticket details shown to the team.
-                            </p>
+                        <div className="space-y-6 p-6 sm:p-8">
+                            <div className="border-b border-[var(--app-outline-variant)]/10 pb-6">
+                                <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">
+                                    {ticket.displayId}
+                                </p>
+                                <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">Edit Ticket</h1>
+                                <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                                    Update the core ticket details shown to the team.
+                                </p>
                         </div>
 
                         <Form className="space-y-8" method="post">
@@ -568,6 +580,9 @@ export default function TicketDetailsRoute() {
                                 ) : null}
 
                                 <div className="space-y-3">
+                                    <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">
+                                        {ticket.displayId}
+                                    </p>
                                     <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--app-on-surface)] sm:text-[2.2rem]">
                                         {ticket.name}
                                     </h1>

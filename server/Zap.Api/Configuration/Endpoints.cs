@@ -96,6 +96,7 @@ public static class Endpoints
 
         group.MapEndpoint<CreateTicket>()
             .MapEndpoint<CreateTicketProjectList>()
+            .MapEndpoint<GetRecentActivity>()
             .MapEndpoint<GetTicket>()
             .MapEndpoint<GetMyTickets>()
             .MapEndpoint<GetOpenTickets>()

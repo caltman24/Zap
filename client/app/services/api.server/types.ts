@@ -122,6 +122,7 @@ export type CreateTicketRequest = {
 
 export type BasicTicketInfo = {
   id: string;
+  displayId: string;
   name: string;
   description: string;
   priority: string;
@@ -151,6 +152,21 @@ export type BasicTicketInfo = {
 
 export type CreateTicketResult = {
   id: string;
+};
+
+export type RecentActivityInfo = {
+  id: string;
+  ticketId: string;
+  displayId: string;
+  ticketName: string;
+  projectId: string;
+  type: "ticketCreated" | "statusChanged" | "priorityChanged" | "assigneeChanged" | "commentAdded";
+  actor: BasicUserInfo;
+  occurredAt: string;
+  message: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  relatedEntityName: string | null;
 };
 
 export type TicketComment = {

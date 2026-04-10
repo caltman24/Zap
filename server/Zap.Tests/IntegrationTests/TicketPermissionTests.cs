@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Zap.Api.Data;
 using Zap.Api.Data.Models;
 using Zap.Tests.IntegrationTests;
 using Microsoft.EntityFrameworkCore;
 using Zap.Api.Common.Constants;
+using Zap.Api.Common.Enums;
 using Zap.Api.Features.Tickets.Services;
 
 namespace Zap.Tests.IntegrationTests;
@@ -153,6 +155,59 @@ public class TicketPermissionTests : IAsyncDisposable
         return (company, project, ticket, admin, projectPm, submitterPm, developer);
     }
 
+    private async Task<Ticket> CreateTicketAsync(string projectId, string submitterId, string? assigneeId = null,
+        string name = "Follow-up Ticket")
+    {
+        var ticket = new Ticket
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = name,
+            Description = $"{name} description",
+            ProjectId = projectId,
+            SubmitterId = submitterId,
+            AssigneeId = assigneeId,
+            PriorityId = await _db.TicketPriorities.Where(p => p.Name == "Low").Select(p => p.Id).FirstAsync(),
+            StatusId = await _db.TicketStatuses.Where(s => s.Name == "New").Select(s => s.Id).FirstAsync(),
+            TypeId = await _db.TicketTypes.Where(t => t.Name == "Defect").Select(t => t.Id).FirstAsync(),
+            IsArchived = false
+        };
+
+        _db.Tickets.Add(ticket);
+        await _db.SaveChangesAsync();
+
+        return ticket;
+    }
+
+    private async Task AddHistoryAsync(string ticketId, string creatorId, TicketHistoryTypes type, DateTime createdAt,
+        string? oldValue = null, string? newValue = null, string? relatedEntityName = null)
+    {
+        _db.TicketHistories.Add(new TicketHistory
+        {
+            TicketId = ticketId,
+            CreatorId = creatorId,
+            Type = type,
+            OldValue = oldValue,
+            NewValue = newValue,
+            RelatedEntityName = relatedEntityName,
+            CreatedAt = createdAt
+        });
+
+        await _db.SaveChangesAsync();
+    }
+
+    private async Task AddCommentAsync(string ticketId, string senderId, string message, DateTime createdAt)
+    {
+        _db.TicketComments.Add(new TicketComment
+        {
+            TicketId = ticketId,
+            SenderId = senderId,
+            Message = message,
+            CreatedAt = createdAt
+        });
+
+        await _db.SaveChangesAsync();
+    }
+
     #endregion
 
     #region Read Ticket Tests
@@ -166,6 +221,9 @@ public class TicketPermissionTests : IAsyncDisposable
         var response = await client.GetAsync($"/tickets/{ticket.Id}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(BasicTicketDto.FormatDisplayId(ticket.Id), payload.RootElement.GetProperty("displayId").GetString());
     }
 
     [Fact]
@@ -256,6 +314,100 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.Single(response);
         Assert.Equal(ticket.Id, response[0].Id);
         Assert.Equal(project.Id, response[0].ProjectId);
+    }
+
+    [Fact]
+    public async Task GetRecentActivity_AsAdmin_ReturnsLatestFiveNonCommentEvents()
+    {
+        var (_, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
+        var now = DateTime.UtcNow;
+        var secondTicket = await CreateTicketAsync(project.Id, submitter.Id, developer.Id, "Second Ticket");
+
+        await AddHistoryAsync(ticket.Id, submitter.Id, TicketHistoryTypes.Created, now.AddMinutes(-6));
+        await AddHistoryAsync(ticket.Id, pm.Id, TicketHistoryTypes.UpdatePriority, now.AddMinutes(-5), "Low", "High");
+        await AddHistoryAsync(ticket.Id, developer.Id, TicketHistoryTypes.UpdateStatus, now.AddMinutes(-4), "New", "Testing");
+        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.DeveloperAssigned, now.AddMinutes(-3), relatedEntityName: "Assigned Dev");
+        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.Resolved, now.AddMinutes(-2));
+        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.DeveloperRemoved, now.AddMinutes(-1), relatedEntityName: "Assigned Dev");
+        await AddCommentAsync(ticket.Id, admin.Id, "Hidden admin comment", now);
+
+        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+
+        var response = await client.GetFromJsonAsync<List<RecentActivityDto>>("/tickets/recent-activity");
+
+        Assert.NotNull(response);
+        Assert.Equal(5, response.Count);
+        Assert.DoesNotContain(response, activity => activity.Type == RecentActivityTypes.CommentAdded);
+        Assert.Equal(
+            response.OrderByDescending(activity => activity.OccurredAt).Select(activity => activity.Id),
+            response.Select(activity => activity.Id));
+        Assert.Equal(RecentActivityTypes.AssigneeChanged, response[0].Type);
+    }
+
+    [Fact]
+    public async Task GetRecentActivity_AsDeveloper_ReturnsProjectLifecycleAndAssignedCommentsOnly()
+    {
+        var (company, project, ticket, _, pm, developer, submitter) = await SetupTestScenario();
+        var now = DateTime.UtcNow;
+
+        var otherDeveloperUserId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(otherDeveloperUserId);
+        var otherDeveloper = new CompanyMember
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = otherDeveloperUserId,
+            CompanyId = company.Id,
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Developer).Select(r => r.Id).FirstAsync()
+        };
+        otherDeveloper.AssignedProjects.Add(project);
+        _db.CompanyMembers.Add(otherDeveloper);
+        await _db.SaveChangesAsync();
+
+        var otherTicket = await CreateTicketAsync(project.Id, submitter.Id, otherDeveloper.Id, "Project Ticket");
+
+        await AddHistoryAsync(otherTicket.Id, pm.Id, TicketHistoryTypes.UpdatePriority, now.AddMinutes(-2), "Low", "Urgent");
+        await AddCommentAsync(otherTicket.Id, pm.Id, "Not assigned comment", now.AddMinutes(-1));
+        await AddCommentAsync(ticket.Id, pm.Id, "Assigned ticket comment", now);
+
+        var client = _app.CreateClient(developer.UserId, RoleNames.Developer);
+
+        var response = await client.GetFromJsonAsync<List<RecentActivityDto>>("/tickets/recent-activity");
+
+        Assert.NotNull(response);
+        Assert.Contains(response, activity =>
+            activity.TicketId == otherTicket.Id && activity.Type == RecentActivityTypes.PriorityChanged);
+        Assert.DoesNotContain(response, activity =>
+            activity.TicketId == otherTicket.Id && activity.Type == RecentActivityTypes.CommentAdded);
+        Assert.Contains(response, activity =>
+            activity.TicketId == ticket.Id && activity.Type == RecentActivityTypes.CommentAdded && activity.Message == "Assigned ticket comment");
+    }
+
+    [Fact]
+    public async Task GetRecentActivity_AsSubmitter_ReturnsProjectLifecycleAndOwnTicketCommentsOnly()
+    {
+        var (company, project, ticket, _, pm, developer, submitter) = await SetupTestScenario();
+        var now = DateTime.UtcNow;
+
+        submitter.AssignedProjects.Add(project);
+        await _db.SaveChangesAsync();
+
+        var otherTicket = await CreateTicketAsync(project.Id, developer.Id, developer.Id, "Shared Project Ticket");
+
+        await AddHistoryAsync(otherTicket.Id, pm.Id, TicketHistoryTypes.UpdateStatus, now.AddMinutes(-2), "New", "In Development");
+        await AddCommentAsync(otherTicket.Id, pm.Id, "Project comment", now.AddMinutes(-1));
+        await AddCommentAsync(ticket.Id, pm.Id, "Own ticket comment", now);
+
+        var client = _app.CreateClient(submitter.UserId, RoleNames.Submitter);
+
+        var response = await client.GetFromJsonAsync<List<RecentActivityDto>>("/tickets/recent-activity");
+
+        Assert.NotNull(response);
+        Assert.Contains(response, activity =>
+            activity.TicketId == otherTicket.Id && activity.Type == RecentActivityTypes.StatusChanged);
+        Assert.DoesNotContain(response, activity =>
+            activity.TicketId == otherTicket.Id && activity.Type == RecentActivityTypes.CommentAdded);
+        Assert.Contains(response, activity =>
+            activity.TicketId == ticket.Id && activity.Type == RecentActivityTypes.CommentAdded && activity.Message == "Own ticket comment");
     }
 
     #endregion

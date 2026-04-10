@@ -51,7 +51,20 @@ public record BasicTicketDto(
     DateTime? UpdatedAt,
     MemberInfoDto Submitter,
     MemberInfoDto? Assignee
-);
+)
+{
+    public string DisplayId => FormatDisplayId(Id);
+
+    public static string FormatDisplayId(string ticketId)
+    {
+        var compactId = ticketId.Replace("-", string.Empty);
+        var suffix = compactId.Length >= 4
+            ? compactId[^4..]
+            : compactId.PadLeft(4, '0');
+
+        return $"#ZAP-{suffix.ToUpperInvariant()}";
+    }
+}
 
 public record CreateTicketDto(
     string Name,

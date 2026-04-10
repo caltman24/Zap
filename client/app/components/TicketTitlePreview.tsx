@@ -16,6 +16,9 @@ export default function TicketTitlePreview({
 }: TicketTitlePreviewProps) {
   return (
     <div className="space-y-2">
+      <span className="app-shell-mono text-[10px] uppercase tracking-[0.2em] text-[var(--app-outline)]">
+        {ticket.displayId}
+      </span>
       <div className="flex flex-wrap items-center gap-2">
         <span className={titleClassName}>{ticket.name}</span>
         <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${getTicketTypeChipClass(ticket.type)}`}>

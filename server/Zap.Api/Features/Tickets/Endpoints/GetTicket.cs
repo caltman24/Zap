@@ -33,6 +33,7 @@ public class GetTicket : IEndpoint
 
         return TypedResults.Ok(new Response(
             ticket.Id,
+            ticket.DisplayId,
             ticket.Name,
             ticket.Description,
             ticket.Priority,
@@ -51,6 +52,7 @@ public class GetTicket : IEndpoint
 
     private record Response(
         string Id,
+        string DisplayId,
         string Name,
         string Description,
         string Priority,

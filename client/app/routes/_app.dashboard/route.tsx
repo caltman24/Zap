@@ -4,7 +4,7 @@ import DashboardTicketTable from "~/components/DashboardTicketTable";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
 import { AuthenticationError } from "~/services/api.server/errors";
-import type { BasicTicketInfo, UserInfoResponse } from "~/services/api.server/types";
+import type { BasicTicketInfo, RecentActivityInfo, UserInfoResponse } from "~/services/api.server/types";
 import { getSession } from "~/services/sessions.server";
 import { requestJson } from "~/utils/api";
 import { JsonResponse, type JsonResponseResult } from "~/utils/response";
@@ -46,11 +46,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
       ? getMyTickets(tokenResponse.token)
       : Promise.resolve<BasicTicketInfo[] | null>(null);
 
-    const [projects, openTickets, resolvedTickets, ownTickets] = await Promise.all([
+    const [projects, openTickets, resolvedTickets, ownTickets, recentEvents] = await Promise.all([
       projectsRequest,
       requestJson<BasicTicketInfo[]>("/tickets/open", { method: "GET" }, tokenResponse.token),
       requestJson<BasicTicketInfo[]>("/tickets/resolved", { method: "GET" }, tokenResponse.token),
       ownTicketsRequest,
+      requestJson<RecentActivityInfo[]>("/tickets/recent-activity", { method: "GET" }, tokenResponse.token),
     ]);
 
     const summaryTickets = getDashboardSummaryTickets(userInfo.role, userInfo.memberId, ownTickets);
@@ -59,7 +60,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const ownResolvedTickets = summaryTickets?.filter((ticket) => ticket.status.toLowerCase() === "resolved") ?? [];
     const upcomingDeadlines = toUpcomingDeadlines(projects);
 
-    const recentActivity = [...openTickets, ...resolvedTickets]
+    const ticketSource = useOwnTicketSummary ? summaryTickets ?? [] : [...openTickets, ...resolvedTickets];
+    const recentTickets = ticketSource
       .sort((left, right) => getTicketUpdatedAt(right) - getTicketUpdatedAt(left))
       .slice(0, 5);
 
@@ -68,7 +70,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       totalTickets: useOwnTicketSummary ? summaryTickets?.length ?? 0 : openTickets.length + resolvedTickets.length,
       openTickets: useOwnTicketSummary ? ownOpenTickets.length : openTickets.length,
       closedTickets: useOwnTicketSummary ? ownResolvedTickets.length : resolvedTickets.length,
-      recentActivity,
+      recentTickets,
+      recentEvents,
       upcomingDeadlines,
     };
 
@@ -104,7 +107,7 @@ export default function DashboardRoute() {
   const projectLabel = getDashboardProjectLabel(userRole);
   const { ticketLabel, openTicketLabel, closedTicketLabel } = getDashboardTicketLabels(userInfo.role);
   const deadlineLabel = getDashboardDeadlineLabel(userRole);
-  const activityItems = data ? toDashboardActivityItems(data.recentActivity, userInfo) : [];
+  const activityItems = data ? toDashboardActivityItems(data.recentEvents, userInfo) : [];
   const location = useLocation();
 
   const statCards = data
@@ -148,12 +151,12 @@ export default function DashboardRoute() {
         })}
       </section>
 
-      <DashboardTicketTable
-        currentMemberId={userInfo.memberId}
-        currentUserRole={userRole}
-        tickets={data.recentActivity}
-        totalTickets={data.totalTickets}
-      />
+        <DashboardTicketTable
+          currentMemberId={userInfo.memberId}
+          currentUserRole={userRole}
+          tickets={data.recentTickets}
+          totalTickets={data.totalTickets}
+        />
 
       <section className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="space-y-4 lg:col-span-5">
@@ -212,31 +215,16 @@ export default function DashboardRoute() {
 
           <div className="rounded-2xl bg-[var(--app-surface-container-low)] p-6 outline-1 outline-[var(--app-outline-variant-soft)]">
             <div className="space-y-6">
-              {activityItems.map((item, index) => {
+              {activityItems.length > 0 ? activityItems.map((item, index) => {
                 const showLine = index < activityItems.length - 1;
 
-                if (item.variant === "commit") {
-                  return (
-                    <div className="relative flex gap-4" key={item.id}>
-                      {showLine ? (
-                        <div className="absolute bottom-0 left-4 top-10 w-px bg-[color:var(--app-outline-variant)]/10" />
-                      ) : null}
-                      <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--app-secondary)]/10 bg-[var(--app-secondary-container)]/30">
-                        <span className="material-symbols-outlined text-sm text-[var(--app-secondary)]">{item.icon}</span>
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <p className="text-sm text-[var(--app-on-surface)]">
-                          New commit on <span className="app-shell-mono text-xs">{item.branchName}</span> by <span className="font-bold">{item.actorName}</span>
-                        </p>
-                        <p className="line-clamp-1 text-xs text-[var(--app-on-surface-variant)]">{item.detail}</p>
-                        <span className="app-shell-mono text-[10px] text-[var(--app-outline)]">{item.timestamp}</span>
-                      </div>
-                    </div>
-                  );
-                }
-
                 return (
-                  <div className="relative flex gap-4" key={item.id}>
+                  <Link
+                    className="group relative flex gap-4 rounded-xl p-2 -m-2 transition-colors hover:bg-[var(--app-surface-container-high)]/30"
+                    key={item.id}
+                    state={{ from: location.pathname }}
+                    to={`/projects/${data.recentEvents[index]?.projectId}/tickets/${data.recentEvents[index]?.ticketId}`}
+                  >
                     {showLine ? (
                       <div className="absolute bottom-0 left-4 top-10 w-px bg-[color:var(--app-outline-variant)]/10" />
                     ) : null}
@@ -255,12 +243,17 @@ export default function DashboardRoute() {
                       <p className="text-sm text-[var(--app-on-surface)]">
                         <span className="font-bold">{item.actorName}</span> {item.action} <span className="app-shell-mono text-xs text-[var(--app-primary)]">{item.ticketLabel}</span>
                       </p>
-                      <p className="text-xs italic text-[var(--app-on-surface-variant)]">&quot;{item.detail}&quot;</p>
+                      <div className="flex items-center gap-2 text-xs text-[var(--app-on-surface-variant)]">
+                        <span className="material-symbols-outlined text-sm text-[var(--app-outline)]">{item.icon}</span>
+                        <p className="min-w-0 italic">&quot;{item.detail}&quot;</p>
+                      </div>
                       <span className="app-shell-mono text-[10px] text-[var(--app-outline)]">{item.timestamp}</span>
                     </div>
-                  </div>
+                  </Link>
                 );
-              })}
+              }) : (
+                <div className="text-sm text-[var(--app-on-surface-variant)]">No recent activity found.</div>
+              )}
             </div>
           </div>
         </div>
