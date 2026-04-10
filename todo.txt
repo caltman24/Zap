@@ -13,11 +13,6 @@ Redesign TODO:
 - Chat box alignment and spacing
 - Finish pagination on dashboard ticket table
 
-BUG: When PM is editing a ticket they submitted but not apart of the project of the ticket,
-client gets a 400 bad request from the server.
-Expected: PM should only be able to edit a ticket from a project they are not assigned to
-when they are the submitters
-
 Functionality for new design:
  - Recent Activity data
  - Whole app search bar in navbar

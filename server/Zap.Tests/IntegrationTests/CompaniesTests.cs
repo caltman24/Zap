@@ -190,7 +190,7 @@ public class CompaniesTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task Get_Company_Projects_All_Returns_Success()
+    public async Task Get_Company_Projects_Without_Filter_Returns_Unarchived_Only()
     {
         var userId = Guid.NewGuid().ToString();
         await _app.CreateUserAsync(userId);
@@ -228,12 +228,28 @@ public class CompaniesTests : IAsyncDisposable
         var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>("/company/projects");
 
         Assert.NotNull(res);
-        Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
+        Assert.Null(res.FirstOrDefault(x => x.Id == projectId && x.IsArchived));
         Assert.NotNull(res.FirstOrDefault(x => x.Id == projectId2 && !x.IsArchived));
     }
 
     [Fact]
-    public async Task Get_Company_Projects_As_Developer_Returns_Assigned_Projects_Only()
+    public async Task Get_Company_Projects_As_Developer_Returns_Forbidden()
+    {
+        var userId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
+        Assert.NotNull(user);
+
+        await CreateTestCompany(_db, userId, user, role: RoleNames.Developer);
+        var client = _app.CreateClient(userId, RoleNames.Developer);
+
+        var res = await client.GetAsync("/company/projects?isArchived=false");
+
+        Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_My_Projects_As_Developer_Returns_Assigned_Unarchived_Projects_Only()
     {
         var adminUserId = Guid.NewGuid().ToString();
         var developerUserId = Guid.NewGuid().ToString();
@@ -246,6 +262,7 @@ public class CompaniesTests : IAsyncDisposable
         var companyId = Guid.NewGuid().ToString();
         var assignedProjectId = Guid.NewGuid().ToString();
         var hiddenProjectId = Guid.NewGuid().ToString();
+        var archivedProjectId = Guid.NewGuid().ToString();
 
         await CreateTestCompany(_db, adminUserId, adminUser, [
             new Project
@@ -267,6 +284,16 @@ public class CompaniesTests : IAsyncDisposable
                 CompanyId = companyId,
                 DueDate = DateTime.Now.AddDays(1),
                 IsArchived = false
+            },
+            new Project
+            {
+                Id = archivedProjectId,
+                Name = "Archived Project",
+                Description = "Archived Project",
+                Priority = "Urgent",
+                CompanyId = companyId,
+                DueDate = DateTime.Now.AddDays(1),
+                IsArchived = true
             }
         ], companyId);
 
@@ -277,13 +304,13 @@ public class CompaniesTests : IAsyncDisposable
             RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Developer).Select(r => r.Id).FirstAsync()
         };
 
-        var assignedProject = await _db.Projects.FirstAsync(p => p.Id == assignedProjectId);
-        developerMember.AssignedProjects.Add(assignedProject);
+        developerMember.AssignedProjects.Add(await _db.Projects.FirstAsync(p => p.Id == assignedProjectId));
+        developerMember.AssignedProjects.Add(await _db.Projects.FirstAsync(p => p.Id == archivedProjectId));
         _db.CompanyMembers.Add(developerMember);
         await _db.SaveChangesAsync();
 
         var client = _app.CreateClient(developerUserId, RoleNames.Developer);
-        var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>("/company/projects?isArchived=false");
+        var res = await client.GetFromJsonAsync<List<CompanyProjectDto>>($"/members/{developerMember.Id}/myprojects");
 
         Assert.NotNull(res);
         Assert.Single(res);
