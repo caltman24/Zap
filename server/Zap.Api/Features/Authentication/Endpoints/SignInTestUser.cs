@@ -15,8 +15,13 @@ public class SignInTestUser : IEndpoint
     }
 
     private static async Task<Results<BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>> Handle(
-        SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, ILogger<Program> logger)
+        SignInManager<AppUser> signInManager,
+        UserManager<AppUser> userManager,
+        HttpContext context,
+        ILogger<SignInTestUser> logger)
     {
+        logger.LogDebug("Development test sign-in endpoint used. TraceId: {TraceId}", context.TraceIdentifier);
+
         var user = await userManager.FindByEmailAsync("test@test.com");
         if (user != null)
         {
@@ -40,8 +45,7 @@ public class SignInTestUser : IEndpoint
 
         await userManager.AddCustomClaimsAsync(user);
 
-        logger.LogDebug("Created test user {Email} with password Password1! and Role {Role}",
-            user.Email, RoleNames.Admin);
+        logger.LogInformation("Development test user auto-created with role {Role}.", RoleNames.Admin);
 
         var principal = await signInManager.CreateUserPrincipalAsync(user);
 

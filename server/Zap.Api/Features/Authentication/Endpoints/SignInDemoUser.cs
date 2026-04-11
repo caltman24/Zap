@@ -20,10 +20,20 @@ public class SignInDemoUser : IEndpoint
     private static async Task<Results<BadRequest<string>, SignInHttpResult>> Handle(
         Request request,
         IDemoEnvironmentService demoEnvironmentService,
-        SignInManager<AppUser> signInManager)
+        SignInManager<AppUser> signInManager,
+        HttpContext context,
+        ILogger<SignInDemoUser> logger)
     {
         var user = await demoEnvironmentService.GetDemoUserByRoleAsync(request.Role);
-        if (user == null) return TypedResults.BadRequest("Invalid demo role");
+        if (user == null)
+        {
+            logger.LogWarning("Rejected demo sign-in request for invalid role {Role}. TraceId: {TraceId}",
+                request.Role, context.TraceIdentifier);
+            return TypedResults.BadRequest("Invalid demo role");
+        }
+
+        logger.LogInformation("Issued demo sign-in for role {Role}. TraceId: {TraceId}",
+            request.Role, context.TraceIdentifier);
 
         var principal = await signInManager.CreateUserPrincipalAsync(user);
 

@@ -43,6 +43,8 @@ msbuild.log
 msbuild.err
 msbuild.wrn
 appsettings.*.json
+!Zap.Api/appsettings.Development.json
+!Zap.Api/appsettings.Production.json
 obj/**/*
 
 .env

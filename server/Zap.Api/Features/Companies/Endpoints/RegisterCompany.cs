@@ -1,11 +1,8 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Identity;
 using Zap.Api.Common;
 using Zap.Api.Common.Authorization;
-using Zap.Api.Common.Constants;
 using Zap.Api.Common.Filters;
-using Zap.Api.Data.Models;
 using Zap.Api.Features.Companies.Services;
 
 namespace Zap.Api.Features.Companies.Endpoints;
@@ -21,8 +18,7 @@ public class RegisterCompany : IEndpoint
 
     private static async Task<Results<BadRequest<string>, NoContent>>
         Handle(
-            Request request, ICompanyService companyService, CurrentUser currentUser,
-            HttpContext context, ILogger<Program> logger, UserManager<AppUser> userManager)
+            Request request, ICompanyService companyService, CurrentUser currentUser)
     {
         if (currentUser.User == null) return TypedResults.BadRequest("User not found");
 
@@ -32,8 +28,6 @@ public class RegisterCompany : IEndpoint
             request.Name,
             request.Description,
             currentUser.User));
-
-        logger.LogDebug("Added user {Email} to role {Role}", currentUser.Email, RoleNames.Admin);
 
         return TypedResults.NoContent();
     }

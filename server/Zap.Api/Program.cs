@@ -18,10 +18,17 @@ else
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddStructuredLogging(builder.Configuration);
+builder.AddStructuredLogging();
 builder.Services.AddRequiredServices(builder.Configuration);
 
 var app = builder.Build();
+var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Zap.Api.Startup");
+var configuration = app.Services.GetRequiredService<IConfiguration>();
+
+startupLogger.LogInformation("Starting Zap.Api in {Environment} environment.", app.Environment.EnvironmentName);
+
+if (configuration.GetValue<bool>("Demo:EnableReset"))
+    startupLogger.LogWarning("Demo reset endpoint is enabled.");
 
 // Determine whether to apply EF Core migrations on startup.
 // Controlled by the environment variable `APPLY_MIGRATIONS`.
@@ -43,32 +50,31 @@ if (applyMigrations)
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<Program>>();
         try
         {
             var db = services.GetRequiredService<AppDbContext>();
             if (db.Database.IsRelational())
             {
                 db.Database.Migrate();
-                logger.LogInformation("Database migrations applied successfully.");
+                startupLogger.LogInformation("Database migrations applied successfully.");
             }
             else
             {
-                logger.LogInformation("Non-relational database provider detected; skipping migrations.");
+                startupLogger.LogInformation("Non-relational database provider detected; skipping migrations.");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while applying database migrations.");
+            startupLogger.LogError(ex, "An error occurred while applying database migrations.");
         }
     }
 }
 else
 {
     // Keep a startup log entry so operators can tell whether migrations were intentionally skipped.
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation(
-        "APPLY_MIGRATIONS is false or unset for this environment; skipping automatic database migrations.");
+    startupLogger.LogInformation(
+        "Automatic database migrations skipped for {Environment} environment.",
+        app.Environment.EnvironmentName);
 }
 
 // Seed test data in Development environment only.
@@ -78,19 +84,20 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<Program>>();
         try
         {
-            await TestDataSeeder.SeedTestDataAsync(services, logger, app.Environment);
+            await TestDataSeeder.SeedTestDataAsync(services, startupLogger, app.Environment);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while seeding test data.");
+            startupLogger.LogError(ex, "An error occurred while seeding test data.");
         }
     }
 
 if (app.Environment.IsDevelopment())
 {
+    startupLogger.LogInformation(
+        "Development-only API features enabled: OpenAPI, Scalar, /auth/signin-test, /company/testmembers, and test data seeding.");
     app.MapOpenApi().AllowAnonymous();
     app.MapScalarApiReference().AllowAnonymous();
 }
@@ -100,16 +107,23 @@ app.UseHttpsRedirection();
 app.UseRequiredServices();
 
 // Lightweight health endpoint used by orchestrators/load-balancers.
-app.MapGet("/health", async (AppDbContext db) =>
+app.MapGet("/health", async (AppDbContext db, HttpContext context, ILoggerFactory loggerFactory) =>
 {
+    var logger = loggerFactory.CreateLogger("Zap.Api.Health");
+
     try
     {
         // Simple connectivity check
         var canConnect = await db.Database.CanConnectAsync();
-        return canConnect ? Results.Ok("Healthy") : Results.StatusCode(503);
+        if (canConnect) return Results.Ok("Healthy");
+
+        logger.LogWarning("Database health check reported unhealthy status. TraceId: {TraceId}",
+            context.TraceIdentifier);
+        return Results.StatusCode(503);
     }
-    catch
+    catch (Exception ex)
     {
+        logger.LogError(ex, "Database health check failed. TraceId: {TraceId}", context.TraceIdentifier);
         return Results.StatusCode(503);
     }
 }).AllowAnonymous();

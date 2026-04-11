@@ -32,10 +32,7 @@ public sealed class S3FileUploadService : IFileUploadService
     public async Task<(string url, string key)> UploadAvatarAsync(IFormFile file, string? oldKey = null)
     {
         if (oldKey != null)
-        {
-            _logger.LogDebug("Deleting old user avatar: {Key}", oldKey);
             await DeleteFileAsync(oldKey);
-        }
 
         return await UploadFileAsync(file, "users/avatars", 2);
     }
@@ -49,10 +46,7 @@ public sealed class S3FileUploadService : IFileUploadService
     public async Task<(string url, string key)> UploadCompanyLogoAsync(IFormFile file, string? oldKey = null)
     {
         if (oldKey != null)
-        {
-            _logger.LogDebug("Deleting old company logo: {Key}", oldKey);
             await DeleteFileAsync(oldKey);
-        }
 
         return await UploadFileAsync(file, "companies/logos", 2);
     }
@@ -64,8 +58,6 @@ public sealed class S3FileUploadService : IFileUploadService
 
     public async Task DeleteFileAsync(string key)
     {
-        _logger.LogDebug("Deleting file: {Key}", key);
-
         var request = new DeleteObjectRequest
         {
             BucketName = _bucketName,
@@ -75,11 +67,10 @@ public sealed class S3FileUploadService : IFileUploadService
         try
         {
             await _s3Client.DeleteObjectAsync(request);
-            _logger.LogDebug("Successfully deleted file: {Key}", key);
         }
         catch (AmazonS3Exception amazonS3Exception)
         {
-            _logger.LogError(amazonS3Exception, "Failed to delete file: {Key}", key);
+            _logger.LogError(amazonS3Exception, "Failed to delete file from S3.");
             throw new Exception("Failed to delete file");
         }
     }
@@ -95,7 +86,6 @@ public sealed class S3FileUploadService : IFileUploadService
         ValidateFileType(file);
 
         var key = $"{prefix}/{Guid.NewGuid()}-{Path.GetFileName(file.FileName)}";
-        _logger.LogDebug("Generated S3 key: {Key}", key);
 
         var request = new PutObjectRequest
         {
@@ -118,16 +108,15 @@ public sealed class S3FileUploadService : IFileUploadService
             var res = await _s3Client.PutObjectAsync(request);
             if (res is not { HttpStatusCode: HttpStatusCode.OK })
             {
-                _logger.LogError("Failed to upload file: {Key}", key);
+                _logger.LogError("Failed to upload file to S3.");
                 throw new Exception("Failed to upload file");
             }
 
-            _logger.LogInformation("Successfully uploaded file: {Key}, size: {SizeKB}KB", key, fileSizeBytes / 1024);
             return ($"https://{_bucketName}.s3.{_region}.amazonaws.com/{key}", key);
         }
         catch (AmazonS3Exception amazonS3Exception)
         {
-            _logger.LogError(amazonS3Exception, "Failed to upload file: {Key}", key);
+            _logger.LogError(amazonS3Exception, "Failed to upload file to S3.");
             throw new Exception("Failed to upload file");
         }
     }

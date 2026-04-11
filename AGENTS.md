@@ -25,6 +25,11 @@ Use this file as project-specific implementation context.
 
 - Prefer existing patterns over introducing new abstractions.
 - Keep changes aligned with the current system design.
+- Add new logs only when they provide clear operational value or are needed to diagnose a real failure path.
+- Do not add logs just because a code path exists; avoid routine success logs, duplicated logs, and low-signal debug noise.
+- For Development, prefer readable diagnostic logs that help local debugging.
+- For Production, log only the minimum needed for support and incident response: startup/shutdown, request failures, slow requests, rate limiting, and other abnormal or security-relevant events.
+- Never log secrets, tokens, passwords, claims dumps, request bodies, or other sensitive user data.
 
 ## Testing Strategy
 

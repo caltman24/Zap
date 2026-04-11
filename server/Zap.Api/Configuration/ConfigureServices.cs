@@ -1,4 +1,5 @@
-﻿using System.Threading.RateLimiting;
+using System.Globalization;
+using System.Threading.RateLimiting;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
@@ -134,6 +135,22 @@ public static class ConfigureServices
     {
         services.AddRateLimiter(opts =>
         {
+            opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            opts.OnRejected = (context, _) =>
+            {
+                context.HttpContext.Items["RateLimitRejected"] = true;
+
+                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
+                {
+                    var retryAfterSeconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
+                    context.HttpContext.Items["RetryAfterSeconds"] = retryAfterSeconds;
+                    context.HttpContext.Response.Headers.RetryAfter =
+                        retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+                }
+
+                return ValueTask.CompletedTask;
+            };
+
             // permit 10 requests per minute by user (identity) or globally:
             opts.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {

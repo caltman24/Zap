@@ -20,7 +20,7 @@ public class CreateProject : IEndpoint
 
 
     private static async Task<Results<BadRequest<string>, CreatedAtRoute<ProjectDto>>> Handle(
-        Request request, IProjectService projectService, CurrentUser currentUser, ILogger<Program> logger)
+        Request request, IProjectService projectService, CurrentUser currentUser)
     {
         var newProject = await projectService.CreateProjectAsync(new CreateProjectDto
         (

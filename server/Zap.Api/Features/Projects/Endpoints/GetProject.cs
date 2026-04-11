@@ -23,8 +23,7 @@ public class GetProject : IEndpoint
         [FromRoute] string projectId,
         IProjectService projectService,
         IProjectAuthorizationService projectAuthorizationService,
-        CurrentUser currentUser,
-        ILogger<Program> logger)
+        CurrentUser currentUser)
     {
         var project = await projectService.GetProjectByIdAsync(projectId);
         if (project == null) return TypedResults.NotFound("Project not found");

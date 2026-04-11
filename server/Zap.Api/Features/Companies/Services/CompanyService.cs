@@ -14,12 +14,10 @@ public sealed class CompanyService : ICompanyService
 
     private readonly AppDbContext _db;
     private readonly IFileUploadService _fileUploadService;
-    private readonly ILogger<CompanyService> _logger;
 
-    public CompanyService(AppDbContext db, ILogger<CompanyService> logger, IFileUploadService fileUploadService)
+    public CompanyService(AppDbContext db, IFileUploadService fileUploadService)
     {
         _db = db;
-        _logger = logger;
         _fileUploadService = fileUploadService;
     }
 
@@ -50,14 +48,11 @@ public sealed class CompanyService : ICompanyService
 
         if (updateCompanyDto.RemoveLogo && company.LogoKey != null)
         {
-            _logger.LogInformation("User removing company logo {LogoKey}", company.LogoKey);
             try
             {
                 await _fileUploadService.DeleteFileAsync(company.LogoKey);
                 company.LogoUrl = null;
                 company.LogoKey = null;
-                _logger.LogInformation("User successfully removed company logo {LogoKey}",
-                    company.LogoKey);
             }
             catch
             {
@@ -66,14 +61,11 @@ public sealed class CompanyService : ICompanyService
         }
         else if (updateCompanyDto.Logo != null)
         {
-            _logger.LogInformation("User uploading company logo, {FileName}", updateCompanyDto.Logo.FileName);
             try
             {
                 // Upload file
                 (company.LogoUrl, company.LogoKey) =
                     await _fileUploadService.UploadCompanyLogoAsync(updateCompanyDto.Logo, company.LogoKey);
-                _logger.LogInformation("User successfully uploaded company logo {LogoKey}",
-                    company.LogoKey);
             }
             catch
             {

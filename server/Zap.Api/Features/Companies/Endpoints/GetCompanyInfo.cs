@@ -16,8 +16,7 @@ public class GetCompanyInfo : IEndpoint
 
     private static async Task<Results<BadRequest<string>, Ok<CompanyInfoDto>>> Handle(
         CurrentUser currentUser,
-        ICompanyService companyService,
-        ILogger<Program> logger)
+        ICompanyService companyService)
     {
         var companyInfo = await companyService.GetCompanyInfoAsync(currentUser.CompanyId!);
         if (companyInfo == null) return TypedResults.BadRequest("Failed to get company info");

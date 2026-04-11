@@ -14,7 +14,8 @@ public class ResetDemoEnvironment : IEndpoint
     private static async Task<Results<ForbidHttpResult, NoContent>> Handle(
         HttpRequest request,
         IConfiguration configuration,
-        IDemoEnvironmentService demoEnvironmentService)
+        IDemoEnvironmentService demoEnvironmentService,
+        ILogger<ResetDemoEnvironment> logger)
     {
         var isEnabled = configuration["Demo:EnableReset"];
         var expectedKey = configuration["Demo:ResetKey"];
@@ -23,7 +24,14 @@ public class ResetDemoEnvironment : IEndpoint
         if (!string.Equals(isEnabled, bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
             string.IsNullOrWhiteSpace(expectedKey) ||
             expectedKey != providedKey)
+        {
+            logger.LogWarning("Rejected demo reset request. TraceId: {TraceId}",
+                request.HttpContext.TraceIdentifier);
             return TypedResults.Forbid();
+        }
+
+        logger.LogInformation("Accepted demo reset request. TraceId: {TraceId}",
+            request.HttpContext.TraceIdentifier);
 
         await demoEnvironmentService.ResetDemoEnvironmentAsync();
         return TypedResults.NoContent();

@@ -20,7 +20,7 @@ public class RegisterUser : IEndpoint
     private static async Task<Results<BadRequest<string>, BadRequest<IEnumerable<IdentityError>>, SignInHttpResult>>
         Handle(
             Request request, UserManager<AppUser> userManager,
-            SignInManager<AppUser> signInManager, ILogger<Program> logger)
+            SignInManager<AppUser> signInManager)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user != null) return TypedResults.BadRequest("An account is already registered with this email");
@@ -39,12 +39,8 @@ public class RegisterUser : IEndpoint
 
         var result = await userManager.CreateAsync(newUser, request.Password);
         if (!result.Succeeded) return TypedResults.BadRequest(result.Errors);
-        logger.LogDebug("Created new user {Email} with default avatar {AvatarUrl}", newUser.Email,
-            newUser.AvatarUrl);
-        logger.LogInformation("New user registered: {Email}", newUser.Email);
 
         await userManager.AddCustomClaimsAsync(newUser);
-        logger.LogDebug("Added custom claims to user {Email}", newUser.Email);
 
         var principal = await signInManager.CreateUserPrincipalAsync(newUser);
 

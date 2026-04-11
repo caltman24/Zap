@@ -23,10 +23,8 @@ public class RefreshTokens : IEndpoint
         SignInManager<AppUser> signInManager,
         IOptionsMonitor<BearerTokenOptions> bearerTokenOptions,
         TimeProvider timeProvider,
-        ILogger<Program> logger)
+        ILogger<RefreshTokens> logger)
     {
-        logger.LogDebug("Processing refresh token request");
-
         try
         {
             var refreshTokenProtector =
@@ -35,34 +33,20 @@ public class RefreshTokens : IEndpoint
             var refreshTicket = refreshTokenProtector.Unprotect(request.RefreshToken);
 
             if (refreshTicket == null)
-            {
-                logger.LogWarning("Refresh token could not be unprotected");
                 return TypedResults.Challenge();
-            }
 
             if (refreshTicket.Properties?.ExpiresUtc is not { } expiresUtc)
-            {
-                logger.LogWarning("Refresh ticket doesn't have an expiration time");
                 return TypedResults.Challenge();
-            }
 
             var currentTime = timeProvider.GetUtcNow();
             if (currentTime >= expiresUtc)
-            {
-                logger.LogWarning("Refresh token expired at {ExpiryTime}, current time is {CurrentTime}",
-                    expiresUtc, currentTime);
                 return TypedResults.Challenge();
-            }
 
             var user = await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal);
 
             if (user == null)
-            {
-                logger.LogWarning("Security stamp validation failed for user");
                 return TypedResults.Challenge();
-            }
 
-            logger.LogInformation("Refresh token validated successfully for user {Email}", user.Email);
             var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
 
             return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);

@@ -21,10 +21,8 @@ public class UpdateCompanyInfo : IEndpoint
     private static async Task<Results<BadRequest<string>, NoContent, ProblemHttpResult>> Handle(
         [FromForm] IFormFile? file,
         [FromForm] Request updateCompanyInfoRequest,
-        HttpContext context,
         ICompanyService companyService,
-        CurrentUser currentUser,
-        ILogger<Program> logger)
+        CurrentUser currentUser)
     {
         if (currentUser.CompanyId == null) return TypedResults.BadRequest("User not in company");
 
