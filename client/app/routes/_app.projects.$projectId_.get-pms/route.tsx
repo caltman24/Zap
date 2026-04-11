@@ -1,14 +1,14 @@
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import {data, LoaderFunctionArgs, redirect} from "@remix-run/node";
 import apiClient from "~/services/api.server/apiClient";
-import { UserInfoResponse } from "~/services/api.server/types";
-import { getSession } from "~/services/sessions.server";
-import { ForbiddenResponse } from "~/utils/response";
-import { hasPermission } from "~/utils/permissions";
+import {UserInfoResponse} from "~/services/api.server/types";
+import {getSession} from "~/services/sessions.server";
+import {ForbiddenResponse} from "~/utils/response";
+import {hasPermission} from "~/utils/permissions";
 import tryCatch from "~/utils/tryCatch";
-import { getAssignablePMs } from "./server.get-pms";
+import {getAssignablePMs} from "./server.get-pms";
 
 // get project managers that isnt assigned to the project
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({request, params}: LoaderFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
     const user = session.get("user") as UserInfoResponse;

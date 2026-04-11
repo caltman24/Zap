@@ -34,10 +34,8 @@ internal static class ActiveProjectFilterExtensions
 
             // If project is archived, only allow specific operations
             if (project.IsArchived)
-            {
                 return TypedResults.BadRequest(
                     "Cannot perform this operation on an archived project.");
-            }
 
             return await next(context);
         }

@@ -37,10 +37,7 @@ public sealed class ProjectAuthorizationService(AppDbContext db) : IProjectAutho
 
     public ProjectCapabilitiesDto GetCapabilities(ProjectDto project, CurrentUser currentUser)
     {
-        if (currentUser.Member == null)
-        {
-            return new ProjectCapabilitiesDto(false, false, false, false, false);
-        }
+        if (currentUser.Member == null) return new ProjectCapabilitiesDto(false, false, false, false, false);
 
         var isAdmin = currentUser.Member.Role.Name == RoleNames.Admin;
         var isProjectManager = project.ProjectManager?.Id == currentUser.Member.Id;
@@ -49,12 +46,12 @@ public sealed class ProjectAuthorizationService(AppDbContext db) : IProjectAutho
         var canManageProject = isAdmin || isProjectManager;
 
         return new ProjectCapabilitiesDto(
-            CanEdit: canManageProject,
-            CanArchive: canManageProject,
-            CanAssignProjectManager: isAdmin && !project.IsArchived,
-            CanManageMembers: canManageProject && !project.IsArchived,
-            CanCreateTicket: !project.IsArchived && (isAdmin || isProjectManager ||
-                currentUser.Member.Role.Name == RoleNames.Submitter && isAssignedMember));
+            canManageProject,
+            canManageProject,
+            isAdmin && !project.IsArchived,
+            canManageProject && !project.IsArchived,
+            !project.IsArchived && (isAdmin || isProjectManager ||
+                                    (currentUser.Member.Role.Name == RoleNames.Submitter && isAssignedMember)));
     }
 
     private sealed record ProjectAccessContext(

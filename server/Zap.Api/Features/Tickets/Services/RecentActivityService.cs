@@ -12,10 +12,7 @@ public class RecentActivityService(AppDbContext db) : IRecentActivityService
 {
     public async Task<List<RecentActivityDto>> GetRecentActivityAsync(CurrentUser currentUser, int limit = 5)
     {
-        if (currentUser.Member == null || string.IsNullOrWhiteSpace(currentUser.CompanyId) || limit <= 0)
-        {
-            return [];
-        }
+        if (currentUser.Member == null || string.IsNullOrWhiteSpace(currentUser.CompanyId) || limit <= 0) return [];
 
         var lifecycleEventsTask = GetLifecycleEventsAsync(currentUser, limit);
         var commentEventsTask = GetCommentEventsAsync(currentUser, limit);
@@ -39,11 +36,11 @@ public class RecentActivityService(AppDbContext db) : IRecentActivityService
             .AsNoTracking()
             .Where(history => visibleTicketIds.Contains(history.TicketId))
             .Where(history => history.Type == TicketHistoryTypes.Created
-                || history.Type == TicketHistoryTypes.UpdateStatus
-                || history.Type == TicketHistoryTypes.UpdatePriority
-                || history.Type == TicketHistoryTypes.Resolved
-                || history.Type == TicketHistoryTypes.DeveloperAssigned
-                || history.Type == TicketHistoryTypes.DeveloperRemoved)
+                              || history.Type == TicketHistoryTypes.UpdateStatus
+                              || history.Type == TicketHistoryTypes.UpdatePriority
+                              || history.Type == TicketHistoryTypes.Resolved
+                              || history.Type == TicketHistoryTypes.DeveloperAssigned
+                              || history.Type == TicketHistoryTypes.DeveloperRemoved)
             .OrderByDescending(history => history.CreatedAt)
             .Take(limit)
             .Select(history => new HistoryActivityProjection(
@@ -72,10 +69,7 @@ public class RecentActivityService(AppDbContext db) : IRecentActivityService
     {
         var member = currentUser.Member!;
 
-        if (member.Role.Name == RoleNames.Admin)
-        {
-            return [];
-        }
+        if (member.Role.Name == RoleNames.Admin) return [];
 
         var visibleTickets = GetCommentVisibleTicketsQuery(member.Id, member.Role.Name, currentUser.CompanyId!);
         var visibleTicketIds = visibleTickets.Select(ticket => ticket.Id);
@@ -125,8 +119,10 @@ public class RecentActivityService(AppDbContext db) : IRecentActivityService
         {
             RoleNames.Admin => query,
             RoleNames.ProjectManager => query.Where(ticket => ticket.Project.ProjectManagerId == memberId),
-            RoleNames.Developer => query.Where(ticket => ticket.Project.AssignedMembers.Any(member => member.Id == memberId)),
-            RoleNames.Submitter => query.Where(ticket => ticket.Project.AssignedMembers.Any(member => member.Id == memberId) || ticket.SubmitterId == memberId),
+            RoleNames.Developer => query.Where(ticket =>
+                ticket.Project.AssignedMembers.Any(member => member.Id == memberId)),
+            RoleNames.Submitter => query.Where(ticket =>
+                ticket.Project.AssignedMembers.Any(member => member.Id == memberId) || ticket.SubmitterId == memberId),
             _ => query.Where(_ => false)
         };
     }

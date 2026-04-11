@@ -26,6 +26,7 @@ public class SignInUser : IEndpoint
     }
 
     public record Request(string Email, string Password);
+
     public class RequestValidator : AbstractValidator<Request>
     {
         public RequestValidator()

@@ -23,9 +23,7 @@ public class ResetDemoEnvironment : IEndpoint
         if (!string.Equals(isEnabled, bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
             string.IsNullOrWhiteSpace(expectedKey) ||
             expectedKey != providedKey)
-        {
             return TypedResults.Forbid();
-        }
 
         await demoEnvironmentService.ResetDemoEnvironmentAsync();
         return TypedResults.NoContent();

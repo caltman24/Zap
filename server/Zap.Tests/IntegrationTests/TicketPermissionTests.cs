@@ -1,11 +1,4 @@
-using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
-using Zap.Api.Data;
-using Zap.Api.Data.Models;
-using Zap.Tests.IntegrationTests;
-using Microsoft.EntityFrameworkCore;
-using Zap.Api.Common.Constants;
 using Zap.Api.Common.Enums;
 using Zap.Api.Features.Tickets.Services;
 
@@ -30,7 +23,9 @@ public class TicketPermissionTests : IAsyncDisposable
 
     #region Helper Methods
 
-    private async Task<(Company company, Project project, Ticket ticket, CompanyMember admin, CompanyMember pm, CompanyMember developer, CompanyMember submitter)> SetupTestScenario()
+    private async
+        Task<(Company company, Project project, Ticket ticket, CompanyMember admin, CompanyMember pm, CompanyMember
+            developer, CompanyMember submitter)> SetupTestScenario()
     {
         // Create users
         var adminUserId = Guid.NewGuid().ToString();
@@ -63,14 +58,15 @@ public class TicketPermissionTests : IAsyncDisposable
 
         var admin = await _db.CompanyMembers
             .FirstAsync(cm => cm.UserId == adminUserId && cm.CompanyId == company.Id);
-        
+
         // Add PM
         var pm = new CompanyMember
         {
             Id = Guid.NewGuid().ToString(),
             UserId = pmUserId,
             CompanyId = company.Id,
-            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.ProjectManager).Select(r => r.Id).FirstAsync()
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.ProjectManager).Select(r => r.Id)
+                .FirstAsync()
         };
         _db.CompanyMembers.Add(pm);
 
@@ -132,7 +128,9 @@ public class TicketPermissionTests : IAsyncDisposable
         return (company, project, ticket, admin, pm, developer, submitter);
     }
 
-    private async Task<(Company company, Project project, Ticket ticket, CompanyMember admin, CompanyMember projectPm, CompanyMember submitterPm, CompanyMember developer)> SetupProjectManagerSubmitterOutsideProjectScenario()
+    private async
+        Task<(Company company, Project project, Ticket ticket, CompanyMember admin, CompanyMember projectPm,
+            CompanyMember submitterPm, CompanyMember developer)> SetupProjectManagerSubmitterOutsideProjectScenario()
     {
         var (company, project, ticket, admin, projectPm, developer, _) = await SetupTestScenario();
 
@@ -144,7 +142,8 @@ public class TicketPermissionTests : IAsyncDisposable
             Id = Guid.NewGuid().ToString(),
             UserId = submitterPmUserId,
             CompanyId = company.Id,
-            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.ProjectManager).Select(r => r.Id).FirstAsync()
+            RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.ProjectManager).Select(r => r.Id)
+                .FirstAsync()
         };
 
         _db.CompanyMembers.Add(submitterPm);
@@ -223,7 +222,8 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(BasicTicketDto.FormatDisplayId(ticket.Id), payload.RootElement.GetProperty("displayId").GetString());
+        Assert.Equal(BasicTicketDto.FormatDisplayId(ticket.Id),
+            payload.RootElement.GetProperty("displayId").GetString());
     }
 
     [Fact]
@@ -325,13 +325,16 @@ public class TicketPermissionTests : IAsyncDisposable
 
         await AddHistoryAsync(ticket.Id, submitter.Id, TicketHistoryTypes.Created, now.AddMinutes(-6));
         await AddHistoryAsync(ticket.Id, pm.Id, TicketHistoryTypes.UpdatePriority, now.AddMinutes(-5), "Low", "High");
-        await AddHistoryAsync(ticket.Id, developer.Id, TicketHistoryTypes.UpdateStatus, now.AddMinutes(-4), "New", "Testing");
-        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.DeveloperAssigned, now.AddMinutes(-3), relatedEntityName: "Assigned Dev");
+        await AddHistoryAsync(ticket.Id, developer.Id, TicketHistoryTypes.UpdateStatus, now.AddMinutes(-4), "New",
+            "Testing");
+        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.DeveloperAssigned, now.AddMinutes(-3),
+            relatedEntityName: "Assigned Dev");
         await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.Resolved, now.AddMinutes(-2));
-        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.DeveloperRemoved, now.AddMinutes(-1), relatedEntityName: "Assigned Dev");
+        await AddHistoryAsync(secondTicket.Id, pm.Id, TicketHistoryTypes.DeveloperRemoved, now.AddMinutes(-1),
+            relatedEntityName: "Assigned Dev");
         await AddCommentAsync(ticket.Id, admin.Id, "Hidden admin comment", now);
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         var response = await client.GetFromJsonAsync<List<RecentActivityDto>>("/tickets/recent-activity");
 
@@ -365,7 +368,8 @@ public class TicketPermissionTests : IAsyncDisposable
 
         var otherTicket = await CreateTicketAsync(project.Id, submitter.Id, otherDeveloper.Id, "Project Ticket");
 
-        await AddHistoryAsync(otherTicket.Id, pm.Id, TicketHistoryTypes.UpdatePriority, now.AddMinutes(-2), "Low", "Urgent");
+        await AddHistoryAsync(otherTicket.Id, pm.Id, TicketHistoryTypes.UpdatePriority, now.AddMinutes(-2), "Low",
+            "Urgent");
         await AddCommentAsync(otherTicket.Id, pm.Id, "Not assigned comment", now.AddMinutes(-1));
         await AddCommentAsync(ticket.Id, pm.Id, "Assigned ticket comment", now);
 
@@ -379,7 +383,8 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.DoesNotContain(response, activity =>
             activity.TicketId == otherTicket.Id && activity.Type == RecentActivityTypes.CommentAdded);
         Assert.Contains(response, activity =>
-            activity.TicketId == ticket.Id && activity.Type == RecentActivityTypes.CommentAdded && activity.Message == "Assigned ticket comment");
+            activity.TicketId == ticket.Id && activity.Type == RecentActivityTypes.CommentAdded &&
+            activity.Message == "Assigned ticket comment");
     }
 
     [Fact]
@@ -393,7 +398,8 @@ public class TicketPermissionTests : IAsyncDisposable
 
         var otherTicket = await CreateTicketAsync(project.Id, developer.Id, developer.Id, "Shared Project Ticket");
 
-        await AddHistoryAsync(otherTicket.Id, pm.Id, TicketHistoryTypes.UpdateStatus, now.AddMinutes(-2), "New", "In Development");
+        await AddHistoryAsync(otherTicket.Id, pm.Id, TicketHistoryTypes.UpdateStatus, now.AddMinutes(-2), "New",
+            "In Development");
         await AddCommentAsync(otherTicket.Id, pm.Id, "Project comment", now.AddMinutes(-1));
         await AddCommentAsync(ticket.Id, pm.Id, "Own ticket comment", now);
 
@@ -407,7 +413,8 @@ public class TicketPermissionTests : IAsyncDisposable
         Assert.DoesNotContain(response, activity =>
             activity.TicketId == otherTicket.Id && activity.Type == RecentActivityTypes.CommentAdded);
         Assert.Contains(response, activity =>
-            activity.TicketId == ticket.Id && activity.Type == RecentActivityTypes.CommentAdded && activity.Message == "Own ticket comment");
+            activity.TicketId == ticket.Id && activity.Type == RecentActivityTypes.CommentAdded &&
+            activity.Message == "Own ticket comment");
     }
 
     #endregion
@@ -419,7 +426,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -470,7 +477,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Create another developer not assigned to ticket
         var otherDevUserId = Guid.NewGuid().ToString();
         await _app.CreateUserAsync(otherDevUserId);
@@ -521,12 +528,12 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive the ticket
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -547,7 +554,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -615,12 +622,12 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive the ticket
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -641,7 +648,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -696,7 +703,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.DeleteAsync($"/tickets/{ticket.Id}");
@@ -752,12 +759,12 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive the ticket
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.DeleteAsync($"/tickets/{ticket.Id}");
@@ -775,14 +782,14 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsync($"/tickets/{ticket.Id}/archive", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        
+
         // Verify ticket is archived
         _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets.FindAsync(ticket.Id);
@@ -823,19 +830,19 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive the ticket first
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsync($"/tickets/{ticket.Id}/archive", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        
+
         // Verify ticket is unarchived
         _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets.FindAsync(ticket.Id);
@@ -848,13 +855,13 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive both project and ticket
         project.IsArchived = true;
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsync($"/tickets/{ticket.Id}/archive", null);
@@ -872,7 +879,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -889,7 +896,7 @@ public class TicketPermissionTests : IAsyncDisposable
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        
+
         // Verify all fields updated
         _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets
@@ -993,12 +1000,12 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive the ticket
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
@@ -1015,7 +1022,7 @@ public class TicketPermissionTests : IAsyncDisposable
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        
+
         // Verify only name/description updated
         _db.ChangeTracker.Clear();
         var updatedTicket = await _db.Tickets.FindAsync(ticket.Id);
@@ -1029,20 +1036,20 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Archive the ticket
         ticket.IsArchived = true;
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(
             $"/tickets/{ticket.Id}",
             new
             {
-                Name = ticket.Name,
-                Description = ticket.Description,
+                ticket.Name,
+                ticket.Description,
                 Priority = "Low",
                 Status = "In Development", // Trying to change status
                 Type = "Defect"
@@ -1062,7 +1069,7 @@ public class TicketPermissionTests : IAsyncDisposable
     {
         // Arrange
         var (company, project, ticket, admin, pm, developer, submitter) = await SetupTestScenario();
-        
+
         // Create another developer to assign
         var newDevUserId = Guid.NewGuid().ToString();
         await _app.CreateUserAsync(newDevUserId);
@@ -1077,12 +1084,12 @@ public class TicketPermissionTests : IAsyncDisposable
             RoleId = await _db.CompanyRoles.Where(r => r.Name == RoleNames.Developer).Select(r => r.Id).FirstAsync()
         };
         _db.CompanyMembers.Add(newDev);
-        
+
         // Add to project via navigation property
         newDev.AssignedProjects.Add(project);
         await _db.SaveChangesAsync();
 
-        var client = _app.CreateClient(admin.UserId, RoleNames.Admin);
+        var client = _app.CreateClient(admin.UserId);
 
         // Act
         var response = await client.PutAsJsonAsync(

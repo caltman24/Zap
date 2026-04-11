@@ -1,7 +1,7 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, Outlet, useLoaderData, useOutletContext } from "@remix-run/react";
+import {LoaderFunctionArgs} from "@remix-run/node";
+import {Link, Outlet, useLoaderData, useOutletContext} from "@remix-run/react";
 import projectLoader from "~/commonRoutes/projectDetails/server.loader"
-import { UserInfoResponse } from "~/services/api.server/types";
+import {UserInfoResponse} from "~/services/api.server/types";
 
 export const handle = {
     breadcrumb: (match: any) => {
@@ -21,5 +21,5 @@ export default function ProjectDetailsRoot() {
     // User info is already provided by the _app root route outlet context
     const userInfo = useOutletContext<UserInfoResponse>();
     // Provide the project data and user info to sub routes
-    return <Outlet context={{ loaderData, userInfo }} />
+    return <Outlet context={{loaderData, userInfo}}/>
 }

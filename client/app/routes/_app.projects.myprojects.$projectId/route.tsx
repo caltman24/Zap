@@ -1,9 +1,9 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData, useOutletContext } from "@remix-run/react";
+import {ActionFunctionArgs, LoaderFunctionArgs} from "@remix-run/node";
+import {Link, useLoaderData, useOutletContext} from "@remix-run/react";
 import ProjectCommonRoute from "~/commonRoutes/projectDetails/commonRoute"
 import projectLoader from "~/commonRoutes/projectDetails/server.loader"
 import projectAction from "~/commonRoutes/projectDetails/server.action"
-import { UserInfoResponse } from "~/services/api.server/types";
+import {UserInfoResponse} from "~/services/api.server/types";
 
 export const handle = {
     breadcrumb: (match: any) => {
@@ -21,8 +21,9 @@ export async function loader(loaderParams: LoaderFunctionArgs) {
 export default function ArchivedProjectDetailsRoute() {
     const loaderData = useLoaderData<typeof loader>();
     const userInfo = useOutletContext<UserInfoResponse>();
-    return <ProjectCommonRoute loaderData={loaderData} userInfo={userInfo} collection="myprojects" />
+    return <ProjectCommonRoute loaderData={loaderData} userInfo={userInfo} collection="myprojects"/>
 }
+
 export async function action(actionParams: ActionFunctionArgs) {
     return projectAction(actionParams);
 }

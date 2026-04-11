@@ -1,6 +1,6 @@
 export function hasPermission(
-  permissions: string[] | null | undefined,
-  requiredPermission: string,
+    permissions: string[] | null | undefined,
+    requiredPermission: string,
 ) {
-  return (permissions ?? []).includes(requiredPermission);
+    return (permissions ?? []).includes(requiredPermission);
 }

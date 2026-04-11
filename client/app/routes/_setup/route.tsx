@@ -1,10 +1,8 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Outlet, redirect, useLoaderData } from "@remix-run/react";
-import apiClient from "~/services/api.server/apiClient";
-import { getSession } from "~/services/sessions.server";
-import tryCatch from "~/utils/tryCatch";
+import {LoaderFunctionArgs} from "@remix-run/node";
+import {Outlet, redirect, useLoaderData} from "@remix-run/react";
+import {getSession} from "~/services/sessions.server";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({request}: LoaderFunctionArgs) {
     const session = await getSession(request);
     const user = session.get("user")
 
@@ -17,11 +15,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
 
-    return Response.json({ firstName: user.firstName })
+    return Response.json({firstName: user.firstName})
 }
 
 export default function SetupRootRoute() {
     const loaderData = useLoaderData<typeof loader>();
 
-    return <Outlet context={loaderData} />;
+    return <Outlet context={loaderData}/>;
 }

@@ -98,9 +98,7 @@ public static class TestDataSeeder
         // Get Admin role
         var adminRole = await db.CompanyRoles.FirstOrDefaultAsync(r => r.Name == RoleNames.Admin);
         if (adminRole == null)
-        {
             throw new InvalidOperationException("Admin role not found. Ensure database seeding has run.");
-        }
 
         // Create company member for test user
         var testMember = new CompanyMember
@@ -148,7 +146,7 @@ public static class TestDataSeeder
             RoleNames.Submitter
         };
 
-        for (int i = 0; i < fakeUsers.Count; i++)
+        for (var i = 0; i < fakeUsers.Count; i++)
         {
             var user = fakeUsers[i];
             user.AvatarUrl = $"https://ui-avatars.com/api/?name={user.FirstName}+{user.LastName}";
@@ -195,7 +193,8 @@ public static class TestDataSeeder
         var project1 = new Project
         {
             Name = "Customer Portal Redesign",
-            Description = "Complete overhaul of the customer-facing portal with modern UI/UX design and improved performance.",
+            Description =
+                "Complete overhaul of the customer-facing portal with modern UI/UX design and improved performance.",
             Priority = Priorities.High,
             DueDate = DateTime.UtcNow.AddMonths(2),
             CompanyId = company.Id,
@@ -279,30 +278,106 @@ public static class TestDataSeeder
 
         // Helper to get random items
         var random = new Random();
-        T GetRandom<T>(List<T> items) => items[random.Next(items.Count)];
+
+        T GetRandom<T>(List<T> items)
+        {
+            return items[random.Next(items.Count)];
+        }
 
         // Create 15 tickets distributed across projects
         var ticketTemplates = new[]
         {
-            new { Name = "Fix login authentication issue", Description = "Users are unable to log in with valid credentials intermittently.", Type = TicketTypes.Defect, Priority = Priorities.Urgent, Status = TicketStatuses.InDevelopment },
-            new { Name = "Implement dark mode", Description = "Add dark mode theme support across the entire application.", Type = TicketTypes.Feature, Priority = Priorities.Medium, Status = TicketStatuses.New },
-            new { Name = "Optimize database queries", Description = "Improve query performance for dashboard loading.", Type = TicketTypes.Enhanecment, Priority = Priorities.High, Status = TicketStatuses.InDevelopment },
-            new { Name = "Add export to CSV functionality", Description = "Users should be able to export reports to CSV format.", Type = TicketTypes.Feature, Priority = Priorities.Low, Status = TicketStatuses.New },
-            new { Name = "Fix broken images on profile page", Description = "Profile images are not displaying correctly for some users.", Type = TicketTypes.Defect, Priority = Priorities.Medium, Status = TicketStatuses.Testing },
-            new { Name = "Update API documentation", Description = "Refresh API documentation with new endpoints and examples.", Type = TicketTypes.GeneralTask, Priority = Priorities.Low, Status = TicketStatuses.InDevelopment },
-            new { Name = "Mobile responsive layout fixes", Description = "Several pages are not displaying correctly on mobile devices.", Type = TicketTypes.Defect, Priority = Priorities.High, Status = TicketStatuses.New },
-            new { Name = "Add password strength indicator", Description = "Display password strength when users create or change passwords.", Type = TicketTypes.Enhanecment, Priority = Priorities.Low, Status = TicketStatuses.Resolved },
-            new { Name = "Implement two-factor authentication", Description = "Add 2FA support for enhanced security.", Type = TicketTypes.Feature, Priority = Priorities.High, Status = TicketStatuses.InDevelopment },
-            new { Name = "Fix memory leak in dashboard", Description = "Dashboard component has a memory leak causing performance degradation.", Type = TicketTypes.Defect, Priority = Priorities.Urgent, Status = TicketStatuses.Testing },
-            new { Name = "Add user activity logging", Description = "Track and log user activities for audit purposes.", Type = TicketTypes.Feature, Priority = Priorities.Medium, Status = TicketStatuses.New },
-            new { Name = "Refactor authentication module", Description = "Clean up and refactor authentication code for better maintainability.", Type = TicketTypes.WorkTask, Priority = Priorities.Low, Status = TicketStatuses.Resolved },
-            new { Name = "Update dependencies to latest versions", Description = "Update all npm and NuGet packages to latest stable versions.", Type = TicketTypes.ChangeRequest, Priority = Priorities.Medium, Status = TicketStatuses.InDevelopment },
-            new { Name = "Add search filters to ticket list", Description = "Users need advanced filtering options on the ticket list page.", Type = TicketTypes.Enhanecment, Priority = Priorities.Medium, Status = TicketStatuses.New },
-            new { Name = "Fix timezone handling", Description = "Dates are displaying in incorrect timezone for some users.", Type = TicketTypes.Defect, Priority = Priorities.High, Status = TicketStatuses.Testing }
+            new
+            {
+                Name = "Fix login authentication issue",
+                Description = "Users are unable to log in with valid credentials intermittently.",
+                Type = TicketTypes.Defect, Priority = Priorities.Urgent, Status = TicketStatuses.InDevelopment
+            },
+            new
+            {
+                Name = "Implement dark mode",
+                Description = "Add dark mode theme support across the entire application.", Type = TicketTypes.Feature,
+                Priority = Priorities.Medium, Status = TicketStatuses.New
+            },
+            new
+            {
+                Name = "Optimize database queries", Description = "Improve query performance for dashboard loading.",
+                Type = TicketTypes.Enhanecment, Priority = Priorities.High, Status = TicketStatuses.InDevelopment
+            },
+            new
+            {
+                Name = "Add export to CSV functionality",
+                Description = "Users should be able to export reports to CSV format.", Type = TicketTypes.Feature,
+                Priority = Priorities.Low, Status = TicketStatuses.New
+            },
+            new
+            {
+                Name = "Fix broken images on profile page",
+                Description = "Profile images are not displaying correctly for some users.", Type = TicketTypes.Defect,
+                Priority = Priorities.Medium, Status = TicketStatuses.Testing
+            },
+            new
+            {
+                Name = "Update API documentation",
+                Description = "Refresh API documentation with new endpoints and examples.",
+                Type = TicketTypes.GeneralTask, Priority = Priorities.Low, Status = TicketStatuses.InDevelopment
+            },
+            new
+            {
+                Name = "Mobile responsive layout fixes",
+                Description = "Several pages are not displaying correctly on mobile devices.",
+                Type = TicketTypes.Defect, Priority = Priorities.High, Status = TicketStatuses.New
+            },
+            new
+            {
+                Name = "Add password strength indicator",
+                Description = "Display password strength when users create or change passwords.",
+                Type = TicketTypes.Enhanecment, Priority = Priorities.Low, Status = TicketStatuses.Resolved
+            },
+            new
+            {
+                Name = "Implement two-factor authentication", Description = "Add 2FA support for enhanced security.",
+                Type = TicketTypes.Feature, Priority = Priorities.High, Status = TicketStatuses.InDevelopment
+            },
+            new
+            {
+                Name = "Fix memory leak in dashboard",
+                Description = "Dashboard component has a memory leak causing performance degradation.",
+                Type = TicketTypes.Defect, Priority = Priorities.Urgent, Status = TicketStatuses.Testing
+            },
+            new
+            {
+                Name = "Add user activity logging", Description = "Track and log user activities for audit purposes.",
+                Type = TicketTypes.Feature, Priority = Priorities.Medium, Status = TicketStatuses.New
+            },
+            new
+            {
+                Name = "Refactor authentication module",
+                Description = "Clean up and refactor authentication code for better maintainability.",
+                Type = TicketTypes.WorkTask, Priority = Priorities.Low, Status = TicketStatuses.Resolved
+            },
+            new
+            {
+                Name = "Update dependencies to latest versions",
+                Description = "Update all npm and NuGet packages to latest stable versions.",
+                Type = TicketTypes.ChangeRequest, Priority = Priorities.Medium, Status = TicketStatuses.InDevelopment
+            },
+            new
+            {
+                Name = "Add search filters to ticket list",
+                Description = "Users need advanced filtering options on the ticket list page.",
+                Type = TicketTypes.Enhanecment, Priority = Priorities.Medium, Status = TicketStatuses.New
+            },
+            new
+            {
+                Name = "Fix timezone handling",
+                Description = "Dates are displaying in incorrect timezone for some users.", Type = TicketTypes.Defect,
+                Priority = Priorities.High, Status = TicketStatuses.Testing
+            }
         };
 
         // Distribute tickets across projects
-        for (int i = 0; i < ticketTemplates.Length; i++)
+        for (var i = 0; i < ticketTemplates.Length; i++)
         {
             var template = ticketTemplates[i];
             var project = projects[i % projects.Count]; // Round-robin distribution

@@ -14,6 +14,7 @@ public sealed class DemoEnvironmentService(
     ILogger<DemoEnvironmentService> logger) : IDemoEnvironmentService
 {
     private const string DemoCompanyName = "Zap Demo Co";
+
     private const string DemoCompanyDescription =
         "A curated demonstration workspace that showcases each role in Zap with realistic projects and tickets.";
 
@@ -104,9 +105,12 @@ public sealed class DemoEnvironmentService(
 
         if (ticketIds.Count != 0)
         {
-            db.TicketComments.RemoveRange(await db.TicketComments.Where(c => ticketIds.Contains(c.TicketId)).ToListAsync());
-            db.TicketAttachments.RemoveRange(await db.TicketAttachments.Where(a => ticketIds.Contains(a.TicketId)).ToListAsync());
-            db.TicketHistories.RemoveRange(await db.TicketHistories.Where(h => ticketIds.Contains(h.TicketId)).ToListAsync());
+            db.TicketComments.RemoveRange(await db.TicketComments.Where(c => ticketIds.Contains(c.TicketId))
+                .ToListAsync());
+            db.TicketAttachments.RemoveRange(await db.TicketAttachments.Where(a => ticketIds.Contains(a.TicketId))
+                .ToListAsync());
+            db.TicketHistories.RemoveRange(await db.TicketHistories.Where(h => ticketIds.Contains(h.TicketId))
+                .ToListAsync());
             db.Tickets.RemoveRange(await db.Tickets.Where(t => ticketIds.Contains(t.Id)).ToListAsync());
         }
 
@@ -124,7 +128,8 @@ public sealed class DemoEnvironmentService(
 
         if (demoCompanyIds.Count != 0)
         {
-            db.CompanyMembers.RemoveRange(await db.CompanyMembers.Where(m => demoCompanyIds.Contains(m.CompanyId!)).ToListAsync());
+            db.CompanyMembers.RemoveRange(await db.CompanyMembers.Where(m => demoCompanyIds.Contains(m.CompanyId!))
+                .ToListAsync());
             db.Companies.RemoveRange(await db.Companies.Where(c => demoCompanyIds.Contains(c.Id)).ToListAsync());
         }
 
@@ -137,9 +142,8 @@ public sealed class DemoEnvironmentService(
         {
             var result = await userManager.DeleteAsync(user);
             if (!result.Succeeded)
-            {
-                throw new InvalidOperationException($"Failed to delete demo user {user.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
+                throw new InvalidOperationException(
+                    $"Failed to delete demo user {user.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
     }
 
@@ -163,9 +167,8 @@ public sealed class DemoEnvironmentService(
 
             var result = await userManager.CreateAsync(user);
             if (!result.Succeeded)
-            {
-                throw new InvalidOperationException($"Failed to create demo user {user.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
+                throw new InvalidOperationException(
+                    $"Failed to create demo user {user.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
 
             await userManager.AddCustomClaimsAsync(user);
             usersByRole[demoUser.RoleName] = user;
@@ -366,7 +369,8 @@ public sealed class DemoEnvironmentService(
         await db.SaveChangesAsync();
     }
 
-    private static Ticket CreateTicket(Project project, string name, string description, string priorityId, string statusId,
+    private static Ticket CreateTicket(Project project, string name, string description, string priorityId,
+        string statusId,
         string typeId, string submitterId, string? assigneeId)
     {
         return new Ticket
@@ -382,5 +386,10 @@ public sealed class DemoEnvironmentService(
         };
     }
 
-    private sealed record DemoUserSeed(string RoleKey, string RoleName, string Email, string FirstName, string LastName);
+    private sealed record DemoUserSeed(
+        string RoleKey,
+        string RoleName,
+        string Email,
+        string FirstName,
+        string LastName);
 }

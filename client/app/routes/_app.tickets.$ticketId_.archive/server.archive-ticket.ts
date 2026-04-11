@@ -1,19 +1,19 @@
-import { DEV_URL, handleResponse } from "~/utils/api";
+import {DEV_URL, handleResponse} from "~/utils/api";
 import tryCatch from "~/utils/tryCatch";
 
 export default async function toggleArchiveTicket(
-  ticketId: string,
-  accessToken: string
+    ticketId: string,
+    accessToken: string
 ) {
-  const method = "PUT";
-  const { data: response, error } = await tryCatch(
-    fetch(`${DEV_URL}/tickets/${ticketId}/archive`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-  );
+    const method = "PUT";
+    const {data: response, error} = await tryCatch(
+        fetch(`${DEV_URL}/tickets/${ticketId}/archive`, {
+            method,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        })
+    );
 
-  return handleResponse(response, error, method);
+    return handleResponse(response, error, method);
 }

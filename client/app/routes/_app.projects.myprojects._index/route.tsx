@@ -1,17 +1,17 @@
-import { LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import {LoaderFunctionArgs, redirect} from "@remix-run/node";
+import {useLoaderData} from "@remix-run/react";
 import ProjectCard from "~/components/ProjectCard";
 import RouteLayout from "~/layouts/RouteLayout";
 import apiClient from "~/services/api.server/apiClient";
-import { AuthenticationError } from "~/services/api.server/errors";
-import { getSession } from "~/services/sessions.server";
-import { hasPermission } from "~/utils/permissions";
-import { JsonResponse, JsonResponseResult } from "~/utils/response";
+import {AuthenticationError} from "~/services/api.server/errors";
+import {getSession} from "~/services/sessions.server";
+import {hasPermission} from "~/utils/permissions";
+import {JsonResponse, JsonResponseResult} from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import getMyProjects from "./server.get-myprojects";
-import { CompanyProjectsResponse, UserInfoResponse } from "~/services/api.server/types";
+import {CompanyProjectsResponse, UserInfoResponse} from "~/services/api.server/types";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({request}: LoaderFunctionArgs) {
     const session = await getSession(request);
     const {
         data: tokenResponse,
@@ -27,7 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/projects")
     }
 
-    const { data: res, error } = await tryCatch(
+    const {data: res, error} = await tryCatch(
         getMyProjects(userInfo.memberId!, tokenResponse.token));
 
     if (error instanceof AuthenticationError) {
@@ -48,18 +48,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
         headers: tokenResponse.headers
     });
 }
+
 export default function MyProjectsRoute() {
-    const { data, error } = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
+    const {data, error} = useLoaderData<typeof loader>() as JsonResponseResult<CompanyProjectsResponse[]>;
     return (
         <RouteLayout>
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">My Projects</h1>
-                <p className="mt-1 text-[var(--app-on-surface-variant)]">Projects you are assigned to and can actively work in.</p>
+                <p className="mt-1 text-[var(--app-on-surface-variant)]">Projects you are assigned to and can actively
+                    work in.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data?.map((project, index) => (
-                    <ProjectCard key={index} project={project} collection="myprojects" />
+                    <ProjectCard key={index} project={project} collection="myprojects"/>
                 ))}
                 {!data?.length && (
                     <p className="text-[var(--app-on-surface-variant)]">You do not have any assigned projects yet.</p>

@@ -1,14 +1,14 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import { Form, useActionData, useNavigation } from "@remix-run/react";
+import {ActionFunctionArgs, redirect} from "@remix-run/node";
+import {Form, useActionData, useNavigation} from "@remix-run/react";
 import BackButton from "~/components/BackButton";
-import FormShell, { FormFieldHeader, formInputClassName, formTextareaClassName } from "~/components/FormShell";
+import FormShell, {FormFieldHeader, formInputClassName, formTextareaClassName} from "~/components/FormShell";
 import apiClient from "~/services/api.server/apiClient";
-import { AuthenticationError } from "~/services/api.server/errors";
-import { commitSession, getSession } from "~/services/sessions.server";
-import { ActionResponse, ActionResponseResult } from "~/utils/response";
+import {AuthenticationError} from "~/services/api.server/errors";
+import {commitSession, getSession} from "~/services/sessions.server";
+import {ActionResponse, ActionResponseResult} from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({request}: ActionFunctionArgs) {
     const session = await getSession(request);
 
     // Try to get valid token
@@ -22,14 +22,14 @@ export async function action({ request }: ActionFunctionArgs) {
     if (tokenError) {
         return redirect("/logout");
     }
-    const { token } = tokenResponse;
+    const {token} = tokenResponse;
 
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
 
-    const { data: res, error } = await tryCatch(
+    const {data: res, error} = await tryCatch(
         apiClient.registerCompany({
             name,
             description,
@@ -46,7 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (res.ok) {
-        const { data, error } = await tryCatch(
+        const {data, error} = await tryCatch(
             apiClient.getUserInfo(token));
 
         if (error) {
@@ -70,7 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
         });
     }
 
-    return ActionResponse({ success: false, error: "Failed to register company" })
+    return ActionResponse({success: false, error: "Failed to register company"})
 }
 
 export default function SetupCompanyRoute() {
@@ -85,13 +85,13 @@ export default function SetupCompanyRoute() {
                     description="Create the company workspace your team will use for projects, tickets, and collaboration. You can invite everyone else after this step."
                     error={actionData?.error}
                     eyebrow="Company Setup"
-                    leading={<BackButton to="/setup" />}
+                    leading={<BackButton to="/setup"/>}
                     title="Register Your Company"
                 >
                     <Form className="space-y-8" method="post">
                         <fieldset className="space-y-6" disabled={isSubmitting}>
                             <div>
-                                <FormFieldHeader detail="100 max" label="Company Name" required />
+                                <FormFieldHeader detail="100 max" label="Company Name" required/>
                                 <input
                                     className={formInputClassName}
                                     maxLength={100}
@@ -103,7 +103,7 @@ export default function SetupCompanyRoute() {
                             </div>
 
                             <div>
-                                <FormFieldHeader detail="500 max" label="Description" />
+                                <FormFieldHeader detail="500 max" label="Description"/>
                                 <textarea
                                     className={formTextareaClassName}
                                     maxLength={500}
@@ -113,20 +113,29 @@ export default function SetupCompanyRoute() {
                                 />
                             </div>
 
-                            <div className="rounded-[1.5rem] bg-[var(--app-surface-container-lowest)] p-5 outline outline-1 outline-[var(--app-outline-variant)]/10">
-                                <p className="app-shell-mono text-[10px] uppercase tracking-[0.24em] text-[var(--app-outline)]">What happens next</p>
-                                <div className="mt-4 grid gap-3 text-sm text-[var(--app-on-surface-variant)] sm:grid-cols-3">
+                            <div
+                                className="rounded-[1.5rem] bg-[var(--app-surface-container-lowest)] p-5 outline outline-1 outline-[var(--app-outline-variant)]/10">
+                                <p className="app-shell-mono text-[10px] uppercase tracking-[0.24em] text-[var(--app-outline)]">What
+                                    happens next</p>
+                                <div
+                                    className="mt-4 grid gap-3 text-sm text-[var(--app-on-surface-variant)] sm:grid-cols-3">
                                     <div className="rounded-2xl bg-[var(--app-surface-container-high)]/60 px-4 py-4">
-                                        <p className="font-semibold text-[var(--app-on-surface)]">1. Workspace created</p>
-                                        <p className="mt-1 leading-6">We attach your account to the new company instantly.</p>
+                                        <p className="font-semibold text-[var(--app-on-surface)]">1. Workspace
+                                            created</p>
+                                        <p className="mt-1 leading-6">We attach your account to the new company
+                                            instantly.</p>
                                     </div>
                                     <div className="rounded-2xl bg-[var(--app-surface-container-high)]/60 px-4 py-4">
-                                        <p className="font-semibold text-[var(--app-on-surface)]">2. Dashboard unlocked</p>
-                                        <p className="mt-1 leading-6">You land in the app with company access ready to go.</p>
+                                        <p className="font-semibold text-[var(--app-on-surface)]">2. Dashboard
+                                            unlocked</p>
+                                        <p className="mt-1 leading-6">You land in the app with company access ready to
+                                            go.</p>
                                     </div>
                                     <div className="rounded-2xl bg-[var(--app-surface-container-high)]/60 px-4 py-4">
-                                        <p className="font-semibold text-[var(--app-on-surface)]">3. Invite your team</p>
-                                        <p className="mt-1 leading-6">Start adding members and projects from inside the workspace.</p>
+                                        <p className="font-semibold text-[var(--app-on-surface)]">3. Invite your
+                                            team</p>
+                                        <p className="mt-1 leading-6">Start adding members and projects from inside the
+                                            workspace.</p>
                                     </div>
                                 </div>
                             </div>
@@ -139,7 +148,8 @@ export default function SetupCompanyRoute() {
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                                            <span
+                                                className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"/>
                                             Registering...
                                         </>
                                     ) : (

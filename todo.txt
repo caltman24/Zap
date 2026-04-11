@@ -2,20 +2,8 @@
 
 Goal: turn Zap into a polished, portfolio-quality internal business app that feels real, complete, and interview-ready.
 
-
-Redesign TODO:
-- Review everything for a final polish
-  (done) + Align rows of text in project and ticket view (PM, priority, due date, status, ect...)
-    (done)++ Make select bigger so its easier to click. Change cursor style
-  + Maybe: Replace selects with custom dropdownms for customized styles for options (os/chrome dependent right now)
-  + For submitters, remove the dropdowns from the ticket edit mode since they cant be clicked anyway
-- Polish company details page
-- Chat box alignment and spacing
-- Finish pagination on dashboard ticket table
-
 Functionality for new design:
- - Recent Activity data
- - Whole app search bar in navbar
+ - Optimize Whole app search bar in navbar
 
 
 === MUST HAVE ===

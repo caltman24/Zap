@@ -1,11 +1,11 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
-import { useMemo, useState } from "react";
+import {ActionFunctionArgs, LoaderFunctionArgs, redirect} from "@remix-run/node";
+import {Form, Link, useActionData, useNavigation} from "@remix-run/react";
+import {useMemo, useState} from "react";
 import apiClient from "~/services/api.server/apiClient";
-import { getSession } from "~/services/sessions.server";
+import {getSession} from "~/services/sessions.server";
 import setSession from "../_landing.login/setSession";
 import tryCatch from "~/utils/tryCatch";
-import { TokenResponse } from "~/services/api.server/types";
+import {TokenResponse} from "~/services/api.server/types";
 
 const registerHighlights = [
     {
@@ -47,7 +47,7 @@ function getActionMessage(message: unknown) {
     return null;
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({request}: ActionFunctionArgs) {
     const formData = await request.formData();
     const firstName = formData.get("firstName");
     const lastName = formData.get("lastName");
@@ -56,10 +56,10 @@ export async function action({ request }: ActionFunctionArgs) {
     const confirmPassword = formData.get("confirmPassword");
 
     if (password !== confirmPassword) {
-        return Response.json({ message: "Passwords do not match" });
+        return Response.json({message: "Passwords do not match"});
     }
 
-    const { data: res, error } = await tryCatch(
+    const {data: res, error} = await tryCatch(
         apiClient.auth.registerAccount({
             firstName: firstName as string,
             lastName: lastName as string,
@@ -69,7 +69,7 @@ export async function action({ request }: ActionFunctionArgs) {
     );
 
     if (error) {
-        return Response.json({ message: "Failed to register. Please try again later." });
+        return Response.json({message: "Failed to register. Please try again later."});
     }
 
     if (res.ok) {
@@ -79,13 +79,13 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     if (res.status === 400) {
-        return Response.json({ message: await res.json() });
+        return Response.json({message: await res.json()});
     }
 
-    return Response.json({ message: "Failed to register. Please try again later." });
+    return Response.json({message: "Failed to register. Please try again later."});
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({request}: LoaderFunctionArgs) {
     const session = await getSession(request);
 
     if (session.get("user")) {
@@ -115,10 +115,13 @@ export default function RegisterAccount() {
 
     return (
         <div className="landing-page min-h-screen px-6 pb-14 pt-24 sm:px-8 sm:pb-18 sm:pt-28 lg:pt-32">
-            <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center lg:gap-14 xl:grid-cols-[minmax(0,1fr)_31rem]">
+            <div
+                className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center lg:gap-14 xl:grid-cols-[minmax(0,1fr)_31rem]">
                 <section className="order-2 space-y-7 lg:order-1 lg:pr-10">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--landing-on-surface-variant)]">
-                        <span className="material-symbols-outlined text-base text-[var(--landing-primary)]">person_add</span>
+                    <div
+                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--landing-on-surface-variant)]">
+                        <span
+                            className="material-symbols-outlined text-base text-[var(--landing-primary)]">person_add</span>
                         Account Setup
                     </div>
 
@@ -127,13 +130,15 @@ export default function RegisterAccount() {
                             Create your account and start building your workspace.
                         </h1>
                         <p className="max-w-xl text-lg leading-8 text-[var(--landing-on-surface-variant)]">
-                            Register with the same production-minded auth flow that powers the app, then move directly into company setup and project onboarding.
+                            Register with the same production-minded auth flow that powers the app, then move directly
+                            into company setup and project onboarding.
                         </p>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         {registerHighlights.map((highlight) => (
-                            <article key={highlight.title} className="rounded-3xl bg-[var(--landing-surface-container-low)] p-6">
+                            <article key={highlight.title}
+                                     className="rounded-3xl bg-[var(--landing-surface-container-low)] p-6">
                                 <h2 className={`${headlineClass} text-lg font-bold tracking-[-0.02em] text-[var(--landing-on-surface)]`}>
                                     {highlight.title}
                                 </h2>
@@ -145,7 +150,8 @@ export default function RegisterAccount() {
                     </div>
 
                     <div className="rounded-[1.75rem] bg-[color:var(--landing-surface-container-high)]/45 p-6 sm:p-8">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-primary)]">What happens next</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-primary)]">What
+                            happens next</p>
                         <div className="mt-4 space-y-3 text-sm leading-7 text-[var(--landing-on-surface-variant)]">
                             <p>1. Create your account with a strong password.</p>
                             <p>2. Enter the setup flow and attach yourself to a company.</p>
@@ -155,15 +161,18 @@ export default function RegisterAccount() {
                 </section>
 
                 <section className="relative order-1 w-full lg:order-2">
-                    <div className="absolute inset-x-5 top-10 h-40 rounded-full bg-[rgba(192,193,255,0.14)] blur-[64px]" />
+                    <div
+                        className="absolute inset-x-5 top-10 h-40 rounded-full bg-[rgba(192,193,255,0.14)] blur-[64px]"/>
                     <div className={authCardClass}>
                         <div className="space-y-3 pb-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-primary)]">New Account</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-primary)]">New
+                                Account</p>
                             <h2 className={`${headlineClass} text-3xl font-extrabold tracking-[-0.03em] text-[var(--landing-on-surface)]`}>
                                 Register Account
                             </h2>
                             <p className="text-sm leading-6 text-[var(--landing-on-surface-variant)]">
-                                Create a full account, then continue into setup without changing the auth behavior already in place.
+                                Create a full account, then continue into setup without changing the auth behavior
+                                already in place.
                             </p>
                         </div>
 
@@ -176,7 +185,8 @@ export default function RegisterAccount() {
                                         <span className={authInputLabelClass}>First Name</span>
                                         <span className={authInputWrapClass}>
                                             <span aria-hidden="true" className={authInputIconClass}>badge</span>
-                                            <input className={authInputClass} maxLength={50} name="firstName" placeholder="John" required type="text" />
+                                            <input className={authInputClass} maxLength={50} name="firstName"
+                                                   placeholder="John" required type="text"/>
                                         </span>
                                     </label>
 
@@ -184,7 +194,8 @@ export default function RegisterAccount() {
                                         <span className={authInputLabelClass}>Last Name</span>
                                         <span className={authInputWrapClass}>
                                             <span aria-hidden="true" className={authInputIconClass}>badge</span>
-                                            <input className={authInputClass} maxLength={50} name="lastName" placeholder="Doe" required type="text" />
+                                            <input className={authInputClass} maxLength={50} name="lastName"
+                                                   placeholder="Doe" required type="text"/>
                                         </span>
                                     </label>
                                 </div>
@@ -193,7 +204,8 @@ export default function RegisterAccount() {
                                     <span className={authInputLabelClass}>Email</span>
                                     <span className={authInputWrapClass}>
                                         <span aria-hidden="true" className={authInputIconClass}>mail</span>
-                                        <input className={authInputClass} maxLength={75} name="email" placeholder="mail@site.com" required type="email" />
+                                        <input className={authInputClass} maxLength={75} name="email"
+                                               placeholder="mail@site.com" required type="email"/>
                                     </span>
                                 </label>
 
@@ -227,12 +239,14 @@ export default function RegisterAccount() {
                                 </label>
 
                                 <p className={authHelperClass}>
-                                    Use at least one number, one lowercase letter, one uppercase letter, and one non-alphanumeric character.
+                                    Use at least one number, one lowercase letter, one uppercase letter, and one
+                                    non-alphanumeric character.
                                 </p>
 
                                 <label className="block space-y-2">
                                     <span className={authInputLabelClass}>Confirm Password</span>
-                                    <span className={`${authInputWrapClass} ${passwordsMatch ? "" : authInputWrapErrorClass}`.trim()}>
+                                    <span
+                                        className={`${authInputWrapClass} ${passwordsMatch ? "" : authInputWrapErrorClass}`.trim()}>
                                         <span aria-hidden="true" className={authInputIconClass}>verified_user</span>
                                         <input
                                             className={authInputClass}
@@ -263,10 +277,13 @@ export default function RegisterAccount() {
                                     </p>
                                 )}
 
-                                <button className={`${buttonBaseClass} ${primaryButtonClass} min-h-[3.25rem] w-full px-5 text-base disabled:opacity-70 sm:min-h-14`} type="submit">
+                                <button
+                                    className={`${buttonBaseClass} ${primaryButtonClass} min-h-[3.25rem] w-full px-5 text-base disabled:opacity-70 sm:min-h-14`}
+                                    type="submit">
                                     {isSubmitting ? (
                                         <span className="flex items-center gap-3">
-                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                                            <span
+                                                className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"/>
                                             Creating Account
                                         </span>
                                     ) : (
@@ -278,7 +295,9 @@ export default function RegisterAccount() {
 
                         <p className="text-sm text-[var(--landing-on-surface-variant)]">
                             Already have an account?{" "}
-                            <Link className="font-semibold text-[var(--landing-primary)] transition-colors duration-200 hover:text-[var(--landing-on-surface)]" to="/login">
+                            <Link
+                                className="font-semibold text-[var(--landing-primary)] transition-colors duration-200 hover:text-[var(--landing-on-surface)]"
+                                to="/login">
                                 Sign in here
                             </Link>
                         </p>

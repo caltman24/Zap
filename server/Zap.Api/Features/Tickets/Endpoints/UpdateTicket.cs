@@ -55,8 +55,8 @@ public class UpdateTicket : IEndpoint
         if (ticket == null) return TypedResults.NotFound("Ticket not found");
 
         var isChangingRestrictedFields = request.Priority != ticket.PriorityName ||
-            request.Status != ticket.StatusName ||
-            request.Type != ticket.TypeName;
+                                         request.Status != ticket.StatusName ||
+                                         request.Type != ticket.TypeName;
 
         var isSubmitterEditingOwnTicket = currentUser.Member!.Id == ticket.SubmitterId;
 

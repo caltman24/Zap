@@ -1,16 +1,19 @@
 # Ticket Attachment System
 
 ## Overview
+
 A polished drag & drop file upload system for ticket attachments with preview capabilities and access control.
 
 ## Features
 
 ### 🎯 Access Control
+
 - **Upload permissions**: Submitter, Assigned Developer, Project Manager, Company Admin
 - **Remove permissions**: File uploader, Project Manager, Company Admin
 - **View/Download**: All users with ticket access
 
 ### 📁 File Support
+
 - **Documents**: PDF, DOC, DOCX, TXT
 - **Archives**: ZIP
 - **Images**: JPG, JPEG, PNG, GIF, WebP
@@ -19,9 +22,11 @@ A polished drag & drop file upload system for ticket attachments with preview ca
 ### 🎨 UI Components
 
 #### AttachmentSection
+
 Main container component that orchestrates the entire attachment system.
 
 #### AttachmentUploader
+
 - Drag & drop upload area
 - File type and size validation
 - Upload progress indicators
@@ -29,6 +34,7 @@ Main container component that orchestrates the entire attachment system.
 - Error handling and display
 
 #### AttachmentList
+
 - Clean list view of all attachments
 - File type icons with color coding
 - File size and upload metadata
@@ -36,6 +42,7 @@ Main container component that orchestrates the entire attachment system.
 - Total size summary
 
 #### AttachmentModal
+
 - Full-screen preview for supported file types
 - Image preview with zoom
 - PDF preview placeholder (ready for PDF.js integration)
@@ -43,6 +50,7 @@ Main container component that orchestrates the entire attachment system.
 - Download functionality
 
 ### 🎨 Design Features
+
 - **Responsive design** - Works on all screen sizes
 - **Smooth animations** - Hover effects, drag states, transitions
 - **DaisyUI styling** - Consistent with app theme
@@ -51,6 +59,7 @@ Main container component that orchestrates the entire attachment system.
 - **Error handling** - User-friendly error messages
 
 ### 🔧 Technical Implementation
+
 - **React hooks** for state management
 - **TypeScript** for type safety
 - **File validation** on client side
@@ -60,17 +69,20 @@ Main container component that orchestrates the entire attachment system.
 
 ## Usage
 
-The attachment system is automatically included in the ticket detail page. Users with appropriate permissions will see the upload area, while others will see a read-only view of existing attachments.
+The attachment system is automatically included in the ticket detail page. Users with appropriate permissions will see
+the upload area, while others will see a read-only view of existing attachments.
 
 ## Future Enhancements
 
 ### Server Integration
+
 - File upload to S3/storage service
 - Server-side validation
 - File metadata storage in database
 - Download authentication
 
 ### Advanced Features
+
 - PDF.js integration for PDF preview
 - Image editing capabilities
 - Bulk upload/download
@@ -79,12 +91,14 @@ The attachment system is automatically included in the ticket detail page. Users
 - Search within attachments
 
 ### Performance
+
 - Lazy loading for large attachment lists
 - Thumbnail generation
 - Progressive image loading
 - File compression options
 
 ## File Structure
+
 ```
 AttachmentSection.tsx     # Main container component
 AttachmentUploader.tsx    # Drag & drop upload interface
@@ -93,7 +107,9 @@ AttachmentModal.tsx       # Preview modal component
 ```
 
 ## Demo Data
+
 The system includes sample attachments to demonstrate functionality:
+
 - Sample image with preview
 - Sample PDF document
 - Different file types and sizes

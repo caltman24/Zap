@@ -20,7 +20,8 @@ Use this skill when the user:
 
 ## What is the Skills CLI?
 
-The Skills CLI (`npx skills`) is the package manager for the open agent skills ecosystem. Skills are modular packages that extend agent capabilities with specialized knowledge, workflows, and tools.
+The Skills CLI (`npx skills`) is the package manager for the open agent skills ecosystem. Skills are modular packages
+that extend agent capabilities with specialized knowledge, workflows, and tools.
 
 **Key commands:**
 
@@ -99,7 +100,7 @@ The `-g` flag installs globally (user-level) and `-y` skips confirmation prompts
 When searching, consider these common categories:
 
 | Category        | Example Queries                          |
-| --------------- | ---------------------------------------- |
+|-----------------|------------------------------------------|
 | Web Development | react, nextjs, typescript, css, tailwind |
 | Testing         | testing, jest, playwright, e2e           |
 | DevOps          | deploy, docker, kubernetes, ci-cd        |

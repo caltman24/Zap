@@ -1,8 +1,7 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
-import apiClient from "~/services/api.server/apiClient";
-import { destroySession, getSession } from "~/services/sessions.server";
+import {ActionFunctionArgs, LoaderFunctionArgs, redirect} from "@remix-run/node";
+import {destroySession, getSession} from "~/services/sessions.server";
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({request}: ActionFunctionArgs) {
     const session = await getSession(request);
 
     return redirect("/", {
@@ -12,7 +11,7 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({request}: LoaderFunctionArgs) {
     const session = await getSession(request);
 
     if (!session.get("user")) {

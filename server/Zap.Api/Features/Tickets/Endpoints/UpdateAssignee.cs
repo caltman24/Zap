@@ -31,8 +31,8 @@ public class UpdateAssignee : IEndpoint
             return TypedResults.Forbid();
 
         var hasMismatchedAssigneeFields = request?.MemberId != null &&
-            request.DeveloperId != null &&
-            request.MemberId != request.DeveloperId;
+                                          request.DeveloperId != null &&
+                                          request.MemberId != request.DeveloperId;
 
         if (hasMismatchedAssigneeFields)
             return TypedResults.BadRequest("Provide only one assignee field, or make both values the same.");

@@ -1,11 +1,11 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/node";
+import {ActionFunctionArgs, redirect} from "@remix-run/node";
 import apiClient from "~/services/api.server/apiClient";
-import { getSession } from "~/services/sessions.server";
-import { ActionResponse } from "~/utils/response";
+import {getSession} from "~/services/sessions.server";
+import {ActionResponse} from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
 import updateTicketStatus from "./server.update-status";
 
-export async function action({ request, params }: ActionFunctionArgs) {
+export async function action({request, params}: ActionFunctionArgs) {
     const ticketId = params.ticketId!
     const session = await getSession(request);
     const formData = await request.formData();
@@ -20,7 +20,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return redirect("/logout");
     }
 
-    const { data: res, error } = await tryCatch(
+    const {data: res, error} = await tryCatch(
         updateTicketStatus(
             ticketId,
             status,

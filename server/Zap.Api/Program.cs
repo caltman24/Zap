@@ -64,7 +64,6 @@ else
 // This creates a test user (test@test.com) with a complete company, members, projects, and tickets
 // for development and testing purposes. Seeding is idempotent - it will skip if the test user already exists.
 if (app.Environment.IsDevelopment())
-{
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
@@ -78,7 +77,6 @@ if (app.Environment.IsDevelopment())
             logger.LogError(ex, "An error occurred while seeding test data.");
         }
     }
-}
 
 if (app.Environment.IsDevelopment())
 {

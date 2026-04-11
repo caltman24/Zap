@@ -18,7 +18,8 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
             RoleNames.ProjectManager => true,
             RoleNames.Developer => context.ProjectMemberIds.Contains(currentUser.Member.Id),
             RoleNames.Submitter =>
-                context.ProjectMemberIds.Contains(currentUser.Member.Id) || context.SubmitterId == currentUser.Member.Id,
+                context.ProjectMemberIds.Contains(currentUser.Member.Id) ||
+                context.SubmitterId == currentUser.Member.Id,
             _ => false
         };
     }
@@ -54,12 +55,13 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
         if (context == null || !IsSameCompany(context, currentUser)) return false;
 
         var isSubmitterWithEditableStatus = context.SubmitterId == currentUser.Member!.Id &&
-            context.Status == TicketStatuses.New;
+                                            context.Status == TicketStatuses.New;
 
         return currentUser.Member!.Role.Name switch
         {
             RoleNames.Admin => true,
-            RoleNames.ProjectManager => context.ProjectManagerId == currentUser.Member.Id || isSubmitterWithEditableStatus,
+            RoleNames.ProjectManager => context.ProjectManagerId == currentUser.Member.Id ||
+                                        isSubmitterWithEditableStatus,
             RoleNames.Submitter => isSubmitterWithEditableStatus,
             _ => false
         };
@@ -129,9 +131,7 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
     public TicketCapabilitiesDto GetCapabilities(BasicTicketDto ticket, CurrentUser currentUser)
     {
         if (currentUser.Member == null)
-        {
             return new TicketCapabilitiesDto(false, false, false, false, false, false, false, false, false, false);
-        }
 
         var member = currentUser.Member;
         var isAdmin = member.Role.Name == RoleNames.Admin;
@@ -145,22 +145,22 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
             ticket.Assignee?.Id,
             currentUser);
         var canEditNameDescription = isAdmin || isProjectManager ||
-            (!ticket.isArchived && isSubmitter && ticket.Status == TicketStatuses.New);
+                                     (!ticket.isArchived && isSubmitter && ticket.Status == TicketStatuses.New);
         var canUpdatePriority = !ticket.isArchived && canManageTicket;
         var canUpdateStatus = !ticket.isArchived &&
-            (canManageTicket || member.Role.Name == RoleNames.Developer && isAssignedDeveloper);
+                              (canManageTicket || (member.Role.Name == RoleNames.Developer && isAssignedDeveloper));
 
         return new TicketCapabilitiesDto(
-            CanEditDetails: canEditNameDescription || canUpdatePriority || canUpdateStatus,
-            CanEditNameDescription: canEditNameDescription,
-            CanUpdatePriority: canUpdatePriority,
-            CanUpdateStatus: canUpdateStatus,
-            CanUpdateType: canUpdatePriority,
-            CanAssignDeveloper: !ticket.isArchived && canManageTicket,
-            CanArchive: canManageTicket,
-            CanUnarchive: canManageTicket,
-            CanDelete: !ticket.isArchived && canManageTicket,
-            CanComment: canComment);
+            canEditNameDescription || canUpdatePriority || canUpdateStatus,
+            canEditNameDescription,
+            canUpdatePriority,
+            canUpdateStatus,
+            canUpdatePriority,
+            !ticket.isArchived && canManageTicket,
+            canManageTicket,
+            canManageTicket,
+            !ticket.isArchived && canManageTicket,
+            canComment);
     }
 
     private async Task<TicketAccessContext?> GetTicketAccessContextAsync(string ticketId)
@@ -184,7 +184,7 @@ public sealed class TicketAuthorizationService(AppDbContext db) : ITicketAuthori
         if (currentUser.Member == null) return false;
 
         return currentUser.Member.Role.Name == RoleNames.Admin ||
-            context.ProjectManagerId == currentUser.Member.Id;
+               context.ProjectManagerId == currentUser.Member.Id;
     }
 
     private static bool IsSameCompany(TicketAccessContext context, CurrentUser currentUser)

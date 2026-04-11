@@ -31,10 +31,10 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
                 Comment = c,
                 c.SenderId,
                 SenderRoleName = c.Sender.Role.Name,
-                CompanyId = c.Ticket.Project.CompanyId,
-                ProjectManagerId = c.Ticket.Project.ProjectManagerId,
-                SubmitterId = c.Ticket.SubmitterId,
-                AssigneeId = c.Ticket.AssigneeId,
+                c.Ticket.Project.CompanyId,
+                c.Ticket.Project.ProjectManagerId,
+                c.Ticket.SubmitterId,
+                c.Ticket.AssigneeId,
                 c.Ticket.IsArchived
             })
             .FirstOrDefaultAsync();
@@ -56,7 +56,8 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         return true;
     }
 
-    public async Task<bool> UpdateCommentAsync(string ticketId, string commentId, string message, CurrentUser currentUser)
+    public async Task<bool> UpdateCommentAsync(string ticketId, string commentId, string message,
+        CurrentUser currentUser)
     {
         if (currentUser.Member == null) return false;
 
@@ -67,10 +68,10 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
                 Comment = c,
                 c.SenderId,
                 SenderRoleName = c.Sender.Role.Name,
-                CompanyId = c.Ticket.Project.CompanyId,
-                ProjectManagerId = c.Ticket.Project.ProjectManagerId,
-                SubmitterId = c.Ticket.SubmitterId,
-                AssigneeId = c.Ticket.AssigneeId,
+                c.Ticket.Project.CompanyId,
+                c.Ticket.Project.ProjectManagerId,
+                c.Ticket.SubmitterId,
+                c.Ticket.AssigneeId,
                 c.Ticket.IsArchived
             })
             .FirstOrDefaultAsync();
@@ -140,7 +141,7 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
         if (currentUser.Member == null) return false;
 
         return senderId == currentUser.Member.Id &&
-            TicketAuthorizationRules.CanCommentOnTicket(projectManagerId, submitterId, assigneeId, currentUser);
+               TicketAuthorizationRules.CanCommentOnTicket(projectManagerId, submitterId, assigneeId, currentUser);
     }
 
     private static bool CanDeleteComment(
@@ -160,7 +161,7 @@ public class TicketCommentsService(AppDbContext db) : ITicketCommentsService
 
         if (currentUser.Member.Role.Name is RoleNames.Developer or RoleNames.Submitter)
             return senderId == currentUser.Member.Id &&
-                TicketAuthorizationRules.CanCommentOnTicket(projectManagerId, submitterId, assigneeId, currentUser);
+                   TicketAuthorizationRules.CanCommentOnTicket(projectManagerId, submitterId, assigneeId, currentUser);
 
         if (senderId == currentUser.Member.Id)
             return TicketAuthorizationRules.CanCommentOnTicket(projectManagerId, submitterId, assigneeId, currentUser);

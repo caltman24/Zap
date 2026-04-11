@@ -1,11 +1,11 @@
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import {data, LoaderFunctionArgs, redirect} from "@remix-run/node";
 import apiClient from "~/services/api.server/apiClient";
-import { getSession } from "~/services/sessions.server";
+import {getSession} from "~/services/sessions.server";
 import tryCatch from "~/utils/tryCatch";
 import getUnassignedProjectMembers from "./server.getUnassignedMembers";
 
 // get unassigned members
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({request, params}: LoaderFunctionArgs) {
     const projectId = params.projectId!
     const session = await getSession(request);
 

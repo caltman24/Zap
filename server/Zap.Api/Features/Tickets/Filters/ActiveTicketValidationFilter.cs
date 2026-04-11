@@ -8,9 +8,14 @@ internal static class ActiveTicketFiltersExtensions
     /// <summary>
     ///     Applies validation for endpoints that only support operations on active tickets.
     /// </summary>
-    ///     Returns <see cref="TypedResults.NotFound" /> if the resource is not found,
-    ///     <see cref="TypedResults.BadRequest" /> if the ticket is archived and operation is not allowed,
-    ///     or the result of <paramref name="next" /> if neither condition is met.
+    /// Returns
+    /// <see cref="TypedResults.NotFound" />
+    /// if the resource is not found,
+    /// <see cref="TypedResults.BadRequest" />
+    /// if the ticket is archived and operation is not allowed,
+    /// or the result of
+    /// <paramref name="next" />
+    /// if neither condition is met.
     /// </returns>
     internal static RouteHandlerBuilder WithActiveTicketValidation(this RouteHandlerBuilder builder)
     {
@@ -32,10 +37,8 @@ internal static class ActiveTicketFiltersExtensions
             if (ticket == null) return TypedResults.NotFound();
 
             if (ticket.IsArchived)
-            {
                 return TypedResults.BadRequest(
                     "Cannot perform this operation on an archived ticket.");
-            }
 
             return await next(context);
         }

@@ -1,22 +1,31 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useFetcher, useLoaderData, useNavigation, useOutletContext, useParams } from "@remix-run/react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {type ActionFunctionArgs, type LoaderFunctionArgs, redirect} from "@remix-run/node";
+import {
+    Form,
+    Link,
+    useActionData,
+    useFetcher,
+    useLoaderData,
+    useNavigation,
+    useOutletContext,
+    useParams
+} from "@remix-run/react";
+import {type FormEvent, useEffect, useRef, useState} from "react";
 import RouteLayout from "~/layouts/RouteLayout";
 import SelectControl from "~/components/SelectControl";
-import { FormFieldHeader, formInputClassName, formTextareaClassName } from "~/components/FormShell";
+import {FormFieldHeader, formInputClassName, formTextareaClassName} from "~/components/FormShell";
 import BackButton from "~/components/BackButton";
 import ArchiveWarningModal from "~/components/ArchiveWarningModal";
 import DropdownMenu from "~/components/DropdownMenu";
-import { ticketPriorityOptions, ticketStatusOptions, ticketTypeOptions } from "~/data/selectOptions";
+import {ticketPriorityOptions, ticketStatusOptions, ticketTypeOptions} from "~/data/selectOptions";
 import apiClient from "~/services/api.server/apiClient";
-import { ApiError, AuthenticationError } from "~/services/api.server/errors";
-import type { ActionResponseParams, JsonResponseResult } from "~/utils/response";
-import { ActionResponse, ForbiddenResponse, JsonResponse } from "~/utils/response";
-import { getSession } from "~/services/sessions.server";
-import type { BasicTicketInfo, BasicUserInfo, UserInfoResponse } from "~/services/api.server/types";
-import { useEditMode } from "~/utils/editMode";
+import {ApiError, AuthenticationError} from "~/services/api.server/errors";
+import type {ActionResponseParams, JsonResponseResult} from "~/utils/response";
+import {ActionResponse, JsonResponse} from "~/utils/response";
+import {getSession} from "~/services/sessions.server";
+import type {BasicTicketInfo, BasicUserInfo, UserInfoResponse} from "~/services/api.server/types";
+import {useEditMode} from "~/utils/editMode";
 import tryCatch from "~/utils/tryCatch";
-import { getTicketById } from "./server.get-ticket";
+import {getTicketById} from "./server.get-ticket";
 import DeveloperListModal from "./DeveloperListModal";
 import updateTicket from "./server.update-ticket";
 import ChatBox from "./ChatBox";
@@ -41,10 +50,10 @@ const primaryButtonClass =
 const inlineSelectClass = "h-auto border-transparent bg-transparent px-0 pr-8 font-medium text-[var(--app-on-surface)] focus:border-transparent";
 
 function PersonIdentity({
-    label,
-    person,
-    fallback,
-}: {
+                            label,
+                            person,
+                            fallback,
+                        }: {
     label: string;
     person?: BasicUserInfo | null;
     fallback: string;
@@ -62,7 +71,8 @@ function PersonIdentity({
                         src={person.avatarUrl}
                     />
                 ) : (
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-surface-container-high)] text-sm font-semibold text-[var(--app-outline)]">
+                    <span
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-surface-container-high)] text-sm font-semibold text-[var(--app-outline)]">
                         {displayName.slice(0, 1).toUpperCase()}
                     </span>
                 )}
@@ -88,11 +98,14 @@ export const handle = {
         return displayId ? `${displayId} ${ticketName}` : ticketName;
     },
 };
-export async function loader({ request, params }: LoaderFunctionArgs) {
+
+export async function loader({request, params}: LoaderFunctionArgs) {
     const session = await getSession(request);
-    const { ticketId } = params;
-    const { data: tokenResponse,
-        error: tokenError } = await tryCatch(apiClient.auth.getValidToken(session));
+    const {ticketId} = params;
+    const {
+        data: tokenResponse,
+        error: tokenError
+    } = await tryCatch(apiClient.auth.getValidToken(session));
     if (tokenError) {
         return redirect("/logout");
     }
@@ -127,11 +140,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function TicketDetailsRoute() {
-    const { data: ticket, error } = useLoaderData<JsonResponseResult<BasicTicketInfo>>();
-    const { ticketId } = useParams();
+    const {data: ticket, error} = useLoaderData<JsonResponseResult<BasicTicketInfo>>();
+    const {ticketId} = useParams();
     const actionData = useActionData() as ActionResponseParams
-    const { isEditing, formError, toggleEditMode } = useEditMode({ actionData });
-    const { userInfo } = useOutletContext<{ loaderData: any; userInfo: UserInfoResponse }>();
+    const {isEditing, formError, toggleEditMode} = useEditMode({actionData});
+    const {userInfo} = useOutletContext<{ loaderData: any; userInfo: UserInfoResponse }>();
 
     const navigation = useNavigation()
 
@@ -140,22 +153,22 @@ export default function TicketDetailsRoute() {
     const [toast, setToast] = useState<InlineToast | null>(null);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const updatePriorityFetcher = useFetcher({ key: "update-priority" })
-    const updateStatusFetcher = useFetcher({ key: "update-status" })
-    const updateTypeFetcher = useFetcher({ key: "update-type" })
+    const updatePriorityFetcher = useFetcher({key: "update-priority"})
+    const updateStatusFetcher = useFetcher({key: "update-status"})
+    const updateTypeFetcher = useFetcher({key: "update-type"})
 
-    const getDevelopersFetcher = useFetcher({ key: "get-devs" })
-    const assignDeveloperFetcher = useFetcher({ key: "update-dev" })
+    const getDevelopersFetcher = useFetcher({key: "get-devs"})
+    const assignDeveloperFetcher = useFetcher({key: "update-dev"})
 
     const commentsFormRef = useRef<HTMLFormElement>(null);
 
-    const deleteCommentFetcher = useFetcher({ key: "delete-comment" })
-    const updateCommentFetcher = useFetcher({ key: "update-comment" })
-    const getCommentsFetcher = useFetcher({ key: "get-comments" })
-    const getHistoryFetcher = useFetcher({ key: "get-history" })
+    const deleteCommentFetcher = useFetcher({key: "delete-comment"})
+    const updateCommentFetcher = useFetcher({key: "update-comment"})
+    const getCommentsFetcher = useFetcher({key: "get-comments"})
+    const getHistoryFetcher = useFetcher({key: "get-history"})
 
     const showToast = (message: string, tone: InlineToast["tone"] = "success") => {
-        setToast({ message, tone });
+        setToast({message, tone});
 
         if (toastTimeoutRef.current) {
             clearTimeout(toastTimeoutRef.current);
@@ -261,7 +274,8 @@ export default function TicketDetailsRoute() {
     if (error) {
         return (
             <RouteLayout>
-                <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+                <div
+                    className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
                     {error}
                 </div>
             </RouteLayout>
@@ -271,7 +285,8 @@ export default function TicketDetailsRoute() {
     if (!ticket) {
         return (
             <RouteLayout>
-                <div className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
+                <div
+                    className="rounded-[1.5rem] bg-[var(--app-surface-container-low)] p-6 text-[var(--app-error)] outline outline-1 outline-[var(--app-outline-variant-soft)]">
                     Ticket details could not be loaded.
                 </div>
             </RouteLayout>
@@ -308,19 +323,21 @@ export default function TicketDetailsRoute() {
 
     const priorityDisplay = (
         <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-on-surface)]">
-            <span className={`h-2.5 w-2.5 rounded-full ${getTicketPriorityDotClass(ticket.priority)}`} />
+            <span className={`h-2.5 w-2.5 rounded-full ${getTicketPriorityDotClass(ticket.priority)}`}/>
             {ticket.priority}
         </div>
     );
 
     const statusDisplay = (
-        <span className={`app-shell-mono inline-flex rounded-md px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] ${getTicketStatusChipClass(ticket.status)}`}>
+        <span
+            className={`app-shell-mono inline-flex rounded-md px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] ${getTicketStatusChipClass(ticket.status)}`}>
             {ticket.status}
         </span>
     );
 
     const typeDisplay = (
-        <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${getTicketTypeChipClass(ticket.type)}`}>
+        <span
+            className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${getTicketTypeChipClass(ticket.type)}`}>
             {ticket.type}
         </span>
     );
@@ -335,7 +352,7 @@ export default function TicketDetailsRoute() {
                             : toast.tone === "error"
                                 ? "bg-[var(--app-error-container)]/35 text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10"
                                 : "bg-[var(--app-tertiary-container)]/25 text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/10"
-                            }`}
+                        }`}
                     >
                         {toast.message}
                     </div>
@@ -343,7 +360,7 @@ export default function TicketDetailsRoute() {
             ) : null}
 
             <div className="flex flex-wrap items-start justify-between gap-3">
-                <BackButton />
+                <BackButton/>
 
                 {!isEditing && hasToolbarActions ? (
                     <>
@@ -359,7 +376,7 @@ export default function TicketDetailsRoute() {
                                 </>
                             }
                         >
-                            {({ close }) => (
+                            {({close}) => (
                                 <>
                                     {canEditNameDescriptionField ? (
                                         <button
@@ -376,16 +393,18 @@ export default function TicketDetailsRoute() {
                                     ) : null}
 
                                     {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
-                                        <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={(event) => {
-                                            close();
-                                            handleArchiveClick(event);
-                                        }}>
-                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                        <Form action={`/tickets/${ticketId}/archive`} method="post"
+                                              onSubmit={(event) => {
+                                                  close();
+                                                  handleArchiveClick(event);
+                                              }}>
+                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden
+                                                   name="projectId" type="text"/>
                                             <button
                                                 className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${ticket.isArchived
                                                     ? "text-[var(--app-success)] hover:bg-emerald-500/10"
                                                     : "text-[var(--app-tertiary)] hover:bg-[var(--app-tertiary-container)]/15"
-                                                    }`}
+                                                }`}
                                                 name="intent"
                                                 type="submit"
                                                 value={ticket.isArchived ? "unarchive" : "archive"}
@@ -398,7 +417,8 @@ export default function TicketDetailsRoute() {
 
                                     {canDelete ? (
                                         <Form action={`/tickets/${ticketId}/delete`} method="post" onSubmit={close}>
-                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                            <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden
+                                                   name="projectId" type="text"/>
                                             <button
                                                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--app-error)] transition-colors hover:bg-[var(--app-error-container)]/15"
                                                 type="submit"
@@ -414,20 +434,23 @@ export default function TicketDetailsRoute() {
 
                         <div className="hidden flex-wrap items-center justify-end gap-3 sm:flex">
                             {canEditNameDescriptionField ? (
-                                <button className={`${secondaryButtonClass} cursor-pointer`} onClick={handleEditToggle} type="button">
+                                <button className={`${secondaryButtonClass} cursor-pointer`} onClick={handleEditToggle}
+                                        type="button">
                                     <span className="material-symbols-outlined text-lg">edit</span>
                                     Edit Details
                                 </button>
                             ) : null}
 
                             {(canArchive && !ticket.isArchived) || (canUnarchive && ticket.isArchived) ? (
-                                <Form action={`/tickets/${ticketId}/archive`} method="post" onSubmit={handleArchiveClick}>
-                                    <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                <Form action={`/tickets/${ticketId}/archive`} method="post"
+                                      onSubmit={handleArchiveClick}>
+                                    <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden
+                                           name="projectId" type="text"/>
                                     <button
                                         className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${ticket.isArchived
                                             ? "text-[var(--app-success)] outline outline-1 outline-[var(--app-success)]/15 hover:bg-emerald-500/10"
                                             : "text-[var(--app-tertiary)] outline outline-1 outline-[var(--app-tertiary)]/15 hover:bg-[var(--app-tertiary-container)]/15"
-                                            }`}
+                                        }`}
                                         name="intent"
                                         type="submit"
                                         value={ticket.isArchived ? "unarchive" : "archive"}
@@ -440,7 +463,8 @@ export default function TicketDetailsRoute() {
 
                             {canDelete ? (
                                 <Form action={`/tickets/${ticketId}/delete`} method="post">
-                                    <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden name="projectId" type="text" />
+                                    <input aria-hidden className="hidden" defaultValue={ticket.projectId} hidden
+                                           name="projectId" type="text"/>
                                     <button
                                         className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/15 transition-colors hover:bg-[var(--app-error-container)]/15"
                                         type="submit"
@@ -470,31 +494,34 @@ export default function TicketDetailsRoute() {
 
             <section className="overflow-hidden border-b border-[var(--app-outline-variant)]/10 pb-8">
                 {isEditing ? (
-                        <div className="space-y-6 p-6 sm:p-8">
-                            <div className="border-b border-[var(--app-outline-variant)]/10 pb-6">
-                                <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">
-                                    {ticket.displayId}
-                                </p>
-                                <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">Edit Ticket</h1>
-                                <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
-                                    Update the core ticket details shown to the team.
-                                </p>
+                    <div className="space-y-6 p-6 sm:p-8">
+                        <div className="border-b border-[var(--app-outline-variant)]/10 pb-6">
+                            <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">
+                                {ticket.displayId}
+                            </p>
+                            <h1 className="text-3xl font-bold tracking-[-0.03em] text-[var(--app-on-surface)]">Edit
+                                Ticket</h1>
+                            <p className="mt-1 max-w-2xl text-sm text-[var(--app-on-surface-variant)] sm:text-base">
+                                Update the core ticket details shown to the team.
+                            </p>
                         </div>
 
                         <Form className="space-y-8" method="post">
                             {formError ? (
-                                <div className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
+                                <div
+                                    className="rounded-2xl bg-[var(--app-error-container)]/20 px-4 py-3 text-sm text-[var(--app-error)] outline outline-1 outline-[var(--app-error)]/10">
                                     {formError}
                                 </div>
                             ) : null}
 
-                            {!canUpdatePriorityField ? <input name="priority" type="hidden" value={ticket.priority} /> : null}
-                            {!canUpdateStatusField ? <input name="status" type="hidden" value={ticket.status} /> : null}
-                            {!canUpdateTypeField ? <input name="type" type="hidden" value={ticket.type} /> : null}
+                            {!canUpdatePriorityField ?
+                                <input name="priority" type="hidden" value={ticket.priority}/> : null}
+                            {!canUpdateStatusField ? <input name="status" type="hidden" value={ticket.status}/> : null}
+                            {!canUpdateTypeField ? <input name="type" type="hidden" value={ticket.type}/> : null}
 
                             <div className="grid gap-6">
                                 <div>
-                                    <FormFieldHeader label="Ticket Name" required />
+                                    <FormFieldHeader label="Ticket Name" required/>
                                     <input
                                         className={formInputClassName}
                                         defaultValue={ticket.name}
@@ -507,7 +534,7 @@ export default function TicketDetailsRoute() {
                                 </div>
 
                                 <div>
-                                    <FormFieldHeader label="Description" required />
+                                    <FormFieldHeader label="Description" required/>
                                     <textarea
                                         className={formTextareaClassName}
                                         defaultValue={ticket.description}
@@ -522,8 +549,9 @@ export default function TicketDetailsRoute() {
                                 {canUpdatePriorityField &&
                                     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                                         <div>
-                                            <FormFieldHeader label="Priority" required />
-                                            <SelectControl controlSize="md" defaultValue={ticket.priority} disabled={!canUpdatePriorityField} name="priority">
+                                            <FormFieldHeader label="Priority" required/>
+                                            <SelectControl controlSize="md" defaultValue={ticket.priority}
+                                                           disabled={!canUpdatePriorityField} name="priority">
                                                 {ticketPriorityOptions.map((option) => (
                                                     <option key={option.value} value={option.value}>
                                                         {option.label}
@@ -533,8 +561,9 @@ export default function TicketDetailsRoute() {
                                         </div>
 
                                         <div>
-                                            <FormFieldHeader label="Status" required />
-                                            <SelectControl controlSize="md" defaultValue={ticket.status} disabled={!canUpdateStatusField} name="status">
+                                            <FormFieldHeader label="Status" required/>
+                                            <SelectControl controlSize="md" defaultValue={ticket.status}
+                                                           disabled={!canUpdateStatusField} name="status">
                                                 {ticketStatusOptions.map((option) => (
                                                     <option key={option.value} value={option.value}>
                                                         {option.label}
@@ -544,8 +573,9 @@ export default function TicketDetailsRoute() {
                                         </div>
 
                                         <div>
-                                            <FormFieldHeader label="Type" required />
-                                            <SelectControl controlSize="md" defaultValue={ticket.type} disabled={!canUpdateTypeField} name="type">
+                                            <FormFieldHeader label="Type" required/>
+                                            <SelectControl controlSize="md" defaultValue={ticket.type}
+                                                           disabled={!canUpdateTypeField} name="type">
                                                 {ticketTypeOptions.map((option) => (
                                                     <option key={option.value} value={option.value}>
                                                         {option.label}
@@ -557,8 +587,11 @@ export default function TicketDetailsRoute() {
                                 }
                             </div>
 
-                            <div className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 pt-5">
-                                <button className={`${secondaryButtonClass} cursor-pointer`} disabled={navigation.state === "submitting"} onClick={handleEditToggle} type="button">
+                            <div
+                                className="flex justify-end gap-3 border-t border-[var(--app-outline-variant)]/10 pt-5">
+                                <button className={`${secondaryButtonClass} cursor-pointer`}
+                                        disabled={navigation.state === "submitting"} onClick={handleEditToggle}
+                                        type="button">
                                     Cancel
                                 </button>
                                 <button
@@ -593,15 +626,18 @@ export default function TicketDetailsRoute() {
                             </div>
                         </div>
 
-                        <div className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
+                        <div
+                            className="mt-8 border-t border-[var(--app-outline-variant)]/10 bg-[var(--app-surface-container-lowest)]/30 px-6 py-6 sm:px-8">
                             <dl className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-                                <PersonIdentity fallback="Unknown submitter" label="Submitter" person={ticket.submitter} />
+                                <PersonIdentity fallback="Unknown submitter" label="Submitter"
+                                                person={ticket.submitter}/>
 
                                 <div className="space-y-3 border-l-2 border-[var(--app-tertiary)] pl-4">
                                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Priority</dt>
                                     <dd>
                                         {updatePriorityFetcher.state === "submitting" ? (
-                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle" />
+                                            <span
+                                                className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle"/>
                                         ) : canUpdatePriorityField ? (
                                             <SelectControl
                                                 className={inlineSelectClass}
@@ -632,7 +668,8 @@ export default function TicketDetailsRoute() {
                                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Status</dt>
                                     <dd>
                                         {updateStatusFetcher.state === "submitting" ? (
-                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle" />
+                                            <span
+                                                className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle"/>
                                         ) : canUpdateStatusField ? (
                                             <SelectControl
                                                 className={inlineSelectClass}
@@ -663,7 +700,8 @@ export default function TicketDetailsRoute() {
                                     <dt className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Type</dt>
                                     <dd>
                                         {updateTypeFetcher.state === "submitting" ? (
-                                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle" />
+                                            <span
+                                                className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-outline)] border-r-transparent align-middle"/>
                                         ) : canUpdateTypeField ? (
                                             <SelectControl
                                                 className={inlineSelectClass}
@@ -695,7 +733,8 @@ export default function TicketDetailsRoute() {
                         <div className="border-t border-[var(--app-outline-variant)]/10 px-6 py-6 sm:px-8">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Assigned Developer</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Assigned
+                                        Developer</h2>
                                     <p className="mt-1 text-sm text-[var(--app-on-surface-variant)] sm:text-base">
                                         Ownership and active implementation responsibility for this ticket.
                                     </p>
@@ -703,12 +742,14 @@ export default function TicketDetailsRoute() {
 
                                 {canAssign ? (
                                     <div className="flex flex-wrap items-center gap-3">
-                                        <button className={`${secondaryButtonClass} cursor-pointer`} onClick={() => handleOnGetDevelopers()} type="button">
+                                        <button className={`${secondaryButtonClass} cursor-pointer`}
+                                                onClick={() => handleOnGetDevelopers()} type="button">
                                             <span className="material-symbols-outlined text-lg">person_add</span>
                                             Assign
                                         </button>
                                         {ticket.assignee ? (
-                                            <button className={`${secondaryButtonClass} cursor-pointer`} onClick={() => handleOnUnassignDeveloper()} type="button">
+                                            <button className={`${secondaryButtonClass} cursor-pointer`}
+                                                    onClick={() => handleOnUnassignDeveloper()} type="button">
                                                 <span className="material-symbols-outlined text-lg">person_remove</span>
                                                 Unassign
                                             </button>
@@ -717,7 +758,8 @@ export default function TicketDetailsRoute() {
                                 ) : null}
                             </div>
 
-                            <div className="mt-5 rounded-2xl bg-[var(--app-surface-container-lowest)]/70 px-5 py-4 outline outline-1 outline-[var(--app-outline-variant)]/10">
+                            <div
+                                className="mt-5 rounded-2xl bg-[var(--app-surface-container-lowest)]/70 px-5 py-4 outline outline-1 outline-[var(--app-outline-variant)]/10">
                                 {ticket.assignee ? (
                                     <div className="flex items-center gap-3">
                                         <img
@@ -726,7 +768,8 @@ export default function TicketDetailsRoute() {
                                             src={ticket.assignee.avatarUrl}
                                         />
                                         <div>
-                                            <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Assigned Developer</p>
+                                            <p className="app-shell-mono text-[10px] uppercase tracking-[0.22em] text-[var(--app-outline)]">Assigned
+                                                Developer</p>
                                             <p className="text-base font-semibold text-[var(--app-on-surface)]">{ticket.assignee.name}</p>
                                         </div>
                                     </div>
@@ -754,7 +797,9 @@ export default function TicketDetailsRoute() {
                             userId={userInfo.memberId ?? ""}
                         />
 
-                        <Form action={`/tickets/${ticketId}/create-comment`} className="mt-4 border-t border-[var(--app-outline-variant)]/10 pt-4" fetcherKey="create-comment" method="post" navigate={false} ref={commentsFormRef}>
+                        <Form action={`/tickets/${ticketId}/create-comment`}
+                              className="mt-4 border-t border-[var(--app-outline-variant)]/10 pt-4"
+                              fetcherKey="create-comment" method="post" navigate={false} ref={commentsFormRef}>
                             <div className="flex items-start gap-3">
                                 <button
                                     className="inline-flex min-w-24 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--app-primary)_0%,var(--app-primary-fixed)_100%)] px-4 py-3 text-sm font-bold text-[#1000a9] transition-all duration-200 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
@@ -778,15 +823,17 @@ export default function TicketDetailsRoute() {
                     <div className="mb-4 border-b border-[var(--app-outline-variant)]/10 pb-4">
                         <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">Attachments</h2>
                     </div>
-                    <AttachmentSection ticket={ticket} ticketId={ticketId!} userInfo={userInfo} />
+                    <AttachmentSection ticket={ticket} ticketId={ticketId!} userInfo={userInfo}/>
                 </section>
             </div>
 
             <section className={`${panelClass} p-6`}>
-                <div className="mb-4 flex items-center justify-between border-b border-[var(--app-outline-variant)]/10 pb-4">
+                <div
+                    className="mb-4 flex items-center justify-between border-b border-[var(--app-outline-variant)]/10 pb-4">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight text-[var(--app-on-surface)]">History</h2>
-                        <p className="mt-1 text-sm text-[var(--app-on-surface-variant)]">A running record of edits and assignment changes.</p>
+                        <p className="mt-1 text-sm text-[var(--app-on-surface-variant)]">A running record of edits and
+                            assignment changes.</p>
                     </div>
                     <button
                         className={`${secondaryButtonClass} cursor-pointer px-3 py-2`}
@@ -796,14 +843,16 @@ export default function TicketDetailsRoute() {
                         type="button"
                     >
                         {getHistoryFetcher.state === "loading" ? (
-                            <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                            <span
+                                className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"/>
                         ) : (
                             <span className="material-symbols-outlined text-lg">refresh</span>
                         )}
                     </button>
                 </div>
 
-                <TicketTimeline history={(getHistoryFetcher.data as any)?.data || []} loading={getHistoryFetcher.state === "loading"} />
+                <TicketTimeline history={(getHistoryFetcher.data as any)?.data || []}
+                                loading={getHistoryFetcher.state === "loading"}/>
             </section>
 
             <ArchiveWarningModal
@@ -816,9 +865,9 @@ export default function TicketDetailsRoute() {
     );
 }
 
-export async function action({ request, params }: ActionFunctionArgs) {
+export async function action({request, params}: ActionFunctionArgs) {
     const session = await getSession(request);
-    const { data: tokenResponse, error: tokenError } = await tryCatch(
+    const {data: tokenResponse, error: tokenError} = await tryCatch(
         apiClient.auth.getValidToken(session),
     );
 
@@ -842,7 +891,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
         type
     };
 
-    const { error } = await tryCatch(
+    const {error} = await tryCatch(
         updateTicket(ticketId, ticketData, tokenResponse.token),
     );
 

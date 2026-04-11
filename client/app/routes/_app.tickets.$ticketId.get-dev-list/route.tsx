@@ -1,12 +1,12 @@
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import {LoaderFunctionArgs, redirect} from "@remix-run/node";
 import apiClient from "~/services/api.server/apiClient";
-import { getSession } from "~/services/sessions.server";
-import { JsonResponse } from "~/utils/response";
+import {getSession} from "~/services/sessions.server";
+import {JsonResponse} from "~/utils/response";
 import tryCatch from "~/utils/tryCatch";
-import { getProjectDevList } from "./server.get-dev-list";
+import {getProjectDevList} from "./server.get-dev-list";
 
 // get project managers that isnt assigned to the project
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({request, params}: LoaderFunctionArgs) {
     const ticketId = params.ticketId!
     const session = await getSession(request);
 
