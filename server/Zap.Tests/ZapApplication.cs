@@ -7,10 +7,12 @@ namespace Zap.Tests;
 public class ZapApplication : WebApplicationFactory<Program>
 {
     private readonly Dictionary<string, string?> _configurationOverrides;
+    private readonly bool _useInMemoryDatabase;
 
-    public ZapApplication(Dictionary<string, string?>? configurationOverrides = null)
+    public ZapApplication(Dictionary<string, string?>? configurationOverrides = null, bool useInMemoryDatabase = true)
     {
         _configurationOverrides = configurationOverrides ?? new Dictionary<string, string?>();
+        _useInMemoryDatabase = useInMemoryDatabase;
     }
 
     public AppDbContext CreateAppDbContext()
@@ -60,9 +62,10 @@ public class ZapApplication : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
 
         if (_configurationOverrides.Count > 0)
-        {
-            builder.ConfigureAppConfiguration((_, config) => { config.AddInMemoryCollection(_configurationOverrides); });
-        }
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(_configurationOverrides);
+            });
 
         base.ConfigureWebHost(builder);
     }
@@ -75,11 +78,11 @@ public class ZapApplication : WebApplicationFactory<Program>
             .WithEnvFiles(".env")
             .WithOverwriteExistingVars()
             .Load();
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices((context, services) =>
         {
             // DbContext
             services.AddDbContextFactory<AppDbContext>();
-            services.AddDbContextOptions();
+            services.AddDbContextOptions(context.Configuration, _useInMemoryDatabase);
 
             // Lower the requirements for the tests
             services.Configure<IdentityOptions>(o =>

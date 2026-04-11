@@ -10,10 +10,10 @@ namespace Zap.Api.Features.Companies.Endpoints;
 /// <summary>
 ///     Searches visible active tickets and projects for the current company member.
 /// </summary>
-    public class GetCompanySearch : IEndpoint
-    {
-        private const int ResultLimitPerType = 5;
-        private const int MinimumQueryLength = 2;
+public class GetCompanySearch : IEndpoint
+{
+    private const int ResultLimitPerType = 5;
+    private const int MinimumQueryLength = 2;
 
     /// <summary>
     ///     Maps the company search endpoint.
@@ -39,46 +39,48 @@ namespace Zap.Api.Features.Companies.Endpoints;
         CurrentUser currentUser,
         [FromQuery] string? query = null)
     {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return TypedResults.Ok<List<Response>>([]);
-        }
+        if (string.IsNullOrWhiteSpace(query)) return TypedResults.Ok<List<Response>>([]);
 
         var currentMember = currentUser.Member!;
         var trimmedQuery = query.Trim();
 
-        if (trimmedQuery.Length < MinimumQueryLength)
-        {
-            return TypedResults.Ok<List<Response>>([]);
-        }
+        if (trimmedQuery.Length < MinimumQueryLength) return TypedResults.Ok<List<Response>>([]);
 
         var projects = await companyService.SearchVisibleProjectsAsync(
             currentUser.CompanyId!,
             currentMember.Id,
             currentMember.Role.Name,
-            trimmedQuery,
-            ResultLimitPerType);
+            trimmedQuery);
         var tickets = await ticketService.SearchVisibleTicketsAsync(
             currentMember.Id,
             currentMember.Role.Name,
             currentUser.CompanyId!,
-            trimmedQuery,
-            ResultLimitPerType);
+            trimmedQuery);
 
         var results = projects
-            .Select(project => new Response(
-                "project",
-                project.Id,
-                null,
-                project.Name,
-                null))
-            .Concat(tickets.Select(ticket => new Response(
-                "ticket",
-                ticket.Id,
-                ticket.ProjectId,
-                ticket.Name,
-                ticket.DisplayId)))
-            .OrderBy(result => result.Name)
+            .Select(project => new
+            {
+                Response = new Response(
+                    "project",
+                    project.Id,
+                    null,
+                    project.Name,
+                    null),
+                project.Score
+            })
+            .Concat(tickets.Select(ticket => new
+            {
+                Response = new Response(
+                    "ticket",
+                    ticket.Id,
+                    ticket.ProjectId,
+                    ticket.Name,
+                    ticket.DisplayId),
+                ticket.Score
+            }))
+            .OrderByDescending(result => result.Score)
+            .ThenBy(result => result.Response.Name)
+            .Select(result => result.Response)
             .ToList();
 
         return TypedResults.Ok(results);

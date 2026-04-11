@@ -9,6 +9,13 @@ namespace Zap.Api.Features.Tickets.Services;
 
 public class TicketService : ITicketService
 {
+    private const float DisplayIdExactScore = 1000;
+    private const float DisplayIdPrefixScore = 850;
+    private const float DisplayIdPartialScore = 700;
+    private const float NamePrefixScore = 500;
+    private const float NameTokenPrefixBaseScore = 400;
+    private const float NameTokenPrefixRankMultiplier = 100;
+
     private readonly AppDbContext _db;
     private readonly ITicketHistoryService _historyService;
 
@@ -59,7 +66,7 @@ public class TicketService : ITicketService
     public async Task<List<BasicTicketDto>> GetAssignedTicketsAsync(string memberId)
     {
         return await ProjectBasicTickets(_db.Tickets
-            .Where(t => t.AssigneeId == memberId || t.SubmitterId == memberId)
+                .Where(t => t.AssigneeId == memberId || t.SubmitterId == memberId)
             )
             .ToListAsync();
     }
@@ -67,21 +74,21 @@ public class TicketService : ITicketService
     public async Task<List<BasicTicketDto>> GetOpenTicketsAsync(string memberId, string roleName, string companyId)
     {
         return await ProjectBasicTickets(GetVisibleTicketsQuery(memberId, roleName, companyId)
-            .Where(t => !t.IsArchived && !t.Project.IsArchived && t.Status.Name != TicketStatuses.Resolved))
+                .Where(t => !t.IsArchived && !t.Project.IsArchived && t.Status.Name != TicketStatuses.Resolved))
             .ToListAsync();
     }
 
     public async Task<List<BasicTicketDto>> GetArchivedTicketsAsync(string memberId, string roleName, string companyId)
     {
         return await ProjectBasicTickets(GetVisibleTicketsQuery(memberId, roleName, companyId)
-            .Where(t => t.IsArchived))
+                .Where(t => t.IsArchived))
             .ToListAsync();
     }
 
     public async Task<List<BasicTicketDto>> GetResolvedTicketsAsync(string memberId, string roleName, string companyId)
     {
         return await ProjectBasicTickets(GetVisibleTicketsQuery(memberId, roleName, companyId)
-            .Where(t => !t.IsArchived && !t.Project.IsArchived && t.Status.Name == TicketStatuses.Resolved))
+                .Where(t => !t.IsArchived && !t.Project.IsArchived && t.Status.Name == TicketStatuses.Resolved))
             .ToListAsync();
     }
 
@@ -92,58 +99,87 @@ public class TicketService : ITicketService
         string searchTerm,
         int limit = 5)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm) || limit <= 0)
-        {
-            return [];
-        }
+        if (string.IsNullOrWhiteSpace(searchTerm) || limit <= 0) return [];
 
         var trimmedSearchTerm = searchTerm.Trim();
-        var searchTerms = GetSearchTerms(trimmedSearchTerm);
+        var namePrefixPattern = $"{trimmedSearchTerm}%";
+        var nameTokenPrefixQuery = BuildNameTokenPrefixQuery(trimmedSearchTerm);
         var normalizedDisplayIdSearch = NormalizeDisplayIdSearchTerm(trimmedSearchTerm);
-        var baseQuery = GetVisibleTicketsQuery(memberId, roleName, companyId)
-            .Where(ticket => !ticket.IsArchived && !ticket.Project.IsArchived);
+        var canonicalDisplayId = GetCanonicalDisplayId(normalizedDisplayIdSearch);
+        var displayIdPrefixPattern = normalizedDisplayIdSearch != null && StartsWithDisplayIdPrefix(trimmedSearchTerm)
+            ? $"{GetCanonicalDisplayIdPrefix(normalizedDisplayIdSearch)}%"
+            : null;
 
-        var textQuery = baseQuery;
+        if (nameTokenPrefixQuery == null && normalizedDisplayIdSearch == null) return [];
 
-        foreach (var term in searchTerms)
-        {
-            var likePattern = $"%{term}%";
-            textQuery = textQuery.Where(ticket =>
-                EF.Functions.ILike(ticket.Name, likePattern) ||
-                EF.Functions.ILike(ticket.Description, likePattern));
-        }
-
-        var results = await ProjectTicketSearchResults(textQuery
-            .OrderBy(ticket => ticket.Name)
-            .Take(limit))
-            .ToListAsync();
-
-        if (results.Count >= limit || string.IsNullOrWhiteSpace(normalizedDisplayIdSearch))
-        {
-            return results;
-        }
-
-        var displayIdMatches = await ProjectTicketSearchResults(baseQuery
-                .Where(ticket =>
-                    EF.Functions.ILike(ticket.DisplayId, $"%{trimmedSearchTerm}%") ||
-                    EF.Functions.ILike(
-                        ticket.DisplayId.Replace("#", string.Empty).Replace("-", string.Empty),
-                        $"%{normalizedDisplayIdSearch}%"))
-                .OrderBy(ticket => ticket.Name)
-                .Take(limit))
-            .ToListAsync();
-
-        return results
-            .Concat(displayIdMatches)
-            .DistinctBy(ticket => ticket.Id)
+        return await GetVisibleTicketsQuery(memberId, roleName, companyId)
+            .Where(ticket => !ticket.IsArchived && !ticket.Project.IsArchived)
+            .Select(ticket => new
+            {
+                ticket.Id,
+                ticket.ProjectId,
+                ticket.Name,
+                ticket.DisplayId,
+                NormalizedDisplayId = ticket.DisplayId.Replace("#", string.Empty).Replace("-", string.Empty),
+                NameVector = EF.Functions.ToTsVector("simple", ticket.Name)
+            })
+            .Select(ticket => new
+            {
+                ticket.Id,
+                ticket.ProjectId,
+                ticket.Name,
+                ticket.DisplayId,
+                DisplayIdExactMatch = canonicalDisplayId != null && ticket.DisplayId == canonicalDisplayId,
+                DisplayIdPrefixMatch = displayIdPrefixPattern != null &&
+                                       EF.Functions.ILike(ticket.DisplayId, displayIdPrefixPattern),
+                DisplayIdPartialMatch = normalizedDisplayIdSearch != null &&
+                                        (EF.Functions.ILike(ticket.DisplayId, $"%{trimmedSearchTerm}%") ||
+                                         EF.Functions.ILike(ticket.NormalizedDisplayId,
+                                             $"%{normalizedDisplayIdSearch}%")),
+                NamePrefixMatch = EF.Functions.ILike(ticket.Name, namePrefixPattern),
+                NameTokenPrefixMatch = nameTokenPrefixQuery != null &&
+                                       ticket.NameVector.Matches(EF.Functions.ToTsQuery("simple",
+                                           nameTokenPrefixQuery)),
+                NameTokenPrefixRank = nameTokenPrefixQuery != null
+                    ? ticket.NameVector.Rank(EF.Functions.ToTsQuery("simple", nameTokenPrefixQuery))
+                    : 0
+            })
+            .Where(ticket =>
+                ticket.DisplayIdExactMatch ||
+                ticket.DisplayIdPrefixMatch ||
+                ticket.DisplayIdPartialMatch ||
+                ticket.NamePrefixMatch ||
+                ticket.NameTokenPrefixMatch)
+            .Select(ticket => new
+            {
+                Score =
+                    (ticket.DisplayIdExactMatch ? DisplayIdExactScore : 0) +
+                    (ticket.DisplayIdPrefixMatch ? DisplayIdPrefixScore : 0) +
+                    (ticket.DisplayIdPartialMatch ? DisplayIdPartialScore : 0) +
+                    (ticket.NamePrefixMatch ? NamePrefixScore : 0) +
+                    (ticket.NameTokenPrefixMatch
+                        ? NameTokenPrefixBaseScore + ticket.NameTokenPrefixRank * NameTokenPrefixRankMultiplier
+                        : 0),
+                ticket.Id,
+                ticket.ProjectId,
+                ticket.Name,
+                StoredDisplayId = ticket.DisplayId
+            })
+            .OrderByDescending(ticket => ticket.Score)
+            .ThenBy(ticket => ticket.Name)
             .Take(limit)
-            .ToList();
+            .Select(ticket => new TicketSearchDto(ticket.Id, ticket.ProjectId, ticket.Name)
+            {
+                Score = ticket.Score,
+                StoredDisplayId = ticket.StoredDisplayId
+            })
+            .ToListAsync();
     }
 
     public async Task<BasicTicketDto?> GetTicketByIdAsync(string ticketId)
     {
         return await ProjectBasicTickets(_db.Tickets
-            .Where(t => t.Id == ticketId))
+                .Where(t => t.Id == ticketId))
             .FirstOrDefaultAsync();
     }
 
@@ -527,36 +563,49 @@ public class TicketService : ITicketService
             .ToArray());
     }
 
-    private static List<string> GetSearchTerms(string searchTerm)
-    {
-        return searchTerm
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-    }
-
     private static string? NormalizeDisplayIdSearchTerm(string searchTerm)
     {
         var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
 
         if (normalizedSearchTerm.StartsWith("ZAP", StringComparison.Ordinal))
-        {
             normalizedSearchTerm = normalizedSearchTerm[3..];
-        }
 
         return string.IsNullOrWhiteSpace(normalizedSearchTerm)
             ? null
             : normalizedSearchTerm;
     }
 
-    private static IQueryable<TicketSearchDto> ProjectTicketSearchResults(IQueryable<Ticket> query)
+    private static string? BuildNameTokenPrefixQuery(string searchTerm)
     {
-        return query.Select(ticket => new TicketSearchDto(
-            ticket.Id,
-            ticket.ProjectId,
-            ticket.Name)
-        {
-            StoredDisplayId = ticket.DisplayId
-        });
+        var tokens = searchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(NormalizeSearchTerm)
+            .Where(token => token.Length > 0)
+            .Select(token => $"{token}:*")
+            .ToList();
+
+        return tokens.Count == 0
+            ? null
+            : string.Join(" & ", tokens);
+    }
+
+    private static string? GetCanonicalDisplayId(string? normalizedDisplayIdSearch)
+    {
+        return normalizedDisplayIdSearch is { Length: 4 }
+            ? $"#ZAP-{normalizedDisplayIdSearch}"
+            : null;
+    }
+
+    private static string GetCanonicalDisplayIdPrefix(string normalizedDisplayIdSearch)
+    {
+        return $"#ZAP-{normalizedDisplayIdSearch}";
+    }
+
+    private static bool StartsWithDisplayIdPrefix(string searchTerm)
+    {
+        return NormalizeSearchTerm(searchTerm).StartsWith("ZAP", StringComparison.Ordinal) ||
+               searchTerm.Contains('#') ||
+               searchTerm.Contains('-');
     }
 
     private static IQueryable<BasicTicketDto> ProjectBasicTickets(IQueryable<Ticket> query)

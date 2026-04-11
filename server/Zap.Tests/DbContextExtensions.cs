@@ -1,15 +1,23 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Zap.Tests;
 
 public static class DbContextExtensions
 {
-    public static IServiceCollection AddDbContextOptions(this IServiceCollection services)
+    public static IServiceCollection AddDbContextOptions(this IServiceCollection services, IConfiguration configuration,
+        bool useInMemoryDatabase = true)
     {
         services.RemoveAll<DbContextOptions<AppDbContext>>();
 
         var ob = new DbContextOptionsBuilder<AppDbContext>();
-        ob.UseInMemoryDatabase($"ZapTests_{Guid.NewGuid().ToString()}");
+
+        if (useInMemoryDatabase)
+            ob.UseInMemoryDatabase($"ZapTests_{Guid.NewGuid().ToString()}");
+        else
+            ob.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                .UseRequiredSeeding();
+
         ob.UseSeeding((ctx, _) =>
         {
             // Do this check because this runs each test for some reason

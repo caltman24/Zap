@@ -85,6 +85,7 @@ public record BasicTicketDto(
 
 public record TicketSearchDto(string Id, string ProjectId, string Name)
 {
+    public float Score { get; init; }
     public string? StoredDisplayId { get; init; }
     public string DisplayId => StoredDisplayId ?? BasicTicketDto.FormatDisplayId(Id);
 }

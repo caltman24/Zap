@@ -8,6 +8,10 @@ namespace Zap.Api.Features.Companies.Services;
 
 public sealed class CompanyService : ICompanyService
 {
+    private const float NamePrefixScore = 350;
+    private const float NameTokenPrefixBaseScore = 300;
+    private const float NameTokenPrefixRankMultiplier = 100;
+
     private readonly AppDbContext _db;
     private readonly IFileUploadService _fileUploadService;
     private readonly ILogger<CompanyService> _logger;
@@ -93,26 +97,18 @@ public sealed class CompanyService : ICompanyService
         string searchTerm,
         int limit = 5)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm) || limit <= 0)
-        {
-            return [];
-        }
+        if (string.IsNullOrWhiteSpace(searchTerm) || limit <= 0) return [];
 
         var trimmedSearchTerm = searchTerm.Trim();
-        var searchTerms = GetSearchTerms(trimmedSearchTerm);
+        var namePrefixPattern = $"{trimmedSearchTerm}%";
+        var nameTokenPrefixQuery = BuildNameTokenPrefixQuery(trimmedSearchTerm);
+
+        if (nameTokenPrefixQuery == null) return [];
 
         var query = _db.Projects
             .AsNoTracking()
             .Where(p => p.CompanyId == companyId)
             .Where(p => !p.IsArchived);
-
-        foreach (var term in searchTerms)
-        {
-            var likePattern = $"%{term}%";
-            query = query.Where(p =>
-                EF.Functions.ILike(p.Name, likePattern) ||
-                EF.Functions.ILike(p.Description, likePattern));
-        }
 
         query = roleName switch
         {
@@ -124,19 +120,40 @@ public sealed class CompanyService : ICompanyService
         };
 
         return await query
-            .OrderBy(project => project.Name)
-            .Take(limit)
-            .Select(project => new ProjectSearchDto(
+            .Select(project => new
+            {
                 project.Id,
-                project.Name))
+                project.Name,
+                NameVector = EF.Functions.ToTsVector("simple", project.Name)
+            })
+            .Select(project => new
+            {
+                project.Id,
+                project.Name,
+                NamePrefixMatch = EF.Functions.ILike(project.Name, namePrefixPattern),
+                NameTokenPrefixMatch =
+                    project.NameVector.Matches(EF.Functions.ToTsQuery("simple", nameTokenPrefixQuery)),
+                NameTokenPrefixRank = project.NameVector.Rank(EF.Functions.ToTsQuery("simple", nameTokenPrefixQuery))
+            })
+            .Select(project => new
+            {
+                Score =
+                    (project.NamePrefixMatch ? NamePrefixScore : 0) +
+                    (project.NameTokenPrefixMatch
+                        ? NameTokenPrefixBaseScore + project.NameTokenPrefixRank * NameTokenPrefixRankMultiplier
+                        : 0),
+                project.Id,
+                project.Name
+            })
+            .Where(project => project.Score > 0)
+            .OrderByDescending(project => project.Score)
+            .ThenBy(project => project.Name)
+            .Take(limit)
+            .Select(project => new ProjectSearchDto(project.Id, project.Name)
+            {
+                Score = project.Score
+            })
             .ToListAsync();
-    }
-
-    private static List<string> GetSearchTerms(string searchTerm)
-    {
-        return searchTerm
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
     }
 
     public async Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(
@@ -167,67 +184,12 @@ public sealed class CompanyService : ICompanyService
     public async Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId, bool isArchived)
     {
         var result = await ProjectSummaryQuery(_db.Projects
-            .Where(p => p.CompanyId == companyId)
-            .Where(p => p.IsArchived == isArchived))
+                .Where(p => p.CompanyId == companyId)
+                .Where(p => p.IsArchived == isArchived))
             .ToListAsync();
 
         return ProjectSummaryResult(result);
     }
-
-    private static List<CompanyProjectDto> ProjectSummaryResult(IEnumerable<ProjectSummaryRow> result)
-    {
-        return [.. result.Select(p =>
-        {
-            if (p.ProjectManagerAvatar != null) p.AvatarUrls.Add(p.ProjectManagerAvatar);
-
-            return new CompanyProjectDto(
-                p.Id,
-                p.Name,
-                p.Priority,
-                p.DueDate,
-                p.IsArchived,
-                p.MemberCount,
-                p.AvatarUrls
-            );
-        })];
-    }
-
-    private static IQueryable<ProjectSummaryRow> ProjectSummaryQuery(IQueryable<Project> query)
-    {
-        return query
-            .Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Priority,
-                p.DueDate,
-                p.IsArchived,
-                MemberCount = p.ProjectManagerId != null
-                    ? p.AssignedMembers.Count() + 1
-                    : p.AssignedMembers.Count(),
-                AvatarUrls = p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList(),
-                ProjectManagerAvatar = p.ProjectManager != null ? p.ProjectManager.User.AvatarUrl : null
-            })
-            .Select(p => new ProjectSummaryRow(
-                p.Id,
-                p.Name,
-                p.Priority,
-                p.DueDate,
-                p.IsArchived,
-                p.MemberCount,
-                p.AvatarUrls,
-                p.ProjectManagerAvatar));
-    }
-
-    private sealed record ProjectSummaryRow(
-        string Id,
-        string Name,
-        string Priority,
-        DateTime DueDate,
-        bool IsArchived,
-        int MemberCount,
-        List<string> AvatarUrls,
-        string? ProjectManagerAvatar);
 
     public async Task CreateCompanyAsync(CreateCompanyDto company)
     {
@@ -294,4 +256,84 @@ public sealed class CompanyService : ICompanyService
             .Select(m => m.Role.Name)
             .FirstOrDefaultAsync();
     }
+
+    private static string? BuildNameTokenPrefixQuery(string searchTerm)
+    {
+        var tokens = searchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(NormalizeSearchToken)
+            .Where(token => token.Length > 0)
+            .Select(token => $"{token}:*")
+            .ToList();
+
+        return tokens.Count == 0
+            ? null
+            : string.Join(" & ", tokens);
+    }
+
+    private static string NormalizeSearchToken(string searchTerm)
+    {
+        return new string(searchTerm
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToUpperInvariant)
+            .ToArray());
+    }
+
+    private static List<CompanyProjectDto> ProjectSummaryResult(IEnumerable<ProjectSummaryRow> result)
+    {
+        return
+        [
+            .. result.Select(p =>
+            {
+                if (p.ProjectManagerAvatar != null) p.AvatarUrls.Add(p.ProjectManagerAvatar);
+
+                return new CompanyProjectDto(
+                    p.Id,
+                    p.Name,
+                    p.Priority,
+                    p.DueDate,
+                    p.IsArchived,
+                    p.MemberCount,
+                    p.AvatarUrls
+                );
+            })
+        ];
+    }
+
+    private static IQueryable<ProjectSummaryRow> ProjectSummaryQuery(IQueryable<Project> query)
+    {
+        return query
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Priority,
+                p.DueDate,
+                p.IsArchived,
+                MemberCount = p.ProjectManagerId != null
+                    ? p.AssignedMembers.Count() + 1
+                    : p.AssignedMembers.Count(),
+                AvatarUrls = p.AssignedMembers.Select(m => m.User.AvatarUrl).Take(5).ToList(),
+                ProjectManagerAvatar = p.ProjectManager != null ? p.ProjectManager.User.AvatarUrl : null
+            })
+            .Select(p => new ProjectSummaryRow(
+                p.Id,
+                p.Name,
+                p.Priority,
+                p.DueDate,
+                p.IsArchived,
+                p.MemberCount,
+                p.AvatarUrls,
+                p.ProjectManagerAvatar));
+    }
+
+    private sealed record ProjectSummaryRow(
+        string Id,
+        string Name,
+        string Priority,
+        DateTime DueDate,
+        bool IsArchived,
+        int MemberCount,
+        List<string> AvatarUrls,
+        string? ProjectManagerAvatar);
 }

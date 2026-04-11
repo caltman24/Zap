@@ -24,7 +24,9 @@ public interface ICompanyService
         string searchTerm,
         int limit = 5);
 
-    Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(string companyId, string memberId, string roleName, bool? isArchived);
+    Task<List<CompanyProjectDto>> GetVisibleProjectsAsync(string companyId, string memberId, string roleName,
+        bool? isArchived);
+
     Task<List<CompanyProjectDto>> GetAllCompanyProjectsAsync(string companyId, bool isArchived);
     Task CreateCompanyAsync(CreateCompanyDto company);
     Task DeleteCompanyByIdAsync(string companyId);
@@ -59,4 +61,7 @@ public record CompanyProjectDto(
     int MemberCount,
     IEnumerable<string> AvatarUrls);
 
-public record ProjectSearchDto(string Id, string Name);
+public record ProjectSearchDto(string Id, string Name)
+{
+    public float Score { get; init; }
+}

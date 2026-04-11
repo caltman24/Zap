@@ -207,9 +207,7 @@ public class AppDbContext : IdentityUserContext<AppUser>
                 ((BaseEntity)entry.Entity).CreatedAt = currentTime;
 
                 if (entry.Entity is Ticket ticket && string.IsNullOrWhiteSpace(ticket.DisplayId))
-                {
                     ticket.DisplayId = FormatTicketDisplayId(ticket.Id);
-                }
             }
 
             if (entry.State == EntityState.Modified) ((BaseEntity)entry.Entity).UpdatedAt = currentTime;
