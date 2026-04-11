@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.Extensions.Options;
 
-namespace Zap.Tests;
+namespace Zap.Tests.Infrastructure;
 
 public sealed class TokenService(SignInManager<AppUser> signInManager, IOptionsMonitor<BearerTokenOptions> options)
 {

@@ -1,29 +1,23 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using Amazon.S3;
 using Zap.Tests.Helpers;
 
-namespace Zap.Tests.IntegrationTests;
+namespace Zap.Tests.Features.Companies;
 
-public class UploadFileTests : IAsyncDisposable
+public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
 {
-    private readonly ZapApplication _app;
-    private readonly AppDbContext _db;
     private readonly IAmazonS3 _s3Client;
 
-    public UploadFileTests()
+    public UpdateCompanyInfoFileUploadTests()
     {
-        _app = new ZapApplication();
-        _db = _app.CreateAppDbContext();
         _s3Client = _app.Services.GetRequiredService<IAmazonS3>();
     }
 
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         _s3Client.Dispose();
-        await _app.DisposeAsync();
-        await _db.DisposeAsync();
+        await base.DisposeAsync();
     }
-
 
     [Fact]
     public async Task Update_Company_With_Image_Invalid_MIME_As_Admin_Returns_400_BadRequest()
@@ -33,25 +27,17 @@ public class UploadFileTests : IAsyncDisposable
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        await CompaniesTests.CreateTestCompany(_db, userId, user, role: RoleNames.Admin);
+        await CompanyTestData.CreateTestCompanyAsync(_db, userId, user, role: RoleNames.Admin);
         var client = _app.CreateClient(userId);
 
-        //Image
         await using var imageStream = File.OpenRead("./test-image.jpg");
+        using var content =
+            CreateUploadFormContent(new UploadFormRequest("Name", "Description", false, imageStream, false));
 
-        // Create multipart form data content
-        using var content = CreateUploadFormContent(new UploadFormRequest(
-            "Name",
-            "Description",
-            false,
-            imageStream,
-            false)); // don't add file content type to fail mime type validation
-
-        // Make sure content type is set correctly
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
-        var res = await client.PutAsync("/company/info", content);
+        var response = await client.PutAsync("/company/info", content);
 
-        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -62,31 +48,22 @@ public class UploadFileTests : IAsyncDisposable
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        await CompaniesTests.CreateTestCompany(_db, userId, user);
+        await CompanyTestData.CreateTestCompanyAsync(_db, userId, user);
         var client = _app.CreateClient(userId);
 
-        //Image
         await using var imageStream = File.OpenRead("./test-image.jpg");
+        using var content = CreateUploadFormContent(new UploadFormRequest("Name", "Description", false, imageStream));
 
-        // Create multipart form data content
-        using var content = CreateUploadFormContent(new UploadFormRequest(
-            "Name",
-            "Description",
-            false,
-            imageStream));
-
-        // Make sure content type is set correctly
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
-        var res = await client.PutAsync("/company/info", content);
+        var response = await client.PutAsync("/company/info", content);
 
-        Assert.True(res.IsSuccessStatusCode);
+        Assert.True(response.IsSuccessStatusCode);
 
         await _s3Client.ClearTestBucketAsync();
     }
 
     private static MultipartFormDataContent CreateUploadFormContent(UploadFormRequest request)
     {
-        // Create multipart form data content
         var content = new MultipartFormDataContent();
         content.Add(new StringContent(request.Name), "Name");
         content.Add(new StringContent(request.Description), "Description");
@@ -95,19 +72,18 @@ public class UploadFileTests : IAsyncDisposable
 
         if (request.FileStream == null) return content;
 
-        const int maxSizeKb = 50 * 1024; // 50kb
+        const int maxSizeKb = 50 * 1024;
         if (request.FileStream.Length > maxSizeKb)
             throw new ArgumentException($"The file size is too large. {maxSizeKb}kb Max");
 
-        //Image
         var streamContent = new StreamContent(request.FileStream);
         if (request.AddFileContentType) streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
-        content.Add(streamContent, "file", Path.GetFileName(request.FileStream.Name));
 
+        content.Add(streamContent, "file", Path.GetFileName(request.FileStream.Name));
         return content;
     }
 
-    private record UploadFormRequest(
+    private sealed record UploadFormRequest(
         string Name,
         string Description,
         bool RemoveLogo,

@@ -1,20 +1,9 @@
-namespace Zap.Tests.IntegrationTests;
+namespace Zap.Tests.Features.Companies;
 
-public class SearchTests : IAsyncDisposable
+public sealed class GetCompanySearchTests : IntegrationTestBase
 {
-    private readonly ZapApplication _app;
-    private readonly AppDbContext _db;
-
-    public SearchTests()
+    public GetCompanySearchTests() : base(false)
     {
-        _app = new ZapApplication(useInMemoryDatabase: false);
-        _db = _app.CreateAppDbContext();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _app.DisposeAsync();
-        await _db.DisposeAsync();
     }
 
     [Fact]
@@ -114,7 +103,7 @@ public class SearchTests : IAsyncDisposable
         var adminUser = await _db.Users.FindAsync(adminUserId);
         Assert.NotNull(adminUser);
 
-        var company = await CompaniesTests.CreateTestCompany(_db, adminUserId, adminUser, role: RoleNames.Admin);
+        var company = await CompanyTestData.CreateTestCompanyAsync(_db, adminUserId, adminUser, role: RoleNames.Admin);
         var adminMember =
             await _db.CompanyMembers.FirstAsync(member =>
                 member.UserId == adminUserId && member.CompanyId == company.Id);
@@ -161,7 +150,7 @@ public class SearchTests : IAsyncDisposable
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        var company = await CompaniesTests.CreateTestCompany(_db, userId, user, role: RoleNames.Admin);
+        var company = await CompanyTestData.CreateTestCompanyAsync(_db, userId, user, role: RoleNames.Admin);
         var adminMember =
             await _db.CompanyMembers.FirstAsync(member => member.UserId == userId && member.CompanyId == company.Id);
 

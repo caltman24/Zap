@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Zap.Tests;
+namespace Zap.Tests.Infrastructure;
 
 public static class DbContextExtensions
 {

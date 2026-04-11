@@ -4,7 +4,7 @@ using dotenv.net.Utilities;
 
 namespace Zap.Tests.Helpers;
 
-internal static class S3Helper
+internal static class S3BucketTestHelper
 {
     internal static async Task ClearTestBucketAsync(this IAmazonS3 s3Client)
     {

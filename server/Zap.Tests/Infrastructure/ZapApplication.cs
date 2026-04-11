@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using dotenv.net;
 using Microsoft.Extensions.Configuration;
 
-namespace Zap.Tests;
+namespace Zap.Tests.Infrastructure;
 
 public class ZapApplication : WebApplicationFactory<Program>
 {
