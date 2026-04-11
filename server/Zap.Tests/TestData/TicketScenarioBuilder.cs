@@ -1,6 +1,6 @@
 namespace Zap.Tests.TestData;
 
-public sealed class TicketScenarioBuilder(ZapApplication app, AppDbContext db)
+public sealed class TicketScenarioBuilder(Zap.Tests.Infrastructure.ZapApplication app, AppDbContext db)
 {
     public async Task<(Company company, Project project, Ticket ticket, CompanyMember admin, CompanyMember pm,
         CompanyMember developer, CompanyMember submitter)> SetupTestScenarioAsync()
@@ -113,6 +113,27 @@ public sealed class TicketScenarioBuilder(ZapApplication app, AppDbContext db)
         return member;
     }
 
+    public async Task<Project> CreateProjectAsync(string companyId, string? projectManagerId = null,
+        string name = "Test Project", bool isArchived = false, string priority = "High", DateTime? dueDate = null)
+    {
+        var project = new Project
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = name,
+            Description = $"{name} description",
+            Priority = priority,
+            CompanyId = companyId,
+            ProjectManagerId = projectManagerId,
+            DueDate = dueDate ?? DateTime.UtcNow.AddDays(30),
+            IsArchived = isArchived
+        };
+
+        db.Projects.Add(project);
+        await db.SaveChangesAsync();
+
+        return project;
+    }
+
     public async Task<Ticket> CreateTicketAsync(string projectId, string submitterId, string? assigneeId = null,
         string name = "Follow-up Ticket", bool isArchived = false)
     {
@@ -170,5 +191,21 @@ public sealed class TicketScenarioBuilder(ZapApplication app, AppDbContext db)
         });
 
         await db.SaveChangesAsync();
+    }
+
+    public async Task<TicketComment> CreateCommentAsync(string ticketId, string senderId, string message)
+    {
+        var comment = new TicketComment
+        {
+            Id = Guid.NewGuid().ToString(),
+            TicketId = ticketId,
+            SenderId = senderId,
+            Message = message
+        };
+
+        db.TicketComments.Add(comment);
+        await db.SaveChangesAsync();
+
+        return comment;
     }
 }

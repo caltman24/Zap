@@ -48,7 +48,7 @@ public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
         var user = await _db.Users.FindAsync(userId);
         Assert.NotNull(user);
 
-        await CompanyTestData.CreateTestCompanyAsync(_db, userId, user);
+        var company = await CompanyTestData.CreateTestCompanyAsync(_db, userId, user);
         var client = _app.CreateClient(userId);
 
         await using var imageStream = File.OpenRead("./test-image.jpg");
@@ -57,9 +57,55 @@ public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
         var response = await client.PutAsync("/company/info", content);
 
-        Assert.True(response.IsSuccessStatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        await _s3Client.ClearTestBucketAsync();
+        _db.ChangeTracker.Clear();
+        var updatedCompany = await _db.Companies.SingleAsync(x => x.Id == company.Id);
+        Assert.NotNull(updatedCompany.LogoUrl);
+        Assert.NotNull(updatedCompany.LogoKey);
+
+        await S3BucketTestHelper.ClearTestBucketAsync(_s3Client);
+    }
+
+    [Fact]
+    public async Task Update_Company_With_RemoveLogo_True_As_Admin_Clears_Existing_Logo_Metadata()
+    {
+        var userId = Guid.NewGuid().ToString();
+        await _app.CreateUserAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
+        Assert.NotNull(user);
+
+        var company = await CompanyTestData.CreateTestCompanyAsync(_db, userId, user);
+        var client = _app.CreateClient(userId);
+
+        await using (var imageStream = File.OpenRead("./test-image.jpg"))
+        {
+            using var uploadContent =
+                CreateUploadFormContent(new UploadFormRequest("Name", "Description", false, imageStream));
+
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
+            var uploadResponse = await client.PutAsync("/company/info", uploadContent);
+            Assert.Equal(HttpStatusCode.NoContent, uploadResponse.StatusCode);
+        }
+
+        using var removeContent = CreateUploadFormContent(new UploadFormRequest(
+            "Renamed Company",
+            "Updated Description",
+            true,
+            null));
+
+        var removeResponse = await client.PutAsync("/company/info", removeContent);
+
+        Assert.Equal(HttpStatusCode.NoContent, removeResponse.StatusCode);
+
+        _db.ChangeTracker.Clear();
+        var updatedCompany = await _db.Companies.SingleAsync(x => x.Id == company.Id);
+        Assert.Null(updatedCompany.LogoUrl);
+        Assert.Null(updatedCompany.LogoKey);
+        Assert.Equal("Renamed Company", updatedCompany.Name);
+        Assert.Equal("Updated Description", updatedCompany.Description);
+
+        await S3BucketTestHelper.ClearTestBucketAsync(_s3Client);
     }
 
     private static MultipartFormDataContent CreateUploadFormContent(UploadFormRequest request)

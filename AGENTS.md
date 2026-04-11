@@ -26,6 +26,18 @@ Use this file as project-specific implementation context.
 - Prefer existing patterns over introducing new abstractions.
 - Keep changes aligned with the current system design.
 
+## Testing Strategy
+
+- Keep `server/Zap.Tests/Features/` for integration tests that verify HTTP behavior, auth, filters, persistence, and
+  role-sensitive workflows end to end.
+- Keep `server/Zap.Tests/Unit/` for fast isolated tests around validators, permission rules, capability logic,
+  history/formatting helpers, and other branching business logic.
+- Do not add unit tests for thin endpoint handlers, filters, auth wiring, or provider-specific query behavior unless
+  there is clear branching logic worth isolating.
+- Prefer integration tests when the real value is routing, database interaction, or full request/response flow.
+- Prefer unit tests when the real value is a rule matrix, a validator, or a side-effect decision that is easier to
+  verify in isolation.
+
 Make small, reviewable changes only.
 
 Follow these constraints strictly:

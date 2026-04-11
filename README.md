@@ -14,8 +14,8 @@ Companies can manage projects, assign members, track tickets, and collaborate th
 - Scoped data access: developers and submitters only receive projects and tickets they are actually allowed to access
 - Full-stack architecture: Remix SSR frontend, ASP.NET Core Minimal API backend, PostgreSQL persistence, S3-ready
   attachment path
-- Maintainable backend design: vertical slice structure, thin endpoints, focused services, integration-tested permission
-  logic
+- Maintainable backend design: vertical slices, thin endpoints, focused services, and a mix of integration and unit
+  tests where it matters
 - Product-minded implementation: role-aware navigation, route gating, ticket workflows, comments, project views, and
   audit history
 
@@ -37,21 +37,22 @@ Remix SSR (Netlify)
   +--> AWS S3 (attachments)
 ```
 
-Notes: the client is a Remix v2 + Vite app that runs server-side. All API calls are proxied through Remix
-loaders/actions — the browser never talks directly to the .NET backend. The backend is an ASP.NET Core 10 Minimal API
-using a vertical-slice architecture.
+The client is a Remix v2 + Vite app that runs server-side. Remix handles the API calls through loaders/actions, so the
+browser never talks directly to the .NET backend. The backend is an ASP.NET Core 10 Minimal API built with a
+vertical-slice structure.
 
 ---
 
 ## What This Demonstrates
 
 - Full-stack product development with a Remix SSR frontend and ASP.NET Core Minimal API backend
-- API-driven authorization and UI gating: global permissions come from `/user/info`, while project/ticket actions come
-  from resource capabilities
+- API-driven authorization and UI gating: global permissions come from `/user/info`, while project and ticket actions
+  come from resource capabilities
 - Vertical slice backend architecture with thin endpoints and service-based business logic
 - Session-based auth in the web app with token refresh handling
 - Scoped data access so users only receive the projects and tickets relevant to their role
-- Integration-tested backend behavior for permission-sensitive flows
+- A testing strategy that uses integration tests for end-to-end behavior and unit tests for rule-heavy services,
+  validators, and audit/history logic
 
 ---
 
@@ -74,7 +75,8 @@ If you are reviewing this as part of an interview or application, the best place
 - `server/Zap.Api/Features/Tickets/Services/TicketAuthorizationService.cs`
 - `server/Zap.Api/Features/Projects/Services/ProjectAuthorizationService.cs`
 - `server/Zap.Api/Features/Users/Services/UserPermissionService.cs`
-- `server/Zap.Tests/IntegrationTests/`
+- `server/Zap.Tests/Features/`
+- `server/Zap.Tests/Unit/`
 
 ---
 
@@ -110,7 +112,9 @@ Key server files and locations:
 - `server/Zap.Api/Configuration/Endpoints.cs` — endpoint registration
 - `server/Features/` — vertical-slice feature folders (Authentication, Companies, Projects, Tickets, FileUpload)
 - `server/Data/AppDbContext.cs` — EF Core DbContext (PostgreSQL)
-- `server/Zap.Tests/` — xUnit integration tests (in-memory DB)
+- `server/Zap.Tests/Features/` — xUnit integration tests for endpoint behavior and authorization flows
+- `server/Zap.Tests/Unit/` — focused unit tests for validators, permission rules, capability logic, and selected
+  service behavior
 
 ---
 
@@ -147,10 +151,39 @@ Key server files and locations:
 
 ---
 
+## Testing Strategy
+
+The backend tests are split pretty deliberately.
+
+- Integration tests under `server/Zap.Tests/Features/` cover the stuff that really needs the full stack: routing,
+  auth, endpoint filters, data scoping, persistence, and role-sensitive workflows
+- Unit tests under `server/Zap.Tests/Unit/` cover the logic that benefits from fast, isolated feedback: validators,
+  permission maps, capability calculations, comment rules, and ticket history side effects
+
+I do not try to unit test every service just because it exists. I use unit tests where the logic itself is the point,
+and integration tests where the wiring and persistence are the point.
+
+Examples of logic covered by unit tests:
+
+- `TicketAuthorizationRules` and `UserPermissionService` for role-based rule matrices
+- FluentValidation request validators for endpoint contracts
+- `TicketAuthorizationService` and `ProjectAuthorizationService` for capability and access decisions
+- selected `TicketService`, `TicketCommentsService`, `ProjectService`, and `CompanyService` methods where branching or
+  history/file side effects matter
+
+Things I keep integration-first:
+
+- minimal API handlers and endpoint filters
+- auth/current-user wiring
+- scoped query behavior through EF and PostgreSQL
+- full request/response flows for projects, tickets, comments, and company actions
+
+---
+
 ## Role Matrix
 
-The API is the source of truth for permissions. The Remix client mirrors those rules by hiding irrelevant routes,
-buttons, and actions.
+The API is the source of truth for permissions. The Remix client mirrors those rules by hiding routes, buttons, and
+actions that do not apply.
 
 - Global permissions are returned from `/user/info` as `user.permissions` and drive navigation, page access, and broad
   UI actions like `company.edit`, `project.create`, and `project.assignPm`
@@ -193,8 +226,8 @@ buttons, and actions.
 - Can edit their own ticket title and description only while the ticket is `New`
 - Cannot change status, priority, type, assignee, archive, or delete ticket state
 
-This was intentionally implemented server-first: the API scopes the data and permissions, and the client follows by
-hiding irrelevant navigation, routes, and controls.
+This is intentionally server-first: the API scopes the data and permissions, and the client follows by hiding the
+navigation, routes, and controls that do not make sense for the current user.
 
 ---
 
@@ -222,8 +255,7 @@ hiding irrelevant navigation, routes, and controls.
 
 The dashboard navbar includes a live search for quickly jumping to tickets and projects.
 
-- Search is still role-aware and server-enforced, so users only see active tickets and projects they already have access
-  to
+- Search is still role-aware and server-enforced, so users only see active tickets and projects they can already access
 - To keep the results focused, the search only looks at:
     - `ticket.displayId`
     - `ticket.name`
@@ -280,8 +312,10 @@ Common commands
 Notes
 
 - Use `pnpm` for the client — do not add `package-lock.json` or `yarn.lock`.
-- Server integration tests use in-memory DB by default; full end-to-end requires a real Postgres instance and any EF
-  migrations to be applied.
+- The server test project contains both integration tests (`Features/`) and unit tests (`Unit/`).
+- Most integration tests use an in-memory DB by default, while a few provider-sensitive cases use the real test
+  database path.
+- Full end-to-end verification still requires a real Postgres instance and any EF migrations to be applied.
 
 Environment variables
 

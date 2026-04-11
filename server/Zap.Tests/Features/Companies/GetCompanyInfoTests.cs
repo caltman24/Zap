@@ -46,7 +46,7 @@ public sealed class GetCompanyInfoTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task Get_Company_Info_With_No_Relation_Returns_400_BadRequest()
+    public async Task Get_Company_Info_With_No_Relation_Returns_403_Forbidden()
     {
         var userId = Guid.NewGuid().ToString();
         await _app.CreateUserAsync(userId);

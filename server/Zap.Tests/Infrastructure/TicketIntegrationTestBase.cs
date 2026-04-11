@@ -4,7 +4,8 @@ public abstract class TicketIntegrationTestBase : IntegrationTestBase
 {
     protected readonly TicketScenarioBuilder _tickets;
 
-    protected TicketIntegrationTestBase()
+    protected TicketIntegrationTestBase(bool useInMemoryDatabase = true)
+        : base(useInMemoryDatabase)
     {
         _tickets = new TicketScenarioBuilder(_app, _db);
     }

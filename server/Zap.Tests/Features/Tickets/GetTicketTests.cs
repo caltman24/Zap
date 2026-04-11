@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace Zap.Tests.Features.Tickets;
 
 public sealed class GetTicketTests : TicketIntegrationTestBase
@@ -10,13 +8,16 @@ public sealed class GetTicketTests : TicketIntegrationTestBase
         var (_, _, ticket, _, _, developer, _) = await _tickets.SetupTestScenarioAsync();
         var client = _app.CreateClient(developer.UserId, RoleNames.Developer);
 
-        var response = await client.GetAsync($"/tickets/{ticket.Id}");
+        var response = await client.GetFromJsonAsync<TicketResponse>($"/tickets/{ticket.Id}");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(BasicTicketDto.FormatDisplayId(ticket.Id),
-            payload.RootElement.GetProperty("displayId").GetString());
+        Assert.NotNull(response);
+        Assert.Equal(ticket.Id, response!.Id);
+        Assert.Equal(BasicTicketDto.FormatDisplayId(ticket.Id), response.DisplayId);
+        Assert.Equal(ticket.Name, response.Name);
+        Assert.Equal(RoleNames.Developer, response.Assignee!.Role);
+        Assert.True(response.Capabilities.CanUpdateStatus);
+        Assert.True(response.Capabilities.CanComment);
+        Assert.False(response.Capabilities.CanUpdatePriority);
     }
 
     [Fact]
@@ -51,4 +52,22 @@ public sealed class GetTicketTests : TicketIntegrationTestBase
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
+
+    private sealed record TicketResponse(
+        string Id,
+        string DisplayId,
+        string Name,
+        string Description,
+        string Priority,
+        string Status,
+        string Type,
+        string ProjectId,
+        string? ProjectManagerId,
+        bool isArchived,
+        bool ProjectIsArchived,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt,
+        MemberInfoDto Submitter,
+        MemberInfoDto? Assignee,
+        TicketCapabilitiesDto Capabilities);
 }
