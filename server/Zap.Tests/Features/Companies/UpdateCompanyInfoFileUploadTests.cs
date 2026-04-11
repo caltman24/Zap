@@ -6,11 +6,17 @@ namespace Zap.Tests.Features.Companies;
 
 public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
 {
+    private readonly string _bucketName;
     private readonly IAmazonS3 _s3Client;
 
     public UpdateCompanyInfoFileUploadTests()
     {
         _s3Client = _app.Services.GetRequiredService<IAmazonS3>();
+        _bucketName = Environment.GetEnvironmentVariable("AWS_S3_BUCKET")
+                      ?? throw new InvalidOperationException(
+                          "S3 integration tests require AWS_S3_BUCKET. Configure server/Zap.Tests/.env.test.");
+
+        S3BucketTestHelper.EnsureSafeTestBucketName(_bucketName);
     }
 
     public override async ValueTask DisposeAsync()
@@ -64,7 +70,7 @@ public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
         Assert.NotNull(updatedCompany.LogoUrl);
         Assert.NotNull(updatedCompany.LogoKey);
 
-        await S3BucketTestHelper.ClearTestBucketAsync(_s3Client);
+        await S3BucketTestHelper.ClearTestBucketAsync(_s3Client, _bucketName);
     }
 
     [Fact]
@@ -105,7 +111,7 @@ public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
         Assert.Equal("Renamed Company", updatedCompany.Name);
         Assert.Equal("Updated Description", updatedCompany.Description);
 
-        await S3BucketTestHelper.ClearTestBucketAsync(_s3Client);
+        await S3BucketTestHelper.ClearTestBucketAsync(_s3Client, _bucketName);
     }
 
     private static MultipartFormDataContent CreateUploadFormContent(UploadFormRequest request)

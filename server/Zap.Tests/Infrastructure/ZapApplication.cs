@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using dotenv.net;
 using Microsoft.Extensions.Configuration;
 
 namespace Zap.Tests.Infrastructure;
@@ -13,6 +12,8 @@ public class ZapApplication : WebApplicationFactory<Program>
     {
         _configurationOverrides = configurationOverrides ?? new Dictionary<string, string?>();
         _useInMemoryDatabase = useInMemoryDatabase;
+
+        Environment.SetEnvironmentVariable("ZAP_DOTENV_FILE", BuildDotEnvFileList());
     }
 
     public AppDbContext CreateAppDbContext()
@@ -72,12 +73,6 @@ public class ZapApplication : WebApplicationFactory<Program>
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
-        // Overwrite .env file from api
-        DotEnv.Fluent()
-            .WithExceptions()
-            .WithEnvFiles(".env")
-            .WithOverwriteExistingVars()
-            .Load();
         builder.ConfigureServices((context, services) =>
         {
             // DbContext
@@ -102,6 +97,35 @@ public class ZapApplication : WebApplicationFactory<Program>
             services.AddScoped<TokenService>();
         });
         return base.CreateHost(builder);
+    }
+
+    private static string BuildDotEnvFileList()
+    {
+        var testsProjectDirectory = ResolveTestsProjectDirectory();
+        var serverDirectory = Directory.GetParent(testsProjectDirectory)?.FullName
+                              ?? throw new DirectoryNotFoundException("Unable to resolve server directory.");
+
+        var envFiles = new List<string>();
+        var apiEnvFile = Path.Combine(serverDirectory, "Zap.Api", ".env");
+        var testsEnvFile = Path.Combine(testsProjectDirectory, ".env.test");
+
+        if (File.Exists(apiEnvFile)) envFiles.Add(apiEnvFile);
+        if (File.Exists(testsEnvFile)) envFiles.Add(testsEnvFile);
+
+        return string.Join(';', envFiles);
+    }
+
+    private static string ResolveTestsProjectDirectory()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (current != null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Zap.Tests.csproj"))) return current.FullName;
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Unable to locate the Zap.Tests project directory.");
     }
 
     private sealed class AuthHandler(IServiceProvider services, string id, string role) : DelegatingHandler

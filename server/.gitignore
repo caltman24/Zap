@@ -47,3 +47,4 @@ obj/**/*
 
 .env
 .env.local
+.env.test

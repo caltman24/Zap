@@ -4,8 +4,19 @@ using Scalar.AspNetCore;
 using Zap.Api.Configuration;
 using Zap.Api.Data;
 
+var dotEnvFiles = Environment.GetEnvironmentVariable("ZAP_DOTENV_FILE")
+    ?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+if (dotEnvFiles is { Length: > 0 })
+    DotEnv.Fluent()
+        .WithExceptions()
+        .WithEnvFiles(dotEnvFiles)
+        .WithOverwriteExistingVars()
+        .Load();
+else
+    DotEnv.Load();
+
 var builder = WebApplication.CreateBuilder(args);
-DotEnv.Load();
 
 builder.Logging.AddStructuredLogging(builder.Configuration);
 builder.Services.AddRequiredServices(builder.Configuration);
