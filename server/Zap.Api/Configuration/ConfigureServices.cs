@@ -115,13 +115,20 @@ public static class ConfigureServices
 
     private static IServiceCollection AddS3Storage(this IServiceCollection services)
     {
-        services.AddAWSService<IAmazonS3>(new AWSOptions
+        var awsOptions = new AWSOptions
         {
-            Region = RegionEndpoint.GetBySystemName(EnvReader.GetStringValue("AWS_REGION")),
-            Credentials = new BasicAWSCredentials(EnvReader.GetStringValue("AWS_ACCESS_KEY"),
-                EnvReader.GetStringValue("AWS_SECRET_KEY")),
-            Profile = EnvReader.GetStringValue("AWS_PROFILE")
-        });
+            Region = RegionEndpoint.GetBySystemName(EnvReader.GetStringValue("AWS_REGION"))
+        };
+
+        var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
+        var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
+        if (!string.IsNullOrWhiteSpace(accessKey) && !string.IsNullOrWhiteSpace(secretKey))
+            awsOptions.Credentials = new BasicAWSCredentials(accessKey, secretKey);
+
+        var profile = Environment.GetEnvironmentVariable("AWS_PROFILE");
+        if (!string.IsNullOrWhiteSpace(profile)) awsOptions.Profile = profile;
+
+        services.AddAWSService<IAmazonS3>(awsOptions);
         services.Configure<S3Options>(options =>
         {
             options.BucketName = EnvReader.GetStringValue("AWS_S3_BUCKET");
