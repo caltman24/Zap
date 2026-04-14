@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using Zap.Tests.Unit.TestHelpers;
 
 namespace Zap.Tests.Unit.Companies;
@@ -10,7 +9,7 @@ public sealed class UpdateCompanyInfoServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var fileUpload = new RecordingFileUploadService();
-        var service = new CompanyService(db, NullLogger<CompanyService>.Instance, fileUpload);
+        var service = new CompanyService(db, fileUpload);
         var company = new Company
         {
             Id = "company-1",
@@ -43,7 +42,7 @@ public sealed class UpdateCompanyInfoServiceTests
         {
             UploadResult = ("https://example.com/new-logo.png", "new-key")
         };
-        var service = new CompanyService(db, NullLogger<CompanyService>.Instance, fileUpload);
+        var service = new CompanyService(db, fileUpload);
         var company = new Company
         {
             Id = "company-1",
@@ -68,7 +67,7 @@ public sealed class UpdateCompanyInfoServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var fileUpload = new RecordingFileUploadService { ThrowOnDelete = true };
-        var service = new CompanyService(db, NullLogger<CompanyService>.Instance, fileUpload);
+        var service = new CompanyService(db, fileUpload);
         var company = new Company
         {
             Id = "company-1",
