@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging.Abstractions;
+using Zap.Api.Features.FileUpload.Services;
 using Zap.Tests.Unit.TestHelpers;
 
 namespace Zap.Tests.Unit.Companies;
@@ -9,7 +11,7 @@ public sealed class UpdateCompanyInfoServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var fileUpload = new RecordingFileUploadService();
-        var service = new CompanyService(db, fileUpload);
+        var service = new CompanyService(db, fileUpload, NullLogger<CompanyService>.Instance);
         var company = new Company
         {
             Id = "company-1",
@@ -42,7 +44,7 @@ public sealed class UpdateCompanyInfoServiceTests
         {
             UploadResult = ("https://example.com/new-logo.png", "new-key")
         };
-        var service = new CompanyService(db, fileUpload);
+        var service = new CompanyService(db, fileUpload, NullLogger<CompanyService>.Instance);
         var company = new Company
         {
             Id = "company-1",
@@ -67,7 +69,7 @@ public sealed class UpdateCompanyInfoServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var fileUpload = new RecordingFileUploadService { ThrowOnDelete = true };
-        var service = new CompanyService(db, fileUpload);
+        var service = new CompanyService(db, fileUpload, NullLogger<CompanyService>.Instance);
         var company = new Company
         {
             Id = "company-1",
@@ -88,7 +90,7 @@ public sealed class UpdateCompanyInfoServiceTests
         Assert.Equal("https://example.com/logo.png", persisted.LogoUrl);
     }
 
-    private sealed class RecordingFileUploadService : Zap.Api.Features.FileUpload.Services.IFileUploadService
+    private sealed class RecordingFileUploadService : IFileUploadService
     {
         public List<string> DeletedKeys { get; } = [];
         public (string url, string key) UploadResult { get; set; } = ("https://example.com/logo.png", "logo-key");

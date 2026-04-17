@@ -14,11 +14,13 @@ public sealed class CompanyService : ICompanyService
 
     private readonly AppDbContext _db;
     private readonly IFileUploadService _fileUploadService;
+    private readonly ILogger<CompanyService> _logger;
 
-    public CompanyService(AppDbContext db, IFileUploadService fileUploadService)
+    public CompanyService(AppDbContext db, IFileUploadService fileUploadService, ILogger<CompanyService> logger)
     {
         _db = db;
         _fileUploadService = fileUploadService;
+        _logger = logger;
     }
 
     public async Task<CompanyInfoDto?> GetCompanyInfoAsync(string companyId)
@@ -46,31 +48,25 @@ public sealed class CompanyService : ICompanyService
         var company = await _db.Companies.FindAsync(updateCompanyDto.CompanyId);
         if (company == null) return false;
 
-        if (updateCompanyDto.RemoveLogo && company.LogoKey != null)
+        try
         {
-            try
+            if (updateCompanyDto.RemoveLogo && company.LogoKey != null)
             {
                 await _fileUploadService.DeleteFileAsync(company.LogoKey);
                 company.LogoUrl = null;
                 company.LogoKey = null;
             }
-            catch
-            {
-                return false;
-            }
-        }
-        else if (updateCompanyDto.Logo != null)
-        {
-            try
+            else if (updateCompanyDto.Logo != null)
             {
                 // Upload file
                 (company.LogoUrl, company.LogoKey) =
                     await _fileUploadService.UploadCompanyLogoAsync(updateCompanyDto.Logo, company.LogoKey);
             }
-            catch
-            {
-                return false;
-            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error uploading company logo to s3");
+            return false;
         }
 
         company.Name = updateCompanyDto.Name;

@@ -10,7 +10,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         var result = await service.AreMembersInProjectCompanyAsync(scenario.Project.Id,
             [scenario.Developer.Id, scenario.Submitter.Id]);
@@ -23,7 +23,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         var result = await service.AreMembersInProjectCompanyAsync(scenario.Project.Id,
             [scenario.Developer.Id, scenario.ExternalDeveloper.Id]);
@@ -36,7 +36,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         var result = await service.AreMembersInProjectCompanyAsync(scenario.Project.Id, []);
 
@@ -48,7 +48,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         var extraSubmitterRole = db.CompanyRoles.Single(x => x.Name == RoleNames.Submitter);
         var extraSubmitter = UnitTestFactory.CreateMember("submitter-2", "submitter-user-2", scenario.Company.Id,
@@ -72,7 +72,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         scenario.OtherProject.ProjectManagerId = scenario.ProjectManager.Id;
         scenario.OtherProject.IsArchived = true;
@@ -90,7 +90,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         scenario.OtherProject.IsArchived = false;
         await db.SaveChangesAsync();
@@ -107,7 +107,7 @@ public sealed class ProjectServiceTests
     {
         await using var db = UnitTestFactory.CreateDbContext();
         var scenario = await UnitTestFactory.CreateAuthorizationScenarioAsync(db);
-        var service = new ProjectService(db, NullLogger<ProjectService>.Instance, UnitTestFactory.CreateCompanyService(db));
+        var service = new ProjectService(db, NullLogger<ProjectService>.Instance);
 
         scenario.OtherProject.AssignedMembers.Add(scenario.Developer);
         scenario.Developer.AssignedProjects.Add(scenario.OtherProject);
