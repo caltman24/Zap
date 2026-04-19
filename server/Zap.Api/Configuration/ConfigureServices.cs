@@ -2,9 +2,7 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
 using Amazon.S3;
-using dotenv.net.Utilities;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +29,7 @@ public static class ConfigureServices
             .AddIdentityManagement()
             .AddAuthService()
             .AddCorsPolicies()
-            .AddS3Storage()
+            .AddS3Storage(configuration)
             .AddCurrentUser()
             .AddValidatorsFromAssemblyContaining<Program>();
 
@@ -113,20 +111,22 @@ public static class ConfigureServices
         return services;
     }
 
-    private static IServiceCollection AddS3Storage(this IServiceCollection services)
+    private static IServiceCollection AddS3Storage(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddAWSService<IAmazonS3>(new AWSOptions
+        var s3Section = configuration.GetSection("S3");
+        var region = s3Section.GetValue<string>(nameof(S3Options.Region))
+                     ?? throw new InvalidOperationException("Missing S3:Region configuration.");
+
+        var awsOptions = new AWSOptions
         {
-            Region = RegionEndpoint.GetBySystemName(EnvReader.GetStringValue("AWS_REGION")),
-            Credentials = new BasicAWSCredentials(EnvReader.GetStringValue("AWS_ACCESS_KEY"),
-                EnvReader.GetStringValue("AWS_SECRET_KEY")),
-            Profile = EnvReader.GetStringValue("AWS_PROFILE")
-        });
-        services.Configure<S3Options>(options =>
-        {
-            options.BucketName = EnvReader.GetStringValue("AWS_S3_BUCKET");
-            options.Region = EnvReader.GetStringValue("AWS_REGION");
-        });
+            Region = RegionEndpoint.GetBySystemName(region)
+        };
+
+        var profile = Environment.GetEnvironmentVariable("AWS_PROFILE");
+        if (!string.IsNullOrWhiteSpace(profile)) awsOptions.Profile = profile;
+
+        services.AddAWSService<IAmazonS3>(awsOptions);
+        services.Configure<S3Options>(s3Section);
         services.AddScoped<IFileUploadService, S3FileUploadService>();
         return services;
     }

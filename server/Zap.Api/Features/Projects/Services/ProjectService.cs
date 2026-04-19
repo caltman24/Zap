@@ -12,7 +12,7 @@ public sealed class ProjectService : IProjectService
     private readonly AppDbContext _db;
     private readonly ILogger<ProjectService> _logger;
 
-    public ProjectService(AppDbContext db, ILogger<ProjectService> logger, ICompanyService companyService)
+    public ProjectService(AppDbContext db, ILogger<ProjectService> logger)
     {
         _db = db;
         _logger = logger;

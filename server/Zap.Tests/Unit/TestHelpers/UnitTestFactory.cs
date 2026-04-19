@@ -247,7 +247,7 @@ internal static class UnitTestFactory
 
     internal static CompanyService CreateCompanyService(AppDbContext db)
     {
-        return new CompanyService(db, NullLogger<CompanyService>.Instance, new StubFileUploadService());
+        return new CompanyService(db, new StubFileUploadService(), NullLogger<CompanyService>.Instance);
     }
 
     internal static CompanyMember CreateMember(string memberId, string userId, string companyId, CompanyRole role,

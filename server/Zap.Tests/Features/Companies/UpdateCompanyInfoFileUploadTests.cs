@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using Amazon.S3;
+using Microsoft.Extensions.Options;
+using Zap.Api.Features.FileUpload.Configuration;
 using Zap.Tests.Helpers;
 
 namespace Zap.Tests.Features.Companies;
@@ -12,9 +14,11 @@ public sealed class UpdateCompanyInfoFileUploadTests : IntegrationTestBase
     public UpdateCompanyInfoFileUploadTests()
     {
         _s3Client = _app.Services.GetRequiredService<IAmazonS3>();
-        _bucketName = Environment.GetEnvironmentVariable("AWS_S3_BUCKET")
-                      ?? throw new InvalidOperationException(
-                          "S3 integration tests require AWS_S3_BUCKET. Configure server/Zap.Tests/.env.test.");
+        _bucketName = _app.Services.GetRequiredService<IOptions<S3Options>>().Value.BucketName;
+
+        if (string.IsNullOrWhiteSpace(_bucketName))
+            throw new InvalidOperationException(
+                "S3 integration tests require S3:BucketName configuration for the Testing environment.");
 
         S3BucketTestHelper.EnsureSafeTestBucketName(_bucketName);
     }
