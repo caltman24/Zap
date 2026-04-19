@@ -41,12 +41,27 @@ jobs:
 
   server:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ vars.POSTGRES_USER }} -d ${{ vars.POSTGRES_DB }}"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: server
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=${{ vars.POSTGRES_PORT }};Database=${{ vars.POSTGRES_DB }};Username=${{ vars.POSTGRES_USER }};Password=${{ secrets.POSTGRES_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
