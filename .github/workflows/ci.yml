@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -78,7 +81,7 @@ jobs:
         run: dotnet test ZapServer.sln -c Release --filter "FullyQualifiedName!~UpdateCompanyInfoFileUploadTests"
 
   s3-tests:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     defaults:
       run:
