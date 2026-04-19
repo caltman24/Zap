@@ -322,7 +322,10 @@ Environment variables
 - The API loads configuration from `.env` located in `server/Zap.Api` during local development. Typical variables:
     - `ASPNETCORE_ENVIRONMENT`
     - `ConnectionStrings__Default` (Postgres connection)
-    - AWS credentials (e.g. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET`)
+    - Local AWS auth selection (typically `AWS_PROFILE`)
+    - Store local AWS credentials outside the repo in `~/.aws/credentials` and `~/.aws/config`
+    - S3 bucket/region live in committed `appsettings*.json`, with `Development` and `Testing` using different buckets
+    - Real S3 integration tests use the `Testing` environment and the same local AWS profile setup
     - JWT signing/issuer related secrets
 
 Applying EF migrations
