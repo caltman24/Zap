@@ -14,13 +14,12 @@ public class RecentActivityService(AppDbContext db) : IRecentActivityService
     {
         if (currentUser.Member == null || string.IsNullOrWhiteSpace(currentUser.CompanyId) || limit <= 0) return [];
 
-        var lifecycleEventsTask = GetLifecycleEventsAsync(currentUser, limit);
-        var commentEventsTask = GetCommentEventsAsync(currentUser, limit);
+        var lifecycleEventsTask = await GetLifecycleEventsAsync(currentUser, limit);
+        var commentEventsTask = await GetCommentEventsAsync(currentUser, limit);
 
-        await Task.WhenAll(lifecycleEventsTask, commentEventsTask);
 
-        return lifecycleEventsTask.Result
-            .Concat(commentEventsTask.Result)
+        return lifecycleEventsTask
+            .Concat(commentEventsTask)
             .OrderByDescending(activity => activity.OccurredAt)
             .Take(limit)
             .ToList();

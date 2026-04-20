@@ -177,16 +177,7 @@ public class AppDbContext : IdentityUserContext<AppUser>
             .HasOne(c => c.Sender)
             .WithMany()
             .HasForeignKey(c => c.SenderId);
-        builder.Entity<TicketComment>()
-            .HasOne(c => c.Ticket)
-            .WithMany()
-            .HasForeignKey(c => c.TicketId);
-
         // Ticket History
-        builder.Entity<TicketHistory>()
-            .HasOne(c => c.Ticket)
-            .WithMany()
-            .HasForeignKey(t => t.TicketId);
         builder.Entity<TicketHistory>()
             .HasOne(a => a.Creator)
             .WithMany()
