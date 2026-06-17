@@ -1,5 +1,5 @@
 [build]
-  publish = "build/public"
+  publish = "build"
   command = "pnpm --filter client run build"
 
 [context.production.environment]
