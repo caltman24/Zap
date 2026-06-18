@@ -36,6 +36,9 @@ importers:
         specifier: ^4.0.14
         version: 4.0.14
     devDependencies:
+      '@netlify/remix-adapter':
+        specifier: ^3.0.0
+        version: 3.0.0(typescript@5.8.2)(vite@6.2.2(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0))
       '@remix-run/dev':
         specifier: ^2.16.1
         version: 2.16.1(@remix-run/react@2.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.2))(@remix-run/serve@2.16.1(typescript@5.8.2))(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0))(yaml@2.7.0)
@@ -727,6 +730,12 @@ packages:
   '@napi-rs/wasm-runtime@0.2.7':
     resolution: {integrity: sha512-5yximcFK5FNompXfJFoWanu5l8v1hNGqNHh9du1xETp9HWk/B/PzvchX55WYOPaIeNglG8++68AAiauBAtbnzw==}
 
+  '@netlify/remix-adapter@3.0.0':
+    resolution: {integrity: sha512-6q541j/Sb8A/kawnyg4sIGvRxM56Jl+b7+Zt7DY/JEMcHrh+JXgTovb0QHajqI9KEG+1+XxjyDon3hufxKjzlg==}
+    engines: {node: '>=20.6.1'}
+    peerDependencies:
+      vite: '>=5.0.0'
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -812,6 +821,15 @@ packages:
       typescript:
         optional: true
 
+  '@remix-run/node@2.17.5':
+    resolution: {integrity: sha512-CwOUCDJqh9o8r/n5N1l+vz4Jh7DFU52/jo7MN56+OL9gM+14aQKdq1aLAh+4V6GuI/qtki9PPk02GmULimmDkw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      typescript: ^5.1.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   '@remix-run/react@2.16.1':
     resolution: {integrity: sha512-+aPcDvcTkm9jq+JEh4BWKHDk8uRRP1+9N59v4xecWpSdyQ+YID0YhizH2RuJBTosI96/NIeqojT/rJp//M/TCQ==}
     engines: {node: '>=18.0.0'}
@@ -827,6 +845,10 @@ packages:
     resolution: {integrity: sha512-O3rHJzAQKamUz1fvE0Qaw0xSFqsA/yafi2iqeE0pvdFtCO1viYx8QL6f3Ln/aCCTLxs68SLf0KPM9eSeM8yBnA==}
     engines: {node: '>=14.0.0'}
 
+  '@remix-run/router@1.23.3':
+    resolution: {integrity: sha512-4An71tdz9X8+3sI4Qqqd2LWd9vS39J7sqd9EU4Scw7TJE/qB10Flv/UuqbPVgfQV9XoK8Np6jNquZitnZq5i+Q==}
+    engines: {node: '>=14.0.0'}
+
   '@remix-run/serve@2.16.1':
     resolution: {integrity: sha512-u/ijKzsZ56YLCVhGoyCAfIvNnOAvWgttuNNNexOpGu0blmOrkPwVKYBKj2isSxqvqbvpZUqJhB63GaeouoP/kg==}
     engines: {node: '>=18.0.0'}
@@ -834,6 +856,15 @@ packages:
 
   '@remix-run/server-runtime@2.16.1':
     resolution: {integrity: sha512-jk52Gt3GmNzHtQcOQ77iX2Lhm6Zcgqc1hjMAuWtvTvMjqvww9NjHaNNxdJmJ3SXZESxpQ+IKEy4GeQXd8D9CNQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      typescript: ^5.1.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@remix-run/server-runtime@2.17.5':
+    resolution: {integrity: sha512-SyJ5n2pQyo4ERGvjjLvL2PpRWBzlC2qzO5KkkOE2ygOiNcgOu9WQnnom9GI8KgsTRCO8JnIeLHFRcmxZnVBjfw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: ^5.1.0
@@ -1535,6 +1566,10 @@ packages:
 
   cookie@0.7.1:
     resolution: {integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==}
+    engines: {node: '>= 0.6'}
+
+  cookie@0.7.2:
+    resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
 
   core-util-is@1.0.3:
@@ -2383,6 +2418,10 @@ packages:
 
   isbot@4.4.0:
     resolution: {integrity: sha512-8ZvOWUA68kyJO4hHJdWjyreq7TYNWTS9y15IzeqVdKxR9pPr3P/3r9AHcoIv9M0Rllkao5qWz2v1lmcyKIVCzQ==}
+    engines: {node: '>=18'}
+
+  isbot@5.1.43:
+    resolution: {integrity: sha512-drJhFmibra4LO6Wd7D3Oi6UICRK9244vSZkmxzhlZP0TTdwCA2ueK4PEkUkzPYeuqug9+cqqdWPgihjk5+83Cg==}
     engines: {node: '>=18'}
 
   isexe@2.0.0:
@@ -3617,6 +3656,9 @@ packages:
   turbo-stream@2.4.0:
     resolution: {integrity: sha512-FHncC10WpBd2eOmGwpmQsWLDoK4cqsA/UT/GqNoaKOQnT8uzhtCbg3EoUDMvqpOSAI0S26mr0rkjzbOO6S3v1g==}
 
+  turbo-stream@2.4.1:
+    resolution: {integrity: sha512-v8kOJXpG3WoTN/+at8vK7erSzo6nW6CIaeOvNOkHQVDajfz1ZVeSxCbc6tOH4hrGZW7VUCV0TOXd8CPzYnYkrw==}
+
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
@@ -4466,6 +4508,14 @@ snapshots:
       '@tybys/wasm-util': 0.9.0
     optional: true
 
+  '@netlify/remix-adapter@3.0.0(typescript@5.8.2)(vite@6.2.2(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0))':
+    dependencies:
+      '@remix-run/node': 2.17.5(typescript@5.8.2)
+      isbot: 5.1.43
+      vite: 6.2.2(@types/node@22.13.10)(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0)
+    transitivePeerDependencies:
+      - typescript
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -4640,6 +4690,18 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.2
 
+  '@remix-run/node@2.17.5(typescript@5.8.2)':
+    dependencies:
+      '@remix-run/server-runtime': 2.17.5(typescript@5.8.2)
+      '@remix-run/web-fetch': 4.4.2
+      '@web3-storage/multipart-parser': 1.0.0
+      cookie-signature: 1.2.2
+      source-map-support: 0.5.21
+      stream-slice: 0.1.2
+      undici: 6.21.2
+    optionalDependencies:
+      typescript: 5.8.2
+
   '@remix-run/react@2.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.2)':
     dependencies:
       '@remix-run/router': 1.23.0
@@ -4653,6 +4715,8 @@ snapshots:
       typescript: 5.8.2
 
   '@remix-run/router@1.23.0': {}
+
+  '@remix-run/router@1.23.3': {}
 
   '@remix-run/serve@2.16.1(typescript@5.8.2)':
     dependencies:
@@ -4677,6 +4741,18 @@ snapshots:
       set-cookie-parser: 2.7.1
       source-map: 0.7.4
       turbo-stream: 2.4.0
+    optionalDependencies:
+      typescript: 5.8.2
+
+  '@remix-run/server-runtime@2.17.5(typescript@5.8.2)':
+    dependencies:
+      '@remix-run/router': 1.23.3
+      '@types/cookie': 0.6.0
+      '@web3-storage/multipart-parser': 1.0.0
+      cookie: 0.7.2
+      set-cookie-parser: 2.7.1
+      source-map: 0.7.4
+      turbo-stream: 2.4.1
     optionalDependencies:
       typescript: 5.8.2
 
@@ -5406,6 +5482,8 @@ snapshots:
   cookie@0.6.0: {}
 
   cookie@0.7.1: {}
+
+  cookie@0.7.2: {}
 
   core-util-is@1.0.3: {}
 
@@ -6485,6 +6563,8 @@ snapshots:
   isarray@2.0.5: {}
 
   isbot@4.4.0: {}
+
+  isbot@5.1.43: {}
 
   isexe@2.0.0: {}
 
@@ -7980,6 +8060,8 @@ snapshots:
     optional: true
 
   turbo-stream@2.4.0: {}
+
+  turbo-stream@2.4.1: {}
 
   type-check@0.4.0:
     dependencies:
